@@ -1,15 +1,12 @@
 #include "pch.h"
 
-#include <Windows.h>
-
-#include <WindowsUtility.h>
-#include <ArcBall.h>
-
-#include "ThisApp.h"
-
 #pragma comment(lib, "D3DCompiler.lib")
 #pragma comment(lib, "D3D11.lib")
 #pragma comment(lib, "winmm.lib")
+
+#include <WindowsUtility.h>
+
+#include "ThisApp.h"
 
 using namespace std;
 

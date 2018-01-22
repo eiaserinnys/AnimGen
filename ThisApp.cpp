@@ -64,6 +64,14 @@ public:
 
 		XMMATRIX rot = arcBall->GetRotationMatrix();
 
+		sceneDesc.Build(
+			hWnd, 
+			XMFLOAT3(0, 3, -5.0f), 
+			XMFLOAT3(0, 1.5f, 0), 
+			rot);
+
+		global->objRenderer->Render(sceneDesc);
+
 		//{
 		//	float dist = 1.0f;
 		//	XMFLOAT3 ofs = XMFLOAT3(0.5, 0, -0.1f);

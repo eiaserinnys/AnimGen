@@ -18,6 +18,9 @@
     <Filter Include="PCH">
       <UniqueIdentifier>{8c2954cf-247f-4eaa-8f03-a3f3279aa314}</UniqueIdentifier>
     </Filter>
+    <Filter Include="ThisApp\Rendering\Object">
+      <UniqueIdentifier>{81c5585e-bf5d-4ce3-918b-bb8e9618fbdc}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="RenderContext.cpp">
@@ -40,6 +43,9 @@
     </ClCompile>
     <ClCompile Include="pch.cpp">
       <Filter>PCH</Filter>
+    </ClCompile>
+    <ClCompile Include="ObjectRenderer.cpp">
+      <Filter>ThisApp\Rendering\Object</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -64,5 +70,13 @@
     <ClInclude Include="MeshT.h">
       <Filter>Scene</Filter>
     </ClInclude>
+    <ClInclude Include="ObjectRenderer.h">
+      <Filter>ThisApp\Rendering\Object</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <FxCompile Include="Shader\Object.fx">
+      <Filter>ThisApp\Rendering\Object</Filter>
+    </FxCompile>
   </ItemGroup>
 </Project>

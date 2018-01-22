@@ -7,8 +7,9 @@
 #include <list>
 
 #include <DirectXMath.h>
-
 #include <DX11Buffer.h>
+#include <SpriteBatch.h>
+#include <SpriteFont.h>
 
 #include "SceneDescriptor.h"
 
@@ -95,8 +96,8 @@ struct TextToRender
 	DirectX::XMFLOAT4 clr;
 };
 
-struct DX11Render
-{
+class DX11Render {
+public:
 	DX11Render(HWND hwnd, DX11Device* device);
 
 	void Begin(BakeFlag::Value bake = BakeFlag::None);

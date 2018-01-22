@@ -17,6 +17,8 @@ RenderContext::RenderContext(HWND hwnd)
 
 	vs.reset(IVertexShaderManager::Create(d3d11.get()));
 	ps.reset(IPixelShaderManager::Create(d3d11.get()));
+
+	objRenderer.reset(IObjectRenderer::Create(this));
 }
 
 RenderContext::~RenderContext()
