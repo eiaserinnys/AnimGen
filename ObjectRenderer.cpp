@@ -57,7 +57,7 @@ public:
 		ind.reset(IDX11Buffer::Create_DynamicIB(
 			d3dDev, sizeof(UINT16), ibSize * sizeof(UINT16)));
 
-		rasterState.reset(IDX11RasterizerState::Create_Default(d3dDev));
+		rasterState.reset(IDX11RasterizerState::Create_CullNone(d3dDev));
 		depthState.reset(IDX11DepthStencilState::Create_Default(d3dDev));
 		depthStateWire.reset(IDX11DepthStencilState::Create_Always(d3dDev));
 		blendState.reset(IDX11BlendState::Create_AlphaBlend(d3dDev));

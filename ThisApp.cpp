@@ -5,7 +5,7 @@
 
 #include <WindowsUtility.h>
 #include <Utility.h>
-#include <ArcBall.h>
+#include <EulerControl.h>
 
 #include "RenderContext.h"
 #include "Render.h"
@@ -19,7 +19,7 @@ public:
 	unique_ptr<DX11Render> render;
 	HWND hWnd;
 
-	unique_ptr<IArcBall> arcBall;
+	unique_ptr<IEulerControl> arcBall;
 
 	bool init = false;
 
@@ -30,7 +30,7 @@ public:
 		global.reset(new RenderContext(hWnd));
 		render.reset(new DX11Render(hWnd, global->d3d11.get()));
 
-		arcBall.reset(IArcBall::Create());
+		arcBall.reset(IEulerControl::Create());
 	}
 
 	//--------------------------------------------------------------------------
@@ -47,9 +47,6 @@ public:
 	}
 
 	//--------------------------------------------------------------------------
-	IArcBall* GetArcBall() { return arcBall.get(); }
-
-	//--------------------------------------------------------------------------
 	virtual int Do()
 	{
 		return WindowsUtility::MessagePump([&] { DoInternal(); });
@@ -62,13 +59,12 @@ public:
 
 		SceneDescriptor sceneDesc;
 
-		XMMATRIX rot = arcBall->GetRotationMatrix();
+		arcBall->Update(XMFLOAT3(0, 1.5f, 0), 5);
 
 		sceneDesc.Build(
 			hWnd, 
-			XMFLOAT3(0, 3, -5.0f), 
-			XMFLOAT3(0, 1.5f, 0), 
-			rot);
+			arcBall->GetEyePosition(), 
+			arcBall->GetRotationMatrix());
 
 		global->objRenderer->Render(sceneDesc);
 
@@ -88,8 +84,7 @@ public:
 	virtual pair<bool, LRESULT> HandleMessage(
 		HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	{
-		auto result = GetArcBall()->HandleMessages(
-			hWnd, message, wParam, lParam);
+		auto result = arcBall->HandleMessages(hWnd, message, wParam, lParam);
 		if (result) { return make_pair(true, result); }
 
 		switch (message) {

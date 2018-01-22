@@ -11,6 +11,5 @@ struct SceneDescriptor
 	void Build(
 		HWND hwnd,
 		const DirectX::XMFLOAT3& eye,
-		const DirectX::XMFLOAT3& at,
 		const DirectX::XMMATRIX& rotation);
 };
