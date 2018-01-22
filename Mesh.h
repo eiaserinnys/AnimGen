@@ -14,3 +14,11 @@ class IFloorMesh : public IMesh {
 public:
 	static IFloorMesh* Create();
 };
+
+class IBoxMesh : public IMesh {
+public:
+	static IBoxMesh* Create(
+		const DirectX::XMFLOAT3& center, 
+		const DirectX::XMFLOAT3& extent,
+		DWORD clr);
+};

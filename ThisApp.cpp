@@ -59,7 +59,7 @@ public:
 
 		SceneDescriptor sceneDesc;
 
-		arcBall->Update(XMFLOAT3(0, 1.5f, 0), 5);
+		arcBall->Update(XMFLOAT3(0, 1.5f, 0), 10);
 
 		sceneDesc.Build(
 			hWnd, 

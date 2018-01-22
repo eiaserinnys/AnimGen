@@ -1,9 +1,44 @@
 #pragma once
 
+#include <Utility.h>
+
 //------------------------------------------------------------------------------
 template <typename BaseClass>
 class MeshT : public BaseClass {
 public:
+	void AddRectangle(
+		const DirectX::XMFLOAT3& c,
+		const DirectX::XMFLOAT3& rHalf,
+		const DirectX::XMFLOAT3& dHalf,
+		const DirectX::XMFLOAT3& n,
+		DWORD clr)
+	{
+		UINT16 indPtr = (UINT16)pos.size();
+
+		pos.push_back(c - rHalf - dHalf);
+		pos.push_back(c + rHalf - dHalf);
+		pos.push_back(c - rHalf + dHalf);
+		pos.push_back(c + rHalf + dHalf);
+
+		nor.push_back(n);
+		nor.push_back(n);
+		nor.push_back(n);
+		nor.push_back(n);
+
+		col.push_back(clr);
+		col.push_back(clr);
+		col.push_back(clr);
+		col.push_back(clr);
+
+		ind.push_back(indPtr + 0);
+		ind.push_back(indPtr + 1);
+		ind.push_back(indPtr + 2);
+
+		ind.push_back(indPtr + 1);
+		ind.push_back(indPtr + 3);
+		ind.push_back(indPtr + 2);
+	}
+
 	void AddRectangle(
 		const DirectX::XMFLOAT3& lu,
 		const DirectX::XMFLOAT3& ru,
