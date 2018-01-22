@@ -68,46 +68,6 @@ void DX11Render::Bake(IToRender* render, const string& srcTexture, const wstring
 }
 
 //------------------------------------------------------------------------------
-void DX11Render::UpsampleDepth(IToRender* render, vector<float>& buffer, bool fhd)
-{
-	RenderTuple tuple;
-	tuple.render = render;
-	tuple.wireframe = Wireframe::False;
-	tuple.flag = RenderFlag::VertexColor;
-
-	auto flag = fhd ? BakeFlag::DepthUpsample : BakeFlag::WLS;
-
-	Begin(flag);
-
-	//RenderInternal(&tuple, 1, flag, false);
-
-	//End(flag);
-	{
-		ScratchImage img;
-
-		HRESULT hr = DirectX::CaptureTexture(
-			device->g_pd3dDevice,
-			device->immDevCtx,
-			device->GetRenderTarget()->GetTexture(),
-			img);
-
-		if (SUCCEEDED(hr))
-		{
-			auto image = img.GetImage(0, 0, 0);
-
-			const float* byFloat = (const float*)image->pixels;
-
-			auto width = device->GetRenderTarget()->GetWidth();
-			auto height = device->GetRenderTarget()->GetHeight();
-
-			buffer.resize(width * height);
-
-			memcpy(&buffer[0], byFloat, sizeof(buffer[0]) * buffer.size());
-		}
-	}
-}
-
-//------------------------------------------------------------------------------
 void DX11Render::Begin(BakeFlag::Value bake)
 {
 	switch (bake)
@@ -119,10 +79,6 @@ void DX11Render::Begin(BakeFlag::Value bake)
 
 	case BakeFlag::Unwrap:
 		device->SetScreenshotMode(DX11Device::RenderTarget::ForUnwrap);
-		break;
-
-	case BakeFlag::DepthUpsample:
-		device->SetScreenshotMode(DX11Device::RenderTarget::ForUpsample);
 		break;
 
 	case BakeFlag::WLS:

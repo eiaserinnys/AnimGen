@@ -8,7 +8,9 @@ class IThisApp {
 public:
 	virtual ~IThisApp();
 
-	virtual void Do() = 0;
+	virtual int Do() = 0;
+
+	virtual std::pair<bool, LRESULT> HandleMessage(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) = 0;
 
 	virtual void OnKeyDown(WPARAM wParam, LPARAM lParam) = 0;
 

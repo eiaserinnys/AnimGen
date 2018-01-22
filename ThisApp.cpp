@@ -23,6 +23,7 @@ public:
 
 	bool init = false;
 
+	//--------------------------------------------------------------------------
 	ThisApp(HWND hWnd)
 		: hWnd(hWnd)
 	{
@@ -32,20 +33,30 @@ public:
 		arcBall.reset(IArcBall::Create());
 	}
 
+	//--------------------------------------------------------------------------
 	~ThisApp()
 	{
 		CleanUp();
 	}
 
+	//--------------------------------------------------------------------------
 	void CleanUp()
 	{
 		render.reset(NULL);
 		global.reset(NULL);
 	}
 
+	//--------------------------------------------------------------------------
 	IArcBall* GetArcBall() { return arcBall.get(); }
 
-	virtual void Do()
+	//--------------------------------------------------------------------------
+	virtual int Do()
+	{
+		return WindowsUtility::MessagePump([&] { DoInternal(); });
+	}
+
+	//--------------------------------------------------------------------------
+	void DoInternal()
 	{
 		render->Begin();
 
@@ -65,6 +76,24 @@ public:
 		render->End();
 	}
 
+	//--------------------------------------------------------------------------
+	virtual pair<bool, LRESULT> HandleMessage(
+		HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
+	{
+		auto result = GetArcBall()->HandleMessages(
+			hWnd, message, wParam, lParam);
+		if (result) { return make_pair(true, result); }
+
+		switch (message) {
+		case WM_KEYDOWN:
+			OnKeyDown(wParam, lParam);
+			return make_pair(true, 0);
+		}
+
+		return make_pair(false, 0);
+	}
+
+	//--------------------------------------------------------------------------
 	virtual void OnKeyDown(WPARAM wParam, LPARAM lParam)
 	{
 		if (wParam == VK_F5)

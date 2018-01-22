@@ -105,8 +105,6 @@ struct DX11Render
 
 	void Bake(IToRender* render, const std::string& srcTexture, const std::wstring& bakeFileName);
 
-	void UpsampleDepth(IToRender* render, std::vector<float>& buffer, bool fhd);
-
 	void* operator new(std::size_t size) { return _aligned_malloc(size, 16); }
 	void operator delete(void* ptr) { return _aligned_free(ptr); }
 

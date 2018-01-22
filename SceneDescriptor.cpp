@@ -11,27 +11,6 @@ void SceneDescriptor::Build(
 	const XMFLOAT3& at_,
 	const XMMATRIX& rotation)
 {
-	// Update our time
-	static float t = 0.0f;
-	{
-		static DWORD dwTimeStart = 0;
-		DWORD dwTimeCur = GetTickCount();
-		if (dwTimeStart == 0)
-			dwTimeStart = dwTimeCur;
-		t = (dwTimeCur - dwTimeStart) / 1000.0f;
-	}
-
-	DWORD dur = 15000;
-	DWORD curTime = timeGetTime();
-	float timeFactor = (curTime % dur) / (float)dur;
-
-	float min = -180;
-	float max = +180;
-
-	if (timeFactor < 0.5f) { timeFactor = min + (max - min) * timeFactor * 2; }
-	else { timeFactor = max - (max - min) * (timeFactor - 0.5f) * 2; }
-	timeFactor = timeFactor / 360.0f * 3.14192f;
-
 	world = XMMatrixIdentity();
 
 	float atHeight = 0.85f + 0.15f;
@@ -46,17 +25,7 @@ void SceneDescriptor::Build(
 	XMVECTOR atVec = XMVectorSet(at_.x, at_.y, at_.z, 0);
 	XMVECTOR eyeVec = XMVectorSet(eye_.x, eye_.y, eye_.z, 0);
 
-	//float angle = 12.5f / 180.0f * 3.14f;
-	float angle = timeFactor;
-
 	XMVECTOR delta = eyeVec - atVec;
-
-	//XMVECTOR delta2 = XMVectorSet(
-	//	delta.m128_f32[0] * cosf(angle) - delta.m128_f32[2] * sinf(angle),
-	//	delta.m128_f32[1],
-	//	delta.m128_f32[0] * sin(angle) + delta.m128_f32[2] * cosf(angle),
-	//	0);
-
 
 	XMMATRIX rotInv = XMMatrixInverse(nullptr, rotation);
 
