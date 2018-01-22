@@ -15,6 +15,7 @@ RenderContext::RenderContext(HWND hwnd)
 		throw E_FAIL;
 	}
 
+	rts.reset(IRenderTargetManager::Create(d3d11->g_pd3dDevice, d3d11->g_pSwapChain, d3d11->immDevCtx));
 	vs.reset(IVertexShaderManager::Create(d3d11.get()));
 	ps.reset(IPixelShaderManager::Create(d3d11.get()));
 
@@ -33,7 +34,7 @@ RenderContext::~RenderContext()
 
 void RenderContext::Reload()
 {
-	d3d11->ReloadTexture();
+	//d3d11->ReloadTexture();
 	ReloadShader();
 }
 

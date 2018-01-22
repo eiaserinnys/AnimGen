@@ -116,7 +116,7 @@ public:
 
 		devCtx->ClearState();
 
-		context->d3d11->RestoreRenderTarget();
+		context->rts->Restore();
 
 		constants->Update(
 			devCtx, 

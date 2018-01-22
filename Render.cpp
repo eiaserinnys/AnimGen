@@ -17,8 +17,8 @@ IToRender::~IToRender()
 ////////////////////////////////////////////////////////////////////////////////
 
 //------------------------------------------------------------------------------
-DX11Render::DX11Render(HWND hwnd, DX11Device* device)
-	: hwnd(hwnd), device(device)
+DX11Render::DX11Render(HWND hwnd, DX11Device* device, IRenderTargetManager* rts)
+	: hwnd(hwnd), device(device), rts(rts)
 {
 	//lastTime = timeGetTime();
 
@@ -57,7 +57,7 @@ void DX11Render::Bake(IToRender* render, const string& srcTexture, const wstring
 		HRESULT hr = DirectX::CaptureTexture(
 			device->g_pd3dDevice,
 			device->immDevCtx,
-			device->GetRenderTarget()->GetTexture(),
+			rts->GetCurrent()->GetTexture(),
 			img);
 
 		if (SUCCEEDED(hr))
@@ -70,6 +70,7 @@ void DX11Render::Bake(IToRender* render, const string& srcTexture, const wstring
 //------------------------------------------------------------------------------
 void DX11Render::Begin(BakeFlag::Value bake)
 {
+#if 0
 	switch (bake)
 	{
 	default:
@@ -85,9 +86,10 @@ void DX11Render::Begin(BakeFlag::Value bake)
 		device->SetScreenshotMode(DX11Device::RenderTarget::ForWls);
 		break;
 	}
+#endif
 
-	device->RestoreRenderTarget();
-	device->ClearRenderTarget();
+	rts->Restore();
+	rts->Clear();
 }
 
 //------------------------------------------------------------------------------
@@ -101,7 +103,7 @@ void DX11Render::RenderText(const XMMATRIX& wvp_)
 {
 	if (!textToRender.empty())
 	{
-		device->RestoreRenderTarget();
+		rts->Restore();
 
 		spriteBatch->Begin();
 
@@ -118,8 +120,8 @@ void DX11Render::RenderText(const XMMATRIX& wvp_)
 				pos.m128_f32[1] /= pos.m128_f32[3];
 				pos.m128_f32[2] /= pos.m128_f32[3];
 				pos.m128_f32[3] /= pos.m128_f32[3];
-				pos.m128_f32[0] = (1 + pos.m128_f32[0]) / 2 * device->GetRenderTargetWidth();
-				pos.m128_f32[1] = (1 - pos.m128_f32[1]) / 2 * device->GetRenderTargetHeight();
+				pos.m128_f32[0] = (1 + pos.m128_f32[0]) / 2 * rts->GetWidth();
+				pos.m128_f32[1] = (1 - pos.m128_f32[1]) / 2 * rts->GetHeight();
 
 				pos = pos + XMLoadFloat2(&tit->ofs);
 			}

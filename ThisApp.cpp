@@ -28,7 +28,7 @@ public:
 		: hWnd(hWnd)
 	{
 		global.reset(new RenderContext(hWnd));
-		render.reset(new DX11Render(hWnd, global->d3d11.get()));
+		render.reset(new DX11Render(hWnd, global->d3d11.get(), global->rts.get()));
 
 		arcBall.reset(IEulerControl::Create());
 	}

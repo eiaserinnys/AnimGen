@@ -98,7 +98,7 @@ struct TextToRender
 
 class DX11Render {
 public:
-	DX11Render(HWND hwnd, DX11Device* device);
+	DX11Render(HWND hwnd, DX11Device* device, IRenderTargetManager* rts);
 
 	void Begin(BakeFlag::Value bake = BakeFlag::None);
 	void Render(RenderTuple* tuple, int tupleCount, bool wireframe);
@@ -113,9 +113,8 @@ public:
 	void RenderText(const DirectX::XMMATRIX& wvp);
 
 private:
-
-public:
 	DX11Device* device = nullptr;
+	IRenderTargetManager* rts = nullptr;
 	HWND hwnd;
 	std::list<TextToRender> textToRender;
 
