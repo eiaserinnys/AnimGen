@@ -36,5 +36,9 @@ void SceneDescriptor::Build(
 				zMax));
 
 		worldViewProj = XMMatrixMultiply(XMMatrixMultiply(proj, view), world);
+
+		invWorldViewT = XMMatrixTranspose(
+			XMMatrixInverse(
+				nullptr, XMMatrixMultiply(view, world)));
 	}
 }

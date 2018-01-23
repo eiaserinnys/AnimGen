@@ -20,8 +20,6 @@ IToRender::~IToRender()
 RenderProcedure::RenderProcedure(HWND hwnd, DX11Device* device, IRenderTargetManager* rts)
 	: hwnd(hwnd), device(device), rts(rts)
 {
-	//lastTime = timeGetTime();
-
 	spriteBatch.reset(new SpriteBatch(device->immDevCtx));
 	font.reset(new SpriteFont(device->g_pd3dDevice, L"Font/font12.spritefont"));
 }
@@ -67,7 +65,9 @@ void RenderProcedure::Bake(
 void RenderProcedure::Begin()
 {
 	rts->Restore();
-	rts->Clear();
+
+	float color[] = { 0.5, 0.75, 1, 1 };
+	rts->GetCurrent()->Clear(device->immDevCtx, color, 1, 0);
 }
 
 //------------------------------------------------------------------------------

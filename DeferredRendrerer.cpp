@@ -2,6 +2,7 @@
 #include "DeferredRenderer.h"
 
 #include <DX11ConstantBufferT.h>
+#include <DX11StateBlocks.h>
 
 #include <Utility.h>
 
@@ -16,7 +17,8 @@ using namespace DirectX;
 //------------------------------------------------------------------------------
 struct DeferredConstantsBody
 {
-	DirectX::XMFLOAT4 RenderTargetExtent;
+	XMFLOAT4 MainLightDir;
+	XMFLOAT4 RenderTargetExtent;
 };
 
 //------------------------------------------------------------------------------
@@ -32,9 +34,19 @@ struct DeferredConstants
 
 	void Update(
 		ID3D11DeviceContext* devCtx,
+		const SceneDescriptor& sceneDesc, 
 		int width,
 		int height)
 	{
+		XMMATRIX wvT = XMMatrixTranspose(sceneDesc.invWorldViewT);
+
+		XMFLOAT3 dir = Normalize(XMFLOAT3(1, -3, 2));
+		auto dirT = XMVector3TransformNormal(XMLoadFloat3(&dir), wvT);
+		cbChangesEveryFrameMem.MainLightDir.x = dirT.m128_f32[0];
+		cbChangesEveryFrameMem.MainLightDir.y = dirT.m128_f32[1];
+		cbChangesEveryFrameMem.MainLightDir.z = dirT.m128_f32[2];
+		cbChangesEveryFrameMem.MainLightDir.w = 0;
+
 		cbChangesEveryFrameMem.RenderTargetExtent.x = width;
 		cbChangesEveryFrameMem.RenderTargetExtent.y = height;
 		cbChangesEveryFrameMem.RenderTargetExtent.z = 0;
@@ -58,14 +70,18 @@ public:
 		context->ps->Load(fxFileName);
 
 		constants.reset(new DeferredConstants(d3dDev, devCtx));
+
+		blendState.reset(IDX11BlendState::Create_AlphaBlend(d3dDev));
 	}
 
 	//--------------------------------------------------------------------------
-	void Render()
+	void Render(const SceneDescriptor& sceneDesc)
 	{
 		ID3D11DeviceContext* devCtx = context->d3d11->immDevCtx;
 
-		constants->Update(devCtx, 1280, 720);
+		constants->Update(devCtx, sceneDesc, 1280, 720);
+
+		blendState->Apply(devCtx);
 
 		context->vs->Set(fxFileName);
 		context->ps->Set(fxFileName);
@@ -92,6 +108,8 @@ public:
 	const wchar_t* fxFileName = L"Shader/Deferred.fx";
 
 	unique_ptr<DeferredConstants> constants;
+
+	unique_ptr<IDX11BlendState> blendState;
 };
 
 IDeferredRenderer::~IDeferredRenderer()

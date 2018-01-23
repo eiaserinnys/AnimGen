@@ -1,8 +1,8 @@
 //--------------------------------------------------------------------------------------
 cbuffer cbNeverChanges : register(b0)
 {
-	matrix World;
-	matrix ViewProjection;
+	matrix WorldViewProjection;
+	matrix invWorldViewT;
 	float4 EyePos;
 };
 
@@ -33,10 +33,9 @@ struct PS_OUTPUT
 PS_INPUT VS(VS_INPUT input)
 {
 	PS_INPUT output = (PS_INPUT)0;
-	output.Pos = mul(float4(input.Pos.xyz, 1), World);
-	output.Pos = mul(output.Pos, ViewProjection);
-	output.Pos2 = float4(output.Pos.xyz / output.Pos.w, output.Pos.w);
-	output.Nor = input.Nor;
+	output.Pos = mul(float4(input.Pos.xyz, 1), WorldViewProjection);
+	output.Pos2 = output.Pos;
+	output.Nor = mul(float4(input.Nor.xyz, 0), invWorldViewT);
 	output.Col = input.Col;
 	return output;
 }
@@ -46,7 +45,7 @@ PS_OUTPUT PS(PS_INPUT input) : SV_Target
 {
 	PS_OUTPUT output = (PS_OUTPUT)0;
 	output.Col = input.Col;
-	output.Nor = input.Nor;
+	output.Nor = float4((input.Nor.xyz + 1) / 2, 1);
 	output.Depth = float4(input.Pos2.w, 0, 0, 1);
 	return output;
 }

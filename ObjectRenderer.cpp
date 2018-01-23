@@ -127,7 +127,7 @@ public:
 		context->rts->Restore("deferred");
 
 		auto rt = context->rts->GetCurrent();
-		float color[] = { 0.5, 0.75, 1, 1.0f };
+		float color[] = { 0.5, 0.75, 1, 0.0f };
 		float depth[] = { 50, 0, 0, 0 };
 		rt->ClearRenderTarget(context->d3d11->immDevCtx, 0, color);
 		rt->ClearRenderTarget(context->d3d11->immDevCtx, 1, color);
@@ -137,9 +137,8 @@ public:
 
 		constants->Update(
 			devCtx, 
-			sceneDesc.world, 
-			sceneDesc.view, 
-			sceneDesc.proj, 
+			sceneDesc.worldViewProj, 
+			sceneDesc.invWorldViewT, 
 			sceneDesc.eye);
 
 		// »ó¼öµé

@@ -72,7 +72,7 @@ public:
 			global->d3d11->immDevCtx->ClearState();
 			global->rts->Restore();
 
-			global->deferredRenderer->Render(); 
+			global->deferredRenderer->Render(sceneDesc); 
 		}
 
 		render->End();

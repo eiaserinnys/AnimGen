@@ -6,7 +6,9 @@ struct SceneDescriptor
 {
 	DirectX::XMFLOAT4 eye;
 	DirectX::XMMATRIX world, view, proj;
+	
 	DirectX::XMMATRIX worldViewProj;
+	DirectX::XMMATRIX invWorldViewT;
 
 	void Build(
 		HWND hwnd,

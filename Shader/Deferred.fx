@@ -1,7 +1,8 @@
 //--------------------------------------------------------------------------------------
 cbuffer Constants : register(b0)
 {
-	float2 RenderTargetExtent;
+	float4 MainLightDir;
+	float4 RenderTargetExtent;
 };
 
 Texture2D		txAlbedo : register(t0);
@@ -44,15 +45,19 @@ float4 PS(VS_OUTPUT input) : SV_Target
 		txDepth.Sample(smDepth, input.Tex + float2(0, -txOfs.y)).x,
 		txDepth.Sample(smDepth, input.Tex + float2(0, +txOfs.y)).x);
 
-	float o = 
+	float o = saturate(
 		depth - depthN.x +
 		depth - depthN.y +
 		depth - depthN.z +
-		depth - depthN.w;
-	o = clamp(o, 0, 1);
+		depth - depthN.w);
 
-	//float4 final = float4(albedo.xyz + float3(o, o, o), albedo.w);
-	float4 final = float4(normal.xyz + float3(o, o, o), albedo.w);
+	float3 lightDir = MainLightDir.xyz;
+	float3 norV = normalize(normal.xyz * 2 - 1);
+	float l = saturate(dot(-lightDir, norV));
+
+	float4 final = float4(albedo.xyz * l + float3(o, o, o), albedo.w + o);
+	//float4 final = float4(float3(l, l, l) + float3(o, o, o), albedo.w);
+	//float4 final = float4(norV.xyz + float3(o, o, o), albedo.w);
 
 	return final;
 }
