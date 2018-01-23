@@ -97,10 +97,8 @@ public:
 	}
 
 	//--------------------------------------------------------------------------
-	void Render(const SceneDescriptor& sceneDesc)
+	void FillBuffer()
 	{
-		ID3D11DeviceContext* devCtx = context->d3d11->immDevCtx;
-
 		posB.clear();
 		norB.clear();
 		clrB.clear();
@@ -109,14 +107,21 @@ public:
 		FillBuffer(floor.get());
 		FillBuffer(box.get());
 
-		pos->UpdateDiscard(devCtx, &posB[0], (UINT)posB.size());
-		nor->UpdateDiscard(devCtx, &norB[0], (UINT)norB.size());
-		col->UpdateDiscard(devCtx, &clrB[0], (UINT)clrB.size());
-		ind->UpdateDiscard(devCtx, &indB[0], (UINT)indB.size());
+		{
+			ID3D11DeviceContext* devCtx = context->d3d11->immDevCtx;
+			pos->UpdateDiscard(devCtx, &posB[0], (UINT)posB.size());
+			nor->UpdateDiscard(devCtx, &norB[0], (UINT)norB.size());
+			col->UpdateDiscard(devCtx, &clrB[0], (UINT)clrB.size());
+			ind->UpdateDiscard(devCtx, &indB[0], (UINT)indB.size());
+		}
+	}
 
-		devCtx->ClearState();
+	//--------------------------------------------------------------------------
+	void Render(const SceneDescriptor& sceneDesc)
+	{
+		ID3D11DeviceContext* devCtx = context->d3d11->immDevCtx;
 
-		context->rts->Restore();
+		FillBuffer();
 
 		constants->Update(
 			devCtx, 

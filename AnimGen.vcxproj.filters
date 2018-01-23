@@ -21,12 +21,12 @@
     <Filter Include="ThisApp\Rendering\Object">
       <UniqueIdentifier>{81c5585e-bf5d-4ce3-918b-bb8e9618fbdc}</UniqueIdentifier>
     </Filter>
+    <Filter Include="ThisApp\Rendering\FullScreenQuad">
+      <UniqueIdentifier>{f7317785-d480-497f-83c0-6be31c228b90}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="RenderContext.cpp">
-      <Filter>ThisApp\Rendering</Filter>
-    </ClCompile>
-    <ClCompile Include="Render.cpp">
       <Filter>ThisApp\Rendering</Filter>
     </ClCompile>
     <ClCompile Include="SceneDescriptor.cpp">
@@ -47,12 +47,12 @@
     <ClCompile Include="ObjectRenderer.cpp">
       <Filter>ThisApp\Rendering\Object</Filter>
     </ClCompile>
+    <ClCompile Include="RenderProcedure.cpp">
+      <Filter>ThisApp\Rendering</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="RenderContext.h">
-      <Filter>ThisApp\Rendering</Filter>
-    </ClInclude>
-    <ClInclude Include="Render.h">
       <Filter>ThisApp\Rendering</Filter>
     </ClInclude>
     <ClInclude Include="SceneDescriptor.h">
@@ -73,10 +73,16 @@
     <ClInclude Include="ObjectRenderer.h">
       <Filter>ThisApp\Rendering\Object</Filter>
     </ClInclude>
+    <ClInclude Include="RenderProcedure.h">
+      <Filter>ThisApp\Rendering</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Shader\Object.fx">
       <Filter>ThisApp\Rendering\Object</Filter>
+    </FxCompile>
+    <FxCompile Include="Shader\FullScreenQuad.fx">
+      <Filter>ThisApp\Rendering\FullScreenQuad</Filter>
     </FxCompile>
   </ItemGroup>
 </Project>

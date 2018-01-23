@@ -20,6 +20,20 @@ RenderContext::RenderContext(HWND hwnd)
 	ps.reset(IPixelShaderManager::Create(d3d11.get()));
 
 	objRenderer.reset(IObjectRenderer::Create(this));
+
+	{
+		RECT rc;
+		int width, height;
+		GetClientRect(hwnd, &rc);
+		width = rc.right - rc.left;
+		height = rc.bottom - rc.top;
+
+		rts->CreateGenericRenderTarget(
+			"deferred", DXGI_FORMAT_B8G8R8A8_UNORM, width, height);
+	}
+
+	vs->Load(L"Shader/FullScreenQuad.fx");
+	ps->Load(L"Shader/FullScreenQuad.fx");
 }
 
 RenderContext::~RenderContext()

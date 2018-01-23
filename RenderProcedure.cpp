@@ -5,7 +5,7 @@
 #include <DirectXTex.h>
 
 #include "RenderContext.h"
-#include "Render.h"
+#include "RenderProcedure.h"
 
 using namespace std;
 using namespace DirectX;
@@ -17,7 +17,7 @@ IToRender::~IToRender()
 ////////////////////////////////////////////////////////////////////////////////
 
 //------------------------------------------------------------------------------
-DX11Render::DX11Render(HWND hwnd, DX11Device* device, IRenderTargetManager* rts)
+RenderProcedure::RenderProcedure(HWND hwnd, DX11Device* device, IRenderTargetManager* rts)
 	: hwnd(hwnd), device(device), rts(rts)
 {
 	//lastTime = timeGetTime();
@@ -27,7 +27,7 @@ DX11Render::DX11Render(HWND hwnd, DX11Device* device, IRenderTargetManager* rts)
 }
 
 //------------------------------------------------------------------------------
-void DX11Render::Render(RenderTuple* tuples, int count, bool wireframe)
+void RenderProcedure::Render(RenderTuple* tuples, int count, bool wireframe)
 {
 	if (tuples != nullptr && count > 0)
 	{
@@ -36,7 +36,10 @@ void DX11Render::Render(RenderTuple* tuples, int count, bool wireframe)
 }
 
 //------------------------------------------------------------------------------
-void DX11Render::Bake(IToRender* render, const string& srcTexture, const wstring& destTexture)
+void RenderProcedure::Bake(
+	IToRender* render, 
+	const string& srcTexture, 
+	const wstring& destTexture)
 {
 	RenderTuple tuple;
 	tuple.render = render;
@@ -68,38 +71,20 @@ void DX11Render::Bake(IToRender* render, const string& srcTexture, const wstring
 }
 
 //------------------------------------------------------------------------------
-void DX11Render::Begin(BakeFlag::Value bake)
+void RenderProcedure::Begin()
 {
-#if 0
-	switch (bake)
-	{
-	default:
-	case BakeFlag::None:
-		device->SetScreenshotMode(DX11Device::RenderTarget::Backbuffer);
-		break;
-
-	case BakeFlag::Unwrap:
-		device->SetScreenshotMode(DX11Device::RenderTarget::ForUnwrap);
-		break;
-
-	case BakeFlag::WLS:
-		device->SetScreenshotMode(DX11Device::RenderTarget::ForWls);
-		break;
-	}
-#endif
-
 	rts->Restore();
 	rts->Clear();
 }
 
 //------------------------------------------------------------------------------
-void DX11Render::End()
+void RenderProcedure::End()
 {
 	device->g_pSwapChain->Present(0, 0);
 }
 
 //------------------------------------------------------------------------------
-void DX11Render::RenderText(const XMMATRIX& wvp_)
+void RenderProcedure::RenderText(const XMMATRIX& wvp_)
 {
 	if (!textToRender.empty())
 	{

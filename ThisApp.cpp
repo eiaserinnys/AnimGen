@@ -8,7 +8,7 @@
 #include <EulerControl.h>
 
 #include "RenderContext.h"
-#include "Render.h"
+#include "RenderProcedure.h"
 
 using namespace std;
 using namespace DirectX;
@@ -16,7 +16,7 @@ using namespace DirectX;
 class ThisApp : public IThisApp {
 public:
 	unique_ptr<RenderContext> global;
-	unique_ptr<DX11Render> render;
+	unique_ptr<RenderProcedure> render;
 	HWND hWnd;
 
 	unique_ptr<IEulerControl> arcBall;
@@ -28,7 +28,7 @@ public:
 		: hWnd(hWnd)
 	{
 		global.reset(new RenderContext(hWnd));
-		render.reset(new DX11Render(hWnd, global->d3d11.get(), global->rts.get()));
+		render.reset(new RenderProcedure(hWnd, global->d3d11.get(), global->rts.get()));
 
 		arcBall.reset(IEulerControl::Create());
 	}
@@ -55,8 +55,6 @@ public:
 	//--------------------------------------------------------------------------
 	void DoInternal()
 	{
-		render->Begin();
-
 		SceneDescriptor sceneDesc;
 
 		arcBall->Update(XMFLOAT3(0, 1.5f, 0), 10);
@@ -66,16 +64,32 @@ public:
 			arcBall->GetEyePosition(), 
 			arcBall->GetRotationMatrix());
 
-		global->objRenderer->Render(sceneDesc);
+		render->Begin();
 
-		//{
-		//	float dist = 1.0f;
-		//	XMFLOAT3 ofs = XMFLOAT3(0.5, 0, -0.1f);
-		//	sceneDesc.Build(hWnd, com + XMFLOAT3(0.5, 0, -dist) + ofs, com + ofs, rot);
-		//	openPoseRender->Render(render.get(), frames[cur], sceneDesc);
+		{
+			global->d3d11->immDevCtx->ClearState();
+			global->rts->Restore("deferred");
+			global->rts->Clear();
 
-		//	render->RenderText(sceneDesc.worldViewProj);
-		//}
+			global->objRenderer->Render(sceneDesc);
+		}
+
+		{
+			global->d3d11->immDevCtx->ClearState();
+			global->rts->Restore();
+
+			global->vs->Set(L"Shader/FullScreenQuad.fx");
+			global->ps->Set(L"Shader/FullScreenQuad.fx");
+
+			{
+				auto rt = global->rts->GetRenderTarget("deferred");
+				ID3D11ShaderResourceView* view[] = { rt->GetShaderResourceView() };
+				global->d3d11->immDevCtx->PSSetShaderResources(0, 1, view);
+			}
+
+			global->d3d11->immDevCtx->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+			global->d3d11->immDevCtx->Draw(3, 0);
+		}
 
 		render->End();
 	}
