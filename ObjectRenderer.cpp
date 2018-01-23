@@ -123,6 +123,18 @@ public:
 
 		FillBuffer();
 
+		context->d3d11->immDevCtx->ClearState();
+		context->rts->Restore("deferred");
+
+		auto rt = context->rts->GetCurrent();
+		float color[] = { 0.5, 0.75, 1, 1.0f };
+		float depth[] = { 50, 0, 0, 0 };
+		rt->ClearRenderTarget(context->d3d11->immDevCtx, 0, color);
+		rt->ClearRenderTarget(context->d3d11->immDevCtx, 1, color);
+		rt->ClearRenderTarget(context->d3d11->immDevCtx, 2, color);
+		rt->ClearRenderTarget(context->d3d11->immDevCtx, 3, depth);
+		rt->ClearDepthStencil(context->d3d11->immDevCtx, 1, 0);
+
 		constants->Update(
 			devCtx, 
 			sceneDesc.world, 

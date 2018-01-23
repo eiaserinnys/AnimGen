@@ -24,6 +24,9 @@
     <Filter Include="ThisApp\Rendering\FullScreenQuad">
       <UniqueIdentifier>{f7317785-d480-497f-83c0-6be31c228b90}</UniqueIdentifier>
     </Filter>
+    <Filter Include="ThisApp\Rendering\Deferred">
+      <UniqueIdentifier>{c0075188-2759-405f-adde-dee72c6ff609}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="RenderContext.cpp">
@@ -49,6 +52,9 @@
     </ClCompile>
     <ClCompile Include="RenderProcedure.cpp">
       <Filter>ThisApp\Rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="DeferredRendrerer.cpp">
+      <Filter>ThisApp\Rendering\Deferred</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -76,13 +82,16 @@
     <ClInclude Include="RenderProcedure.h">
       <Filter>ThisApp\Rendering</Filter>
     </ClInclude>
+    <ClInclude Include="DeferredRenderer.h">
+      <Filter>ThisApp\Rendering\Deferred</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Shader\Object.fx">
       <Filter>ThisApp\Rendering\Object</Filter>
     </FxCompile>
-    <FxCompile Include="Shader\FullScreenQuad.fx">
-      <Filter>ThisApp\Rendering\FullScreenQuad</Filter>
+    <FxCompile Include="Shader\Deferred.fx">
+      <Filter>ThisApp\Rendering\Deferred</Filter>
     </FxCompile>
   </ItemGroup>
 </Project>

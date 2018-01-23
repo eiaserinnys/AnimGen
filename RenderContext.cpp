@@ -1,6 +1,8 @@
 #include "pch.h"
 #include "RenderContext.h"
 
+#include "Utility.h"
+
 using namespace std;
 using namespace DirectX;
 
@@ -19,8 +21,6 @@ RenderContext::RenderContext(HWND hwnd)
 	vs.reset(IVertexShaderManager::Create(d3d11.get()));
 	ps.reset(IPixelShaderManager::Create(d3d11.get()));
 
-	objRenderer.reset(IObjectRenderer::Create(this));
-
 	{
 		RECT rc;
 		int width, height;
@@ -28,12 +28,24 @@ RenderContext::RenderContext(HWND hwnd)
 		width = rc.right - rc.left;
 		height = rc.bottom - rc.top;
 
+		DXGI_FORMAT formats[] =
+		{
+			DXGI_FORMAT_B8G8R8A8_UNORM,	// ÄÃ·¯
+			DXGI_FORMAT_B8G8R8A8_UNORM,	// ³ë¸Ö
+			DXGI_FORMAT_B8G8R8A8_UNORM,	// ºäº¤ÅÍ
+			DXGI_FORMAT_R32_FLOAT,		// µª½º
+		};
+
 		rts->CreateGenericRenderTarget(
-			"deferred", DXGI_FORMAT_B8G8R8A8_UNORM, width, height);
+			"deferred",
+			formats,
+			COUNT_OF(formats),
+			width,
+			height);
 	}
 
-	vs->Load(L"Shader/FullScreenQuad.fx");
-	ps->Load(L"Shader/FullScreenQuad.fx");
+	objRenderer.reset(IObjectRenderer::Create(this));
+	deferredRenderer.reset(IDeferredRenderer::Create(this));
 }
 
 RenderContext::~RenderContext()

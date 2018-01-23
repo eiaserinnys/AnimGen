@@ -1,10 +1,7 @@
 #pragma once
 
-#include <DX11Device.h>
-
 #include "SceneDescriptor.h"
 
-class DX11Render;
 struct RenderContext;
 
 class IObjectRenderer {

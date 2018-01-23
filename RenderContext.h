@@ -7,6 +7,7 @@
 #include <ShaderManager.h>
 
 #include "ObjectRenderer.h"
+#include "DeferredRenderer.h"
 
 struct RenderContext
 {
@@ -22,5 +23,7 @@ struct RenderContext
 	std::unique_ptr<IRenderTargetManager> rts;
 	std::unique_ptr<IVertexShaderManager> vs;
 	std::unique_ptr<IPixelShaderManager> ps;
+	
 	std::unique_ptr<IObjectRenderer> objRenderer;
+	std::unique_ptr<IDeferredRenderer> deferredRenderer;
 };

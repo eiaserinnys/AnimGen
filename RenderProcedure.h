@@ -101,7 +101,6 @@ public:
 	RenderProcedure(HWND hwnd, DX11Device* device, IRenderTargetManager* rts);
 
 	void Begin();
-	void Render(RenderTuple* tuple, int tupleCount, bool wireframe);
 	void End();
 
 	void Bake(IToRender* render, const std::string& srcTexture, const std::wstring& bakeFileName);
@@ -111,8 +110,6 @@ public:
 
 	void RenderText(const TextToRender& text) { textToRender.push_back(text); }
 	void RenderText(const DirectX::XMMATRIX& wvp);
-
-	void RenderFullScreen();
 
 private:
 	DX11Device* device = nullptr;

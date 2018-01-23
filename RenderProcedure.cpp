@@ -26,15 +26,7 @@ RenderProcedure::RenderProcedure(HWND hwnd, DX11Device* device, IRenderTargetMan
 	font.reset(new SpriteFont(device->g_pd3dDevice, L"Font/font12.spritefont"));
 }
 
-//------------------------------------------------------------------------------
-void RenderProcedure::Render(RenderTuple* tuples, int count, bool wireframe)
-{
-	if (tuples != nullptr && count > 0)
-	{
-		//RenderInternal(tuples, count, BakeFlag::None, wireframe);
-	}
-}
-
+#if 0
 //------------------------------------------------------------------------------
 void RenderProcedure::Bake(
 	IToRender* render, 
@@ -49,7 +41,7 @@ void RenderProcedure::Bake(
 
 	auto flag = BakeFlag::Unwrap;
 
-	Begin(flag);
+	Begin();
 
 	//RenderInternal(&tuple, 1, flag, false);
 
@@ -60,7 +52,7 @@ void RenderProcedure::Bake(
 		HRESULT hr = DirectX::CaptureTexture(
 			device->g_pd3dDevice,
 			device->immDevCtx,
-			rts->GetCurrent()->GetTexture(),
+			rts->GetCurrent()->GetTexture(0),
 			img);
 
 		if (SUCCEEDED(hr))
@@ -69,6 +61,7 @@ void RenderProcedure::Bake(
 		}
 	}
 }
+#endif
 
 //------------------------------------------------------------------------------
 void RenderProcedure::Begin()

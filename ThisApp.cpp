@@ -66,29 +66,13 @@ public:
 
 		render->Begin();
 
-		{
-			global->d3d11->immDevCtx->ClearState();
-			global->rts->Restore("deferred");
-			global->rts->Clear();
-
-			global->objRenderer->Render(sceneDesc);
-		}
+		global->objRenderer->Render(sceneDesc);
 
 		{
 			global->d3d11->immDevCtx->ClearState();
 			global->rts->Restore();
 
-			global->vs->Set(L"Shader/FullScreenQuad.fx");
-			global->ps->Set(L"Shader/FullScreenQuad.fx");
-
-			{
-				auto rt = global->rts->GetRenderTarget("deferred");
-				ID3D11ShaderResourceView* view[] = { rt->GetShaderResourceView() };
-				global->d3d11->immDevCtx->PSSetShaderResources(0, 1, view);
-			}
-
-			global->d3d11->immDevCtx->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-			global->d3d11->immDevCtx->Draw(3, 0);
+			global->deferredRenderer->Render(); 
 		}
 
 		render->End();

@@ -129,6 +129,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="DeferredRendrerer.cpp" />
     <ClCompile Include="Mesh.cpp" />
     <ClCompile Include="ObjectRenderer.cpp" />
     <ClCompile Include="pch.cpp">
@@ -144,6 +145,7 @@
     <ClCompile Include="WinMain.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="DeferredRenderer.h" />
     <ClInclude Include="Mesh.h" />
     <ClInclude Include="MeshT.h" />
     <ClInclude Include="ObjectRenderer.h" />
@@ -165,7 +167,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <FxCompile Include="Shader\FullScreenQuad.fx">
+    <FxCompile Include="Shader\Deferred.fx">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
