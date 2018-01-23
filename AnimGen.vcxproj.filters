@@ -21,9 +21,6 @@
     <Filter Include="ThisApp\Rendering\Object">
       <UniqueIdentifier>{81c5585e-bf5d-4ce3-918b-bb8e9618fbdc}</UniqueIdentifier>
     </Filter>
-    <Filter Include="ThisApp\Rendering\FullScreenQuad">
-      <UniqueIdentifier>{f7317785-d480-497f-83c0-6be31c228b90}</UniqueIdentifier>
-    </Filter>
     <Filter Include="ThisApp\Rendering\Deferred">
       <UniqueIdentifier>{c0075188-2759-405f-adde-dee72c6ff609}</UniqueIdentifier>
     </Filter>
@@ -92,6 +89,9 @@
     </FxCompile>
     <FxCompile Include="Shader\Deferred.fx">
       <Filter>ThisApp\Rendering\Deferred</Filter>
+    </FxCompile>
+    <FxCompile Include="Shader\Shadow.fx">
+      <Filter>ThisApp\Rendering\Object</Filter>
     </FxCompile>
   </ItemGroup>
 </Project>

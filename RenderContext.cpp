@@ -18,8 +18,6 @@ RenderContext::RenderContext(HWND hwnd)
 	}
 
 	rts.reset(IRenderTargetManager::Create(d3d11->g_pd3dDevice, d3d11->g_pSwapChain, d3d11->immDevCtx));
-	vs.reset(IVertexShaderManager::Create(d3d11.get()));
-	ps.reset(IPixelShaderManager::Create(d3d11.get()));
 
 	{
 		RECT rc;
@@ -44,6 +42,26 @@ RenderContext::RenderContext(HWND hwnd)
 			height);
 	}
 
+	sd.reset(IShaderDefineManager::Create(d3d11.get()));
+
+	{
+		D3D11_INPUT_ELEMENT_DESC layout[] =
+		{
+			{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+			{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 1, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+			{ "COLOR", 0, DXGI_FORMAT_R8G8B8A8_UNORM, 2, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 }
+		};
+		sd->Load("ObjectBody", L"Shader/Object.fx", layout, COUNT_OF(layout));
+	}
+
+	{
+		D3D11_INPUT_ELEMENT_DESC layout[] =
+		{
+			{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		};
+		sd->Load("ObjectShadow", L"Shader/Shadow.fx", layout, COUNT_OF(layout));
+	}
+
 	objRenderer.reset(IObjectRenderer::Create(this));
 	deferredRenderer.reset(IDeferredRenderer::Create(this));
 }
@@ -52,8 +70,7 @@ RenderContext::~RenderContext()
 {
 	if (d3d11->immDevCtx) { d3d11->immDevCtx->ClearState(); }
 
-	vs.reset(nullptr);
-	ps.reset(nullptr);
+	sd.reset(nullptr);
 
 	d3d11.reset(NULL);
 }

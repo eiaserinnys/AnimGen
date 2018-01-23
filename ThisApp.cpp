@@ -66,6 +66,8 @@ public:
 
 		render->Begin();
 
+		global->objRenderer->FillBuffer();
+
 		global->objRenderer->Render(sceneDesc);
 
 		{

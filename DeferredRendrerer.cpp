@@ -3,7 +3,7 @@
 
 #include <DX11ConstantBufferT.h>
 #include <DX11StateBlocks.h>
-
+#include <ShaderManager.h>
 #include <Utility.h>
 
 #include "RenderContext.h"
@@ -66,8 +66,7 @@ public:
 		ID3D11Device* d3dDev = context->d3d11->g_pd3dDevice;
 		ID3D11DeviceContext* devCtx = context->d3d11->immDevCtx;
 
-		context->vs->Load(fxFileName);
-		context->ps->Load(fxFileName);
+		context->sd->Load("deferred", fxFileName, nullptr, 0);
 
 		constants.reset(new DeferredConstants(d3dDev, devCtx));
 
@@ -83,8 +82,7 @@ public:
 
 		blendState->Apply(devCtx);
 
-		context->vs->Set(fxFileName);
-		context->ps->Set(fxFileName);
+		context->sd->Set("deferred");
 
 		{
 			auto rt = context->rts->GetRenderTarget("deferred");

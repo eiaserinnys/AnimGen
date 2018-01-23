@@ -28,20 +28,6 @@ public:
 		ID3D11Device* d3dDev = context->d3d11->g_pd3dDevice;
 		ID3D11DeviceContext* devCtx = context->d3d11->immDevCtx;
 
-		context->vs->Load(fxFileName);
-		context->ps->Load(fxFileName);
-
-		D3D11_INPUT_ELEMENT_DESC layout[] =
-		{
-			{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-			{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 1, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-			{ "COLOR", 0, DXGI_FORMAT_R8G8B8A8_UNORM, 2, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 }
-		};
-		UINT numElements = ARRAYSIZE(layout);
-
-		vertexLayout.reset(IDX11InputLayout::Create(
-			d3dDev, layout, numElements, context->vs->Find(fxFileName)->pVSBlob));
-
 		int vbSize = 10000;
 		int ibSize = 50000;
 
@@ -121,8 +107,6 @@ public:
 	{
 		ID3D11DeviceContext* devCtx = context->d3d11->immDevCtx;
 
-		FillBuffer();
-
 		context->d3d11->immDevCtx->ClearState();
 		context->rts->Restore("deferred");
 
@@ -146,11 +130,8 @@ public:
 		depthState->Apply(devCtx);
 		blendState->Apply(devCtx);
 
-		// 버텍스 입력 레이아웃
-		vertexLayout->Apply(devCtx);
-
-		context->vs->Set(fxFileName);
-		context->ps->Set(fxFileName);
+		// 쉐이더 설정
+		context->sd->Set("ObjectBody");
 
 		pos->ApplyVB(devCtx, 0, 0);
 		nor->ApplyVB(devCtx, 1, 0);
@@ -164,8 +145,6 @@ public:
 
 	//--------------------------------------------------------------------------
 	RenderContext* context;
-
-	const wchar_t* fxFileName = L"Shader/Object.fx";
 
 	vector<XMFLOAT3> posB;
 	vector<XMFLOAT3> norB;
@@ -185,8 +164,6 @@ public:
 
 	unique_ptr<IDX11RasterizerState> rasterStateWire;
 	unique_ptr<IDX11DepthStencilState> depthStateWire;
-
-	unique_ptr<IDX11InputLayout> vertexLayout;
 
 	unique_ptr<IMesh> floor;
 	unique_ptr<IMesh> box;
