@@ -35,7 +35,7 @@ PS_INPUT VS(VS_INPUT input)
 	PS_INPUT output = (PS_INPUT)0;
 	output.Pos = mul(float4(input.Pos.xyz, 1), WorldViewProjection);
 	output.Pos2 = output.Pos;
-	output.Nor = mul(float4(input.Nor.xyz, 0), invWorldViewT);
+	output.Nor = input.Nor;
 	output.Col = input.Col;
 	return output;
 }

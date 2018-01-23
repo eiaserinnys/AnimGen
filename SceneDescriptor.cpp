@@ -14,7 +14,7 @@ void SceneDescriptor::Build(
 	const XMFLOAT3& target_,
 	const XMMATRIX& view_)
 {
-	lightDir = Normalize(XMFLOAT3(1, -3, 2));
+	lightDir = Normalize(XMFLOAT3(1, -2, 2));
 
 	world = XMMatrixIdentity();
 
@@ -56,7 +56,7 @@ pair<XMMATRIX, XMFLOAT4>
 		XMMatrixOrthographicRH(
 			10.0f,
 			10.0f,
-			0.1f, 30.0f));
+			1.0f, 30.0f));
 
 	float lightDist = 10.0f;
 

@@ -22,6 +22,7 @@ struct DeferredConstantsBody
 	XMMATRIX InvWorldViewProj;
 	XMMATRIX LightViewProj;
 	XMFLOAT4 ShadowExtent;
+	XMFLOAT4 EyePosition;
 };
 
 //------------------------------------------------------------------------------
@@ -43,10 +44,9 @@ struct DeferredConstants
 	{
 		XMMATRIX wvT = XMMatrixTranspose(sceneDesc.invWorldViewT);
 
-		auto dirT = XMVector3TransformNormal(XMLoadFloat3(&sceneDesc.lightDir), wvT);
-		cbChangesEveryFrameMem.MainLightDir.x = dirT.m128_f32[0];
-		cbChangesEveryFrameMem.MainLightDir.y = dirT.m128_f32[1];
-		cbChangesEveryFrameMem.MainLightDir.z = dirT.m128_f32[2];
+		cbChangesEveryFrameMem.MainLightDir.x = sceneDesc.lightDir.x;
+		cbChangesEveryFrameMem.MainLightDir.y = sceneDesc.lightDir.y;
+		cbChangesEveryFrameMem.MainLightDir.z = sceneDesc.lightDir.z;
 		cbChangesEveryFrameMem.MainLightDir.w = 0;
 
 		cbChangesEveryFrameMem.RenderTargetExtent.x = width;
@@ -63,6 +63,8 @@ struct DeferredConstants
 		cbChangesEveryFrameMem.ShadowExtent.y = 2048;
 		cbChangesEveryFrameMem.ShadowExtent.z = 0;
 		cbChangesEveryFrameMem.ShadowExtent.w = 0;
+
+		cbChangesEveryFrameMem.EyePosition = sceneDesc.eye;
 
 		UpdateInternal(devCtx);
 	}

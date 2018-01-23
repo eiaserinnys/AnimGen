@@ -90,7 +90,7 @@ RenderContext::RenderContext(HWND hwnd)
 	{
 		objBuffer.reset(new ObjectBuffer(d3d11->g_pd3dDevice));
 		floor.reset(IFloorMesh::Create());
-		box.reset(IBoxMesh::Create(XMFLOAT3(0, 1.0f, 0), XMFLOAT3(0.5f, 1.0f, 0.4f), 0xff0000ff));
+		box.reset(IBoxMesh::Create(XMFLOAT3(0, 1.0f, 0), XMFLOAT3(0.5f, 1.0f, 0.4f), 0xff808080));
 	}
 }
 

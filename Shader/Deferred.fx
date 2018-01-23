@@ -6,6 +6,7 @@ cbuffer Constants : register(b0)
 	float4x4 InvWorldViewProj;
 	float4x4 LightViewProj;
 	float4 ShadowExtent;
+	float4 EyePosition;
 };
 
 Texture2D		txAlbedo : register(t0);
@@ -37,29 +38,28 @@ VS_OUTPUT VS(uint id : SV_VertexID)
 	return Output;
 }
 
-float4 PS(VS_OUTPUT input) : SV_Target
+//------------------------------------------------------------------------------
+float4 GetOriginalPosition(float3 uvw)
 {
-	float4 albedo = txAlbedo.Sample(smAlbedo, input.Tex);
-	float4 normal = txNormal.Sample(smNormal, input.Tex);
-	float depth = txDepth.Sample(smDepth, input.Tex).x;
-
-	// 원래 월드 공간으로 역 트랜스폼
-	float z = -depth;
+	float z = -uvw.z;
 	float zn = ViewportDesc.z;
 	float zf = ViewportDesc.w;
 	float zR = zf / (zn - zf);
 
 	float4 ndc = float4(
-		(input.Tex.x - 0.5f) * 2,
-		(0.5f - input.Tex.y) * 2,
+		(uvw.x - 0.5f) * 2,
+		(0.5f - uvw.y) * 2,
 		zR * (zn + z) / (-z),
 		1);
 	ndc = ndc * (-z);
 
-	float4 orgPos = mul(ndc, InvWorldViewProj);
+	return mul(ndc, InvWorldViewProj);
+}
 
-	// 라이트 공간에서 텍스처 좌표를 계산
-	float4 lightNdc = mul(float4(orgPos.xyz, 1), LightViewProj);
+//------------------------------------------------------------------------------
+float GetShadow(float3 orgPos)
+{
+	float4 lightNdc = mul(float4(orgPos, 1), LightViewProj);
 	float lightSpaceDepth = lightNdc.z / lightNdc.w;
 
 	lightNdc = lightNdc / lightNdc.w;
@@ -70,30 +70,78 @@ float4 PS(VS_OUTPUT input) : SV_Target
 	float shadow = shadowDepth + 0.0001 < lightSpaceDepth;
 	shadow = 1 - shadow;
 
-	// 외곽선 계산
+	return shadow;
+}
+
+//------------------------------------------------------------------------------
+float GetOutline(float2 tex, float depth)
+{
 	float2 txOfs = float2(1 / ViewportDesc.x, 1 / ViewportDesc.y);
 
 	float4 depthN = float4(
-		txDepth.Sample(smDepth, input.Tex + float2(-txOfs.x, 0)).x,
-		txDepth.Sample(smDepth, input.Tex + float2(+txOfs.x, 0)).x,
-		txDepth.Sample(smDepth, input.Tex + float2(0, -txOfs.y)).x,
-		txDepth.Sample(smDepth, input.Tex + float2(0, +txOfs.y)).x);
+		txDepth.Sample(smDepth, tex + float2(-txOfs.x, 0)).x,
+		txDepth.Sample(smDepth, tex + float2(+txOfs.x, 0)).x,
+		txDepth.Sample(smDepth, tex + float2(0, -txOfs.y)).x,
+		txDepth.Sample(smDepth, tex + float2(0, +txOfs.y)).x);
 
-	float o = saturate(
+	return saturate(
 		depth - depthN.x +
 		depth - depthN.y +
 		depth - depthN.z +
 		depth - depthN.w);
+}
+
+//------------------------------------------------------------------------------
+float4 PS(VS_OUTPUT input) : SV_Target
+{
+	float4 albedo = txAlbedo.Sample(smAlbedo, input.Tex);
+	float4 normal = txNormal.Sample(smNormal, input.Tex);
+	float depth = txDepth.Sample(smDepth, input.Tex).x;
+
+	// 원래 월드 공간으로 역 트랜스폼
+	float4 orgPos = GetOriginalPosition(float3(input.Tex.xy, depth));
+
+	// 라이트 공간에서 텍스처 좌표를 계산
+	float shadow = GetShadow(orgPos.xyz);
+
+	// 외곽선 계산
+	float o = GetOutline(input.Tex, depth);
 
 	// 라이팅
-	float3 lightDir = MainLightDir.xyz;
-	float3 norV = normalize(normal.xyz * 2 - 1);
-	float l = saturate(dot(-lightDir, norV)) * shadow;
+	float3 vL = -MainLightDir.xyz;
+	float3 vE = normalize(EyePosition - orgPos.xyz);
+	float3 vN = normalize(normal.xyz * 2 - 1);
+	float3 vH = normalize(vL + vE);
 
-	float4 final = float4(albedo.xyz * l + float3(o, o, o), albedo.w + o);
-	//float4 final = float4(float3(l, l, l) + float3(o, o, o), albedo.w);
-	//float4 final = float4(norV.xyz + float3(o, o, o), albedo.w);
+	float l = saturate(dot(vL, vN)) * shadow;
+	float s = saturate(pow(max(dot(vN, vH), 0), 100));
 
+	float3 skylight = float3(33.0/255, 98.0/255, 202.0/255) * 0.75;
+
+	float3 lit = l * (1 - skylight) * (1 / vL.y);
+
+	float3 ambient = skylight;
+
+	float mag = 1 / sqrt(3) * 4;
+	float floorRef = 0.75;
+	lit.xyz = lit.xyz + saturate(dot(vN, -normalize(float3(+1, -1, +1)))) * ambient / mag;
+	lit.xyz = lit.xyz + saturate(dot(vN, -normalize(float3(+1, -1, -1)))) * ambient / mag;
+	lit.xyz = lit.xyz + saturate(dot(vN, -normalize(float3(-1, -1, +1)))) * ambient / mag;
+	lit.xyz = lit.xyz + saturate(dot(vN, -normalize(float3(-1, -1, -1)))) * ambient / mag;
+	lit.xyz = lit.xyz + saturate(dot(vN, -normalize(float3(+1, +1, +1)))) * ambient / mag * floorRef;
+	lit.xyz = lit.xyz + saturate(dot(vN, -normalize(float3(+1, +1, -1)))) * ambient / mag * floorRef;
+	lit.xyz = lit.xyz + saturate(dot(vN, -normalize(float3(-1, +1, +1)))) * ambient / mag * floorRef;
+	lit.xyz = lit.xyz + saturate(dot(vN, -normalize(float3(-1, +1, -1)))) * ambient / mag * floorRef;
+
+	float4 final;
+	final = float4(
+		albedo.xyz * lit + 
+		s + 
+		float3(o, o, o), 
+		albedo.w + o);
+
+	//final = float4(float3(l, l, l) + float3(o, o, o), albedo.w);
+	//final = float4(normal.xyz + float3(o, o, o), albedo.w);
 	//final = float4(shadow, shadow, shadow, 1);
 	//final = float4(lightSpaceDepth, 0, shadowDepth, 1);
 	//final = float4(lightNdc.z, 0, 0, 1);
