@@ -57,27 +57,33 @@ public:
 	{
 		SceneDescriptor sceneDesc;
 
-		arcBall->Update(XMFLOAT3(0, 1.5f, 0), 10);
+		XMFLOAT3 target = XMFLOAT3(0, 1.5f, 0);
+		arcBall->Update(target, 10);
 
 		sceneDesc.Build(
 			hWnd, 
 			arcBall->GetEyePosition(), 
+			target, 
 			arcBall->GetRotationMatrix());
 
-		render->Begin();
-
-		global->objRenderer->FillBuffer();
-
-		global->objRenderer->Render(sceneDesc);
+		global->FillBuffer();
 
 		{
-			global->d3d11->immDevCtx->ClearState();
-			global->rts->Restore();
+			render->Begin();
 
-			global->deferredRenderer->Render(sceneDesc); 
+			global->objRenderer->RenderShadow(sceneDesc, global->objBuffer.get());
+
+			global->objRenderer->Render(sceneDesc, global->objBuffer.get());
+
+			{
+				global->d3d11->immDevCtx->ClearState();
+				global->rts->Restore();
+
+				global->deferredRenderer->Render(sceneDesc);
+			}
+
+			render->End();
 		}
-
-		render->End();
 	}
 
 	//--------------------------------------------------------------------------

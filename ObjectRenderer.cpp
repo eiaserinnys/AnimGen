@@ -15,6 +15,8 @@
 #include "SceneDescriptor.h"
 #include "Mesh.h"
 
+#include "ObjectBuffer.h"
+
 using namespace std;
 using namespace DirectX;
 
@@ -28,82 +30,18 @@ public:
 		ID3D11Device* d3dDev = context->d3d11->g_pd3dDevice;
 		ID3D11DeviceContext* devCtx = context->d3d11->immDevCtx;
 
-		int vbSize = 10000;
-		int ibSize = 50000;
-
-		pos.reset(IDX11Buffer::Create_DynamicVB(
-			d3dDev, sizeof(XMFLOAT3), vbSize * sizeof(XMFLOAT3)));
-
-		nor.reset(IDX11Buffer::Create_DynamicVB(
-			d3dDev, sizeof(XMFLOAT3), vbSize * sizeof(XMFLOAT3)));
-
-		col.reset(IDX11Buffer::Create_DynamicVB(
-			d3dDev, sizeof(DWORD), vbSize * sizeof(DWORD)));
-
-		ind.reset(IDX11Buffer::Create_DynamicIB(
-			d3dDev, sizeof(UINT16), ibSize * sizeof(UINT16)));
-
 		rasterState.reset(IDX11RasterizerState::Create_Default(d3dDev));
 		depthState.reset(IDX11DepthStencilState::Create_Default(d3dDev));
 		depthStateWire.reset(IDX11DepthStencilState::Create_Always(d3dDev));
 		blendState.reset(IDX11BlendState::Create_AlphaBlend(d3dDev));
 
 		constants.reset(new SimpleConstant(d3dDev, devCtx));
-
-		floor.reset(IFloorMesh::Create());
-		box.reset(IBoxMesh::Create(XMFLOAT3(0, 1.0f, 0), XMFLOAT3(0.5f, 1.0f, 0.4f), 0xff0000ff));
 	}
 
 	//--------------------------------------------------------------------------
-	void FillBuffer(IMesh* mesh)
-	{
-		auto ind = mesh->Indices();
-
-		indB.reserve(indB.size() + ind.second);
-
-		for (UINT i = 0; i < ind.second; ++i)
-		{
-			indB.push_back((UINT16)(ind.first[i] + posB.size()));
-		}
-
-		posB.insert(
-			posB.end(), 
-			mesh->Vertices().first,
-			mesh->Vertices().first + mesh->Vertices().second);
-
-		norB.insert(
-			norB.end(),
-			mesh->Normals().first,
-			mesh->Normals().first + mesh->Normals().second);
-
-		clrB.insert(
-			clrB.end(),
-			mesh->Colors().first,
-			mesh->Colors().first + mesh->Colors().second);
-	}
-
-	//--------------------------------------------------------------------------
-	void FillBuffer()
-	{
-		posB.clear();
-		norB.clear();
-		clrB.clear();
-		indB.clear();
-
-		FillBuffer(floor.get());
-		FillBuffer(box.get());
-
-		{
-			ID3D11DeviceContext* devCtx = context->d3d11->immDevCtx;
-			pos->UpdateDiscard(devCtx, &posB[0], (UINT)posB.size());
-			nor->UpdateDiscard(devCtx, &norB[0], (UINT)norB.size());
-			col->UpdateDiscard(devCtx, &clrB[0], (UINT)clrB.size());
-			ind->UpdateDiscard(devCtx, &indB[0], (UINT)indB.size());
-		}
-	}
-
-	//--------------------------------------------------------------------------
-	void Render(const SceneDescriptor& sceneDesc)
+	void Render(
+		const SceneDescriptor& sceneDesc,
+		ObjectBuffer* objBuffer)
 	{
 		ID3D11DeviceContext* devCtx = context->d3d11->immDevCtx;
 
@@ -133,28 +71,43 @@ public:
 		// 쉐이더 설정
 		context->sd->Set("ObjectBody");
 
-		pos->ApplyVB(devCtx, 0, 0);
-		nor->ApplyVB(devCtx, 1, 0);
-		col->ApplyVB(devCtx, 2, 0);
-		ind->ApplyIB(devCtx, 0);
+		objBuffer->Draw(context->d3d11->immDevCtx);
+	}
 
-		devCtx->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	//--------------------------------------------------------------------------
+	void RenderShadow(
+		const SceneDescriptor& sceneDesc,
+		ObjectBuffer* objBuffer)
+	{
+		ID3D11DeviceContext* devCtx = context->d3d11->immDevCtx;
 
-		devCtx->DrawIndexed((UINT) indB.size(), 0, 0);
+		context->d3d11->immDevCtx->ClearState();
+		context->rts->Restore("shadow");
+
+		auto rt = context->rts->GetCurrent();
+		rt->ClearDepthStencil(context->d3d11->immDevCtx, 1, 0);
+
+		pair<XMMATRIX, XMFLOAT4> lightTx = sceneDesc.GetLightTransform();
+
+		constants->Update(
+			devCtx, 
+			lightTx.first, 
+			XMMatrixIdentity(), 
+			lightTx.second);
+
+		// 상수들
+		rasterState->Apply(devCtx);
+		depthState->Apply(devCtx);
+		blendState->Apply(devCtx);
+
+		// 쉐이더 설정
+		context->sd->Set("ObjectShadow");
+
+		objBuffer->Draw(context->d3d11->immDevCtx);
 	}
 
 	//--------------------------------------------------------------------------
 	RenderContext* context;
-
-	vector<XMFLOAT3> posB;
-	vector<XMFLOAT3> norB;
-	vector<DWORD> clrB;
-	vector<UINT16> indB;
-
-	unique_ptr<IDX11Buffer> pos;
-	unique_ptr<IDX11Buffer> nor;
-	unique_ptr<IDX11Buffer> col;
-	unique_ptr<IDX11Buffer> ind;
 
 	unique_ptr<SimpleConstant> constants;
 
@@ -164,9 +117,6 @@ public:
 
 	unique_ptr<IDX11RasterizerState> rasterStateWire;
 	unique_ptr<IDX11DepthStencilState> depthStateWire;
-
-	unique_ptr<IMesh> floor;
-	unique_ptr<IMesh> box;
 };
 
 IObjectRenderer::~IObjectRenderer()

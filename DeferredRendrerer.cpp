@@ -19,6 +19,9 @@ struct DeferredConstantsBody
 {
 	XMFLOAT4 MainLightDir;
 	XMFLOAT4 RenderTargetExtent;
+	XMMATRIX InvWorldViewProj;
+	XMMATRIX LightViewProj;
+	XMFLOAT4 ShadowExtent;
 };
 
 //------------------------------------------------------------------------------
@@ -40,8 +43,7 @@ struct DeferredConstants
 	{
 		XMMATRIX wvT = XMMatrixTranspose(sceneDesc.invWorldViewT);
 
-		XMFLOAT3 dir = Normalize(XMFLOAT3(1, -3, 2));
-		auto dirT = XMVector3TransformNormal(XMLoadFloat3(&dir), wvT);
+		auto dirT = XMVector3TransformNormal(XMLoadFloat3(&sceneDesc.lightDir), wvT);
 		cbChangesEveryFrameMem.MainLightDir.x = dirT.m128_f32[0];
 		cbChangesEveryFrameMem.MainLightDir.y = dirT.m128_f32[1];
 		cbChangesEveryFrameMem.MainLightDir.z = dirT.m128_f32[2];
@@ -49,8 +51,18 @@ struct DeferredConstants
 
 		cbChangesEveryFrameMem.RenderTargetExtent.x = width;
 		cbChangesEveryFrameMem.RenderTargetExtent.y = height;
-		cbChangesEveryFrameMem.RenderTargetExtent.z = 0;
-		cbChangesEveryFrameMem.RenderTargetExtent.w = 0;
+		cbChangesEveryFrameMem.RenderTargetExtent.z = 0.1f;		// zn
+		cbChangesEveryFrameMem.RenderTargetExtent.w = 20.f;		// zf
+
+		cbChangesEveryFrameMem.InvWorldViewProj = XMMatrixInverse(nullptr, sceneDesc.worldViewProj);
+
+		auto lightTx = sceneDesc.GetLightTransform();
+		cbChangesEveryFrameMem.LightViewProj = lightTx.first;
+		
+		cbChangesEveryFrameMem.ShadowExtent.x = 2048;
+		cbChangesEveryFrameMem.ShadowExtent.y = 2048;
+		cbChangesEveryFrameMem.ShadowExtent.z = 0;
+		cbChangesEveryFrameMem.ShadowExtent.w = 0;
 
 		UpdateInternal(devCtx);
 	}
@@ -94,6 +106,14 @@ public:
 				rt->GetShaderResourceView(3)
 			};
 			context->d3d11->immDevCtx->PSSetShaderResources(0, 4, view);
+		}
+
+		{
+			ID3D11ShaderResourceView* view[] =
+			{
+				context->rts->GetRenderTarget("shadow")->GetShaderResourceView(0), 
+			};
+			context->d3d11->immDevCtx->PSSetShaderResources(4, 1, view);
 		}
 
 		context->d3d11->immDevCtx->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);

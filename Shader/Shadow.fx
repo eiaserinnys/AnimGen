@@ -13,7 +13,6 @@ struct VS_INPUT
 struct PS_INPUT
 {
 	float4 Pos	: SV_POSITION;
-	float W		: TEXCOORD0;
 };
 
 //--------------------------------------------------------------------------------------
@@ -21,13 +20,12 @@ PS_INPUT VS(VS_INPUT input)
 {
 	PS_INPUT output = (PS_INPUT)0;
 	output.Pos = mul(float4(input.Pos.xyz, 1), WorldViewProjection);
-	output.W = output.Pos.w;
 	return output;
 }
 
 //--------------------------------------------------------------------------------------
-float PS(PS_INPUT input) : SV_Target
+float4 PS(PS_INPUT input) : SV_Target
 {
-	return input.W;
+	return float4(1, 1, 1, 1);
 }
 

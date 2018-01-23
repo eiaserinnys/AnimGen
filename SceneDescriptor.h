@@ -4,14 +4,21 @@
 
 struct SceneDescriptor
 {
-	DirectX::XMFLOAT4 eye;
-	DirectX::XMMATRIX world, view, proj;
+	DirectX::XMFLOAT3 lightDir;
+
+	DirectX::XMFLOAT4 eye, target;
 	
+	DirectX::XMMATRIX world, view, proj;
 	DirectX::XMMATRIX worldViewProj;
 	DirectX::XMMATRIX invWorldViewT;
 
 	void Build(
 		HWND hwnd,
 		const DirectX::XMFLOAT3& eye,
-		const DirectX::XMMATRIX& rotation);
+		const DirectX::XMFLOAT3& target,
+		const DirectX::XMMATRIX& view);
+
+	std::pair<
+		DirectX::XMMATRIX,
+		DirectX::XMFLOAT4> GetLightTransform() const;
 };

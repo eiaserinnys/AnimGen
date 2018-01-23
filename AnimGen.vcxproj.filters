@@ -8,29 +8,32 @@
     <Filter Include="ThisApp">
       <UniqueIdentifier>{ab395c5d-0537-4313-a07e-da7866d2d5b0}</UniqueIdentifier>
     </Filter>
-    <Filter Include="ThisApp\Rendering">
-      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
-      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
-    </Filter>
-    <Filter Include="Scene">
-      <UniqueIdentifier>{99c7d3c4-fe7d-485c-86ad-6b5aec62ec8f}</UniqueIdentifier>
-    </Filter>
     <Filter Include="PCH">
       <UniqueIdentifier>{8c2954cf-247f-4eaa-8f03-a3f3279aa314}</UniqueIdentifier>
     </Filter>
-    <Filter Include="ThisApp\Rendering\Object">
+    <Filter Include="Visual">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Visual\Scene">
+      <UniqueIdentifier>{99c7d3c4-fe7d-485c-86ad-6b5aec62ec8f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Visual\Rendering">
+      <UniqueIdentifier>{a5fbc745-de7d-4ee1-a400-e65a9078bfca}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Visual\Rendering\Object">
       <UniqueIdentifier>{81c5585e-bf5d-4ce3-918b-bb8e9618fbdc}</UniqueIdentifier>
     </Filter>
-    <Filter Include="ThisApp\Rendering\Deferred">
+    <Filter Include="Visual\Rendering\Deferred">
       <UniqueIdentifier>{c0075188-2759-405f-adde-dee72c6ff609}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="RenderContext.cpp">
-      <Filter>ThisApp\Rendering</Filter>
+      <Filter>Visual</Filter>
     </ClCompile>
     <ClCompile Include="SceneDescriptor.cpp">
-      <Filter>ThisApp\Rendering</Filter>
+      <Filter>Visual</Filter>
     </ClCompile>
     <ClCompile Include="WinMain.cpp">
       <Filter>Entry</Filter>
@@ -39,59 +42,62 @@
       <Filter>ThisApp</Filter>
     </ClCompile>
     <ClCompile Include="Mesh.cpp">
-      <Filter>Scene</Filter>
+      <Filter>Visual\Scene</Filter>
     </ClCompile>
     <ClCompile Include="pch.cpp">
       <Filter>PCH</Filter>
     </ClCompile>
     <ClCompile Include="ObjectRenderer.cpp">
-      <Filter>ThisApp\Rendering\Object</Filter>
+      <Filter>Visual\Rendering\Object</Filter>
     </ClCompile>
     <ClCompile Include="RenderProcedure.cpp">
-      <Filter>ThisApp\Rendering</Filter>
+      <Filter>Visual</Filter>
     </ClCompile>
     <ClCompile Include="DeferredRendrerer.cpp">
-      <Filter>ThisApp\Rendering\Deferred</Filter>
+      <Filter>Visual\Rendering\Deferred</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="RenderContext.h">
-      <Filter>ThisApp\Rendering</Filter>
+      <Filter>Visual</Filter>
     </ClInclude>
     <ClInclude Include="SceneDescriptor.h">
-      <Filter>ThisApp\Rendering</Filter>
+      <Filter>Visual</Filter>
     </ClInclude>
     <ClInclude Include="ThisApp.h">
       <Filter>ThisApp</Filter>
     </ClInclude>
     <ClInclude Include="Mesh.h">
-      <Filter>Scene</Filter>
+      <Filter>Visual\Scene</Filter>
     </ClInclude>
     <ClInclude Include="pch.h">
       <Filter>PCH</Filter>
     </ClInclude>
     <ClInclude Include="MeshT.h">
-      <Filter>Scene</Filter>
+      <Filter>Visual\Scene</Filter>
     </ClInclude>
     <ClInclude Include="ObjectRenderer.h">
-      <Filter>ThisApp\Rendering\Object</Filter>
+      <Filter>Visual\Rendering\Object</Filter>
     </ClInclude>
     <ClInclude Include="RenderProcedure.h">
-      <Filter>ThisApp\Rendering</Filter>
+      <Filter>Visual</Filter>
     </ClInclude>
     <ClInclude Include="DeferredRenderer.h">
-      <Filter>ThisApp\Rendering\Deferred</Filter>
+      <Filter>Visual\Rendering\Deferred</Filter>
+    </ClInclude>
+    <ClInclude Include="ObjectBuffer.h">
+      <Filter>Visual\Rendering\Object</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Shader\Object.fx">
-      <Filter>ThisApp\Rendering\Object</Filter>
+      <Filter>Visual\Rendering\Object</Filter>
     </FxCompile>
     <FxCompile Include="Shader\Deferred.fx">
-      <Filter>ThisApp\Rendering\Deferred</Filter>
+      <Filter>Visual\Rendering\Deferred</Filter>
     </FxCompile>
     <FxCompile Include="Shader\Shadow.fx">
-      <Filter>ThisApp\Rendering\Object</Filter>
+      <Filter>Visual\Rendering\Object</Filter>
     </FxCompile>
   </ItemGroup>
 </Project>

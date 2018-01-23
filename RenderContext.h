@@ -6,6 +6,9 @@
 #include <RenderTargetManager.h>
 #include <ShaderDefineManager.h>
 
+#include "Mesh.h"
+#include "ObjectBuffer.h"
+
 #include "ObjectRenderer.h"
 #include "DeferredRenderer.h"
 
@@ -17,6 +20,8 @@ struct RenderContext
 	void Reload();
 	void ReloadShader();
 
+	void FillBuffer();
+
 	HWND hwnd;
 
 	std::unique_ptr<DX11Device> d3d11;
@@ -25,4 +30,8 @@ struct RenderContext
 	
 	std::unique_ptr<IObjectRenderer> objRenderer;
 	std::unique_ptr<IDeferredRenderer> deferredRenderer;
+
+	std::unique_ptr<ObjectBuffer> objBuffer;
+	std::unique_ptr<IMesh> floor;
+	std::unique_ptr<IMesh> box;
 };
