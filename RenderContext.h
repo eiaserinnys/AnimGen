@@ -36,7 +36,7 @@ struct RenderContext
 
 	std::unique_ptr<ObjectBuffer> objBuffer;
 	std::unique_ptr<IMesh> floor;
-	std::unique_ptr<IMesh> box;
+	std::vector<IMesh*> robot;
 
 	std::unique_ptr<Logger> logger;
 };

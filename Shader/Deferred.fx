@@ -65,12 +65,26 @@ float3 GetShadow(float3 orgPos)
 	lightNdc = lightNdc / lightNdc.w;
 
 	float2 lightTex = float2((lightNdc.x + 1) / 2, (1 - lightNdc.y) / 2);
-	float shadowDepth = txShadow.Sample(smShadow, lightTex).x;
+	float2 txOfs = float2(1 / ShadowExtent.x, 1 / ShadowExtent.y);
 
-	float shadow = shadowDepth + 0.0001 < lightSpaceDepth;
-	shadow = 1 - shadow;
+	float shadowSamples[5] = {
+		txShadow.Sample(smShadow, lightTex).x, 
+		txShadow.Sample(smShadow, lightTex + float2(+1, +0) * txOfs).x,
+		txShadow.Sample(smShadow, lightTex + float2(-1, +0) * txOfs).x,
+		txShadow.Sample(smShadow, lightTex + float2(+0, +1) * txOfs).x,
+		txShadow.Sample(smShadow, lightTex + float2(+0, -1) * txOfs).x,
+	};
+
+	float bias = 0.0005;
+	float shadow = 
+		(shadowSamples[0] + bias < lightSpaceDepth) +
+		(shadowSamples[1] + bias < lightSpaceDepth) +
+		(shadowSamples[2] + bias < lightSpaceDepth) +
+		(shadowSamples[3] + bias < lightSpaceDepth) +
+		(shadowSamples[4] + bias < lightSpaceDepth);
+	shadow = 1 - shadow / 5;
 	
-	return float3(shadow, shadowDepth, lightSpaceDepth);
+	return float3(shadow, shadowSamples[0], lightSpaceDepth);
 }
 
 //------------------------------------------------------------------------------
@@ -91,11 +105,12 @@ float GetOutline(float3 vE, float3 vN, float2 tex, float depth)
 		txDepth.Sample(smDepth, tex + float2(0, -txOfs.y)).x,
 		txDepth.Sample(smDepth, tex + float2(0, +txOfs.y)).x);
 
+	float depthBias = 0.25;
 	float byDepth = saturate(
-		max(depthN.x - depth, 0) +
-		max(depthN.y - depth, 0) +
-		max(depthN.z - depth, 0) +
-		max(depthN.w - depth, 0));
+		max((depthN.x - depth) / depthBias, 0) +
+		max((depthN.y - depth) / depthBias, 0) +
+		max((depthN.z - depth) / depthBias, 0) +
+		max((depthN.w - depth) / depthBias, 0));
 
 	float3 n[4] = 
 	{
