@@ -89,8 +89,8 @@ RenderContext::RenderContext(HWND hwnd)
 	// 씬을 만든다 (임시)
 	{
 		objBuffer.reset(new ObjectBuffer(d3d11->g_pd3dDevice));
-		floor.reset(IFloorMesh::Create());
-		box.reset(IBoxMesh::Create(XMFLOAT3(0, 1.0f, 0), XMFLOAT3(0.5f, 1.0f, 0.4f), 0xff808080));
+		floor.reset(IFloorMesh::Create(0x64808080, 0xff404040));
+		box.reset(IBoxMesh::Create(XMFLOAT3(0, 1.0f, 0), XMFLOAT3(0.5f, 1.0f, 0.4f), 0x06808080));
 	}
 }
 

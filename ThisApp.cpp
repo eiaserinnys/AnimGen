@@ -58,7 +58,7 @@ public:
 		SceneDescriptor sceneDesc;
 
 		XMFLOAT3 target = XMFLOAT3(0, 1.5f, 0);
-		arcBall->Update(target, 10);
+		arcBall->Update(target, 12.5);
 
 		sceneDesc.Build(
 			hWnd, 

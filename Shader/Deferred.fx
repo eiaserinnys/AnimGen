@@ -57,7 +57,7 @@ float4 GetOriginalPosition(float3 uvw)
 }
 
 //------------------------------------------------------------------------------
-float GetShadow(float3 orgPos)
+float3 GetShadow(float3 orgPos)
 {
 	float4 lightNdc = mul(float4(orgPos, 1), LightViewProj);
 	float lightSpaceDepth = lightNdc.z / lightNdc.w;
@@ -70,7 +70,7 @@ float GetShadow(float3 orgPos)
 	float shadow = shadowDepth + 0.0001 < lightSpaceDepth;
 	shadow = 1 - shadow;
 
-	return shadow;
+	return float3(shadow, shadowDepth, lightSpaceDepth);
 }
 
 //------------------------------------------------------------------------------
@@ -102,7 +102,8 @@ float4 PS(VS_OUTPUT input) : SV_Target
 	float4 orgPos = GetOriginalPosition(float3(input.Tex.xy, depth));
 
 	// 라이트 공간에서 텍스처 좌표를 계산
-	float shadow = GetShadow(orgPos.xyz);
+	float3 shadowResult = GetShadow(orgPos.xyz);
+	float shadow = shadowResult.x;
 
 	// 외곽선 계산
 	float o = GetOutline(input.Tex, depth);
@@ -114,7 +115,7 @@ float4 PS(VS_OUTPUT input) : SV_Target
 	float3 vH = normalize(vL + vE);
 
 	float l = saturate(dot(vL, vN)) * shadow;
-	float s = saturate(pow(max(dot(vN, vH), 0), 100));
+	float s = saturate(pow(max(dot(vN, vH), 0), albedo.w * 255));
 
 	float3 skylight = float3(33.0/255, 98.0/255, 202.0/255) * 0.75;
 
@@ -138,11 +139,12 @@ float4 PS(VS_OUTPUT input) : SV_Target
 		albedo.xyz * lit + 
 		s + 
 		float3(o, o, o), 
-		albedo.w + o);
+		(albedo.w + o) > 0);
 
 	//final = float4(float3(l, l, l) + float3(o, o, o), albedo.w);
 	//final = float4(normal.xyz + float3(o, o, o), albedo.w);
 	//final = float4(shadow, shadow, shadow, 1);
+	//final = float4(shadowResult.y, shadowResult.y, shadowResult.y, 1);
 	//final = float4(lightSpaceDepth, 0, shadowDepth, 1);
 	//final = float4(lightNdc.z, 0, 0, 1);
 	//final = float4(shadowDepth, 0, 0, 1);

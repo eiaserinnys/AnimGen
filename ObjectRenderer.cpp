@@ -33,7 +33,7 @@ public:
 		rasterState.reset(IDX11RasterizerState::Create_Default(d3dDev));
 		depthState.reset(IDX11DepthStencilState::Create_Default(d3dDev));
 		depthStateWire.reset(IDX11DepthStencilState::Create_Always(d3dDev));
-		blendState.reset(IDX11BlendState::Create_AlphaBlend(d3dDev));
+		blendState.reset(IDX11BlendState::Create_Default(d3dDev));
 
 		constants.reset(new SimpleConstant(d3dDev, devCtx));
 	}

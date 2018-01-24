@@ -12,7 +12,7 @@ public:
 
 class IFloorMesh : public IMesh {
 public:
-	static IFloorMesh* Create();
+	static IFloorMesh* Create(DWORD clr1, DWORD clr2);
 };
 
 class IBoxMesh : public IMesh {

@@ -44,27 +44,27 @@ struct DeferredConstants
 	{
 		XMMATRIX wvT = XMMatrixTranspose(sceneDesc.invWorldViewT);
 
-		cbChangesEveryFrameMem.MainLightDir.x = sceneDesc.lightDir.x;
-		cbChangesEveryFrameMem.MainLightDir.y = sceneDesc.lightDir.y;
-		cbChangesEveryFrameMem.MainLightDir.z = sceneDesc.lightDir.z;
-		cbChangesEveryFrameMem.MainLightDir.w = 0;
+		changing.MainLightDir.x = sceneDesc.lightDir.x;
+		changing.MainLightDir.y = sceneDesc.lightDir.y;
+		changing.MainLightDir.z = sceneDesc.lightDir.z;
+		changing.MainLightDir.w = 0;
 
-		cbChangesEveryFrameMem.RenderTargetExtent.x = width;
-		cbChangesEveryFrameMem.RenderTargetExtent.y = height;
-		cbChangesEveryFrameMem.RenderTargetExtent.z = 0.1f;		// zn
-		cbChangesEveryFrameMem.RenderTargetExtent.w = 20.f;		// zf
+		changing.RenderTargetExtent.x = width;
+		changing.RenderTargetExtent.y = height;
+		changing.RenderTargetExtent.z = sceneDesc.zRange.x; // zn
+		changing.RenderTargetExtent.w = sceneDesc.zRange.y; // zf
 
-		cbChangesEveryFrameMem.InvWorldViewProj = XMMatrixInverse(nullptr, sceneDesc.worldViewProj);
+		changing.InvWorldViewProj = XMMatrixInverse(nullptr, sceneDesc.worldViewProj);
 
 		auto lightTx = sceneDesc.GetLightTransform();
-		cbChangesEveryFrameMem.LightViewProj = lightTx.first;
+		changing.LightViewProj = lightTx.first;
 		
-		cbChangesEveryFrameMem.ShadowExtent.x = 2048;
-		cbChangesEveryFrameMem.ShadowExtent.y = 2048;
-		cbChangesEveryFrameMem.ShadowExtent.z = 0;
-		cbChangesEveryFrameMem.ShadowExtent.w = 0;
+		changing.ShadowExtent.x = 2048;
+		changing.ShadowExtent.y = 2048;
+		changing.ShadowExtent.z = 0;
+		changing.ShadowExtent.w = 0;
 
-		cbChangesEveryFrameMem.EyePosition = sceneDesc.eye;
+		changing.EyePosition = sceneDesc.eye;
 
 		UpdateInternal(devCtx);
 	}
@@ -85,6 +85,14 @@ public:
 		constants.reset(new DeferredConstants(d3dDev, devCtx));
 
 		blendState.reset(IDX11BlendState::Create_AlphaBlend(d3dDev));
+
+		{
+			D3D11_SAMPLER_DESC sampDesc;
+			IDX11SamplerState::DefaultDesc(sampDesc);
+			sampDesc.AddressU = D3D11_TEXTURE_ADDRESS_BORDER;
+			sampDesc.AddressV = D3D11_TEXTURE_ADDRESS_BORDER;
+			shaderSampler.reset(IDX11SamplerState::Create(d3dDev, sampDesc));
+		}
 	}
 
 	//--------------------------------------------------------------------------
@@ -107,7 +115,7 @@ public:
 				rt->GetShaderResourceView(2),
 				rt->GetShaderResourceView(3)
 			};
-			context->d3d11->immDevCtx->PSSetShaderResources(0, 4, view);
+			devCtx->PSSetShaderResources(0, 4, view);
 		}
 
 		{
@@ -115,11 +123,13 @@ public:
 			{
 				context->rts->GetRenderTarget("shadow")->GetShaderResourceView(0), 
 			};
-			context->d3d11->immDevCtx->PSSetShaderResources(4, 1, view);
+			devCtx->PSSetShaderResources(4, 1, view);
+
+			shaderSampler->Apply(devCtx, 4);
 		}
 
-		context->d3d11->immDevCtx->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-		context->d3d11->immDevCtx->Draw(3, 0);
+		devCtx->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+		devCtx->Draw(3, 0);
 	}
 
 	//--------------------------------------------------------------------------
@@ -130,6 +140,7 @@ public:
 	unique_ptr<DeferredConstants> constants;
 
 	unique_ptr<IDX11BlendState> blendState;
+	unique_ptr<IDX11SamplerState> shaderSampler;
 };
 
 IDeferredRenderer::~IDeferredRenderer()

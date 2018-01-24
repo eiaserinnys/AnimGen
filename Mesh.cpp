@@ -15,39 +15,31 @@ IMesh::~IMesh()
 //------------------------------------------------------------------------------
 class FloorMesh : public MeshT<IFloorMesh> {
 public:
-	FloorMesh()
+	FloorMesh(DWORD clr1, DWORD clr2)
 	{
 		float extent = 1;
 		float height = 0;
 
-		for (int i = -4; i <= 4; ++i)
+		for (int i = -8; i <= 8; ++i)
 		{
-			for (int j = -4; j <= 4; ++j)
+			for (int j = -8; j <= 8; ++j)
 			{
 				XMFLOAT3 center((float)i, 0, (float)j);
-
-				//AddRectangle(
-				//	XMFLOAT3(center.x - extent / 2, height, center.z + extent / 2),
-				//	XMFLOAT3(center.x + extent / 2, height, center.z + extent / 2),
-				//	XMFLOAT3(center.x - extent / 2, height, center.z - extent / 2),
-				//	XMFLOAT3(center.x + extent / 2, height, center.z - extent / 2),
-				//	XMFLOAT3(0, 1, 0),
-				//	(i + j) % 2 == 0 ? 0xff808080 : 0xff404040);
 
 				AddRectangle(
 					center, 
 					XMFLOAT3(extent / 2, 0, 0), 
 					XMFLOAT3(0, 0, extent / 2),
 					XMFLOAT3(0, 1, 0),
-					(i + j) % 2 == 0 ? 0xff808080 : 0xff404040);
+					(i + j) % 2 == 0 ? clr1 : clr2);
 			}
 		}
 	}
 };
 
 //------------------------------------------------------------------------------
-IFloorMesh* IFloorMesh::Create()
-{ return new FloorMesh(); }
+IFloorMesh* IFloorMesh::Create(DWORD clr1, DWORD clr2)
+{ return new FloorMesh(clr1, clr2); }
 
 ////////////////////////////////////////////////////////////////////////////////
 

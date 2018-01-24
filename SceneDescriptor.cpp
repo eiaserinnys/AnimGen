@@ -14,6 +14,8 @@ void SceneDescriptor::Build(
 	const XMFLOAT3& target_,
 	const XMMATRIX& view_)
 {
+	zRange = XMFLOAT2(0.5f, 30.0f);
+
 	lightDir = Normalize(XMFLOAT3(1, -2, 2));
 
 	world = XMMatrixIdentity();
@@ -30,15 +32,12 @@ void SceneDescriptor::Build(
 		UINT width = rc.right - rc.left;
 		UINT height = rc.bottom - rc.top;
 
-		float zMin = 0.1f;
-		float zMax = 20.0f;
-
 		proj = XMMatrixTranspose(
 			XMMatrixPerspectiveFovRH(
 				45.0 / 2 / 180 * XM_PI,
 				width / (FLOAT)height,
-				zMin,
-				zMax));
+				zRange.x,
+				zRange.y));
 
 		worldViewProj = XMMatrixMultiply(XMMatrixMultiply(proj, view), world);
 

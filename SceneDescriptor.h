@@ -11,6 +11,7 @@ struct SceneDescriptor
 	DirectX::XMMATRIX world, view, proj;
 	DirectX::XMMATRIX worldViewProj;
 	DirectX::XMMATRIX invWorldViewT;
+	DirectX::XMFLOAT2 zRange;
 
 	void Build(
 		HWND hwnd,
