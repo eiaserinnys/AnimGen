@@ -317,38 +317,9 @@ public:
 		unique_ptr<IArrowMesh> z(IArrowMesh::Create(
 			org, org + zAxis * length, headLen, radius1, radius2, granulity, 0x64ff0000));
 
-		pos.reserve(x->Vertices().second * 3);
-		col.reserve(x->Vertices().second * 3);
-		nor.reserve(x->Vertices().second * 3);
-		ind.reserve(x->Indices().second * 3);
-
-		// 첫번째는 그냥 넣고
-		pos.insert(pos.end(), x->Vertices().first, x->Vertices().first + x->Vertices().second);
-		nor.insert(nor.end(), x->Normals().first, x->Normals().first + x->Normals().second);
-		col.insert(col.end(), x->Colors().first, x->Colors().first + x->Colors().second);
-		ind.insert(ind.end(), x->Indices().first, x->Indices().first + x->Indices().second);
-
-		{
-			UINT16 pivot = pos.size();
-			pos.insert(pos.end(), y->Vertices().first, y->Vertices().first + y->Vertices().second);
-			nor.insert(nor.end(), y->Normals().first, y->Normals().first + y->Normals().second);
-			col.insert(col.end(), y->Colors().first, y->Colors().first + y->Colors().second);
-			for (int i = 0; i < y->Indices().second; ++i)
-			{
-				ind.push_back(y->Indices().first[i] + pivot);
-			}
-		}
-
-		{
-			UINT16 pivot = pos.size();
-			pos.insert(pos.end(), z->Vertices().first, z->Vertices().first + z->Vertices().second);
-			nor.insert(nor.end(), z->Normals().first, z->Normals().first + z->Normals().second);
-			col.insert(col.end(), z->Colors().first, z->Colors().first + z->Colors().second);
-			for (int i = 0; i < z->Indices().second; ++i)
-			{
-				ind.push_back(z->Indices().first[i] + pivot);
-			}
-		}
+		Append(x.get());
+		Append(y.get());
+		Append(z.get());
 	}
 };
 

@@ -94,53 +94,56 @@ RenderContext::RenderContext(HWND hwnd)
 		objBuffer.reset(new ObjectBuffer(d3d11->g_pd3dDevice));
 		floor.reset(IFloorMesh::Create(0x64808080, 0xff404040));
 
+		robot.reset(IRobot::Create());
+
+#if 0
 		DWORD color = 0x0aa0a0ff;
 
 		// ¸Ó¸®
-		robot.push_back(IBoxMesh::Create(
+		etc.push_back(IBoxMesh::Create(
 			XMFLOAT3(0, 1.665f, 0), XMFLOAT3(0.22f, 0.25f, 0.22f), color));
 
 		// ¸ö
-		robot.push_back(IBoxMesh::Create(
-			XMFLOAT3(0, 1.22f, 0), XMFLOAT3(0.4f, 0.61f, 0.25f), color));
+		etc.push_back(IBoxMesh::Create(
+			XMFLOAT3(0, 1.22f, 0), XMFLOAT3(0.25f, 0.61f, 0.4f), color));
 
 		// ¿À¸¥ÆÈ
-		robot.push_back(IBoxMesh::Create(
-			XMFLOAT3(0.265f, 1.355f, 0), XMFLOAT3(0.11f, 0.35f, 0.11f), color));
-		robot.push_back(IBoxMesh::Create(
-			XMFLOAT3(0.265f, 0.995f, 0), XMFLOAT3(0.11f, 0.35f, 0.11f), color));
+		etc.push_back(IBoxMesh::Create(
+			XMFLOAT3(0, 1.355f, 0.265f), XMFLOAT3(0.11f, 0.35f, 0.11f), color));
+		etc.push_back(IBoxMesh::Create(
+			XMFLOAT3(0, 0.995f, 0.265f), XMFLOAT3(0.11f, 0.35f, 0.11f), color));
 
 		// ¿ÞÆÈ
-		robot.push_back(IBoxMesh::Create(
-			XMFLOAT3(- 0.265f, 1.355f, 0), XMFLOAT3(0.11f, 0.35f, 0.11f), color));
-		robot.push_back(IBoxMesh::Create(
-			XMFLOAT3(- 0.265f, 0.995f, 0), XMFLOAT3(0.11f, 0.35f, 0.11f), color));
+		etc.push_back(IBoxMesh::Create(
+			XMFLOAT3(0, 1.355f, -0.265f), XMFLOAT3(0.11f, 0.35f, 0.11f), color));
+		etc.push_back(IBoxMesh::Create(
+			XMFLOAT3(0, 0.995f, -0.265f), XMFLOAT3(0.11f, 0.35f, 0.11f), color));
 
 		// ¿À¸¥´Ù¸®
-		robot.push_back(IBoxMesh::Create(
-			XMFLOAT3(0.115f, 0.71f, 0), XMFLOAT3(0.17f, 0.4f, 0.17f), color));
-		robot.push_back(IBoxMesh::Create(
-			XMFLOAT3(0.1f, 0.3f, 0), XMFLOAT3(0.14f, 0.4f, 0.14f), color));
-		robot.push_back(IBoxMesh::Create(
-			XMFLOAT3(0.1f, 0.045f, -0.05f), XMFLOAT3(0.14f, 0.09f, 0.25f), color));
+		etc.push_back(IBoxMesh::Create(
+			XMFLOAT3(0, 0.71f, 0.115f), XMFLOAT3(0.17f, 0.4f, 0.17f), color));
+		etc.push_back(IBoxMesh::Create(
+			XMFLOAT3(0, 0.3f, 0.1f), XMFLOAT3(0.14f, 0.4f, 0.14f), color));
+		etc.push_back(IBoxMesh::Create(
+			XMFLOAT3(0.05f, 0.045f, 0.1f), XMFLOAT3(0.25f, 0.09f, 0.14f), color));
 
 		// ¿Þ´Ù¸®
-		robot.push_back(IBoxMesh::Create(
-			XMFLOAT3(-0.115f, 0.71f, 0), XMFLOAT3(0.17f, 0.4f, 0.17f), color));
-		robot.push_back(IBoxMesh::Create(
-			XMFLOAT3(-0.1f, 0.3f, 0), XMFLOAT3(0.14f, 0.4f, 0.14f), color));
-		robot.push_back(IBoxMesh::Create(
-			XMFLOAT3(-0.1f, 0.045f, -0.05f), XMFLOAT3(0.14f, 0.09f, 0.25f), color));
+		etc.push_back(IBoxMesh::Create(
+			XMFLOAT3(0, 0.71f, -0.115f), XMFLOAT3(0.17f, 0.4f, 0.17f), color));
+		etc.push_back(IBoxMesh::Create(
+			XMFLOAT3(0, 0.3f, -0.1f), XMFLOAT3(0.14f, 0.4f, 0.14f), color));
+		etc.push_back(IBoxMesh::Create(
+			XMFLOAT3(0.05f, 0.045f, -0.1f), XMFLOAT3(0.25f, 0.09f, 0.14f), color));
+#endif
 
 		// È­»ìÇ¥µµ Å×½ºÆ®
 		XMMATRIX id = XMMatrixIdentity();
-		robot.push_back(ICoordinateAxisMesh::Create(id, 3, 0.3f, 0.02f, 0.04f, 8));
+		etc.push_back(ICoordinateAxisMesh::Create(id, 0.5, 0.1f, 0.02f, 0.04f, 8));
 
-		XMMATRIX r = 
-			XMMatrixRotationY(30.0f / 180.0f * 3.1415) *
-			XMMatrixTranslation(1, 1, 1);
-
-		robot.push_back(ICoordinateAxisMesh::Create(r, 1, 0.3f, 0.02f, 0.04f, 8));
+		//XMMATRIX r = 
+		//	XMMatrixRotationY(30.0f / 180.0f * 3.1415) *
+		//	XMMatrixTranslation(1, 2, 1);
+		//etc.push_back(ICoordinateAxisMesh::Create(r, 1, 0.3f, 0.02f, 0.04f, 8));
 	}
 
 	textRenderer.reset(ITextRenderer::Create(d3d11->g_pd3dDevice, d3d11->immDevCtx));
@@ -148,11 +151,11 @@ RenderContext::RenderContext(HWND hwnd)
 
 RenderContext::~RenderContext()
 {
-	for (size_t i = 0; i < robot.size(); ++i)
+	for (size_t i = 0; i < etc.size(); ++i)
 	{
-		delete robot[i];
+		delete etc[i];
 	}
-	robot.clear();
+	etc.clear();
 
 	if (d3d11->immDevCtx) { d3d11->immDevCtx->ClearState(); }
 
@@ -174,9 +177,11 @@ void RenderContext::FillBuffer()
 
 	objBuffer->Fill(floor.get());
 
-	for (size_t i = 0; i < robot.size(); ++i)
+	objBuffer->Fill(robot.get());
+
+	for (size_t i = 0; i < etc.size(); ++i)
 	{
-		objBuffer->Fill(robot[i]);
+		objBuffer->Fill(etc[i]);
 	}
 
 	objBuffer->End(d3d11->immDevCtx);

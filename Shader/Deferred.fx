@@ -67,8 +67,8 @@ float3 GetShadow(float3 orgPos)
 	float2 lightTex = float2((lightNdc.x + 1) / 2, (1 - lightNdc.y) / 2);
 	float2 txOfs = float2(1 / ShadowExtent.x, 1 / ShadowExtent.y);
 
-	float bias = 0.0005;
-	int range = 2;
+	float bias = 0.001;
+	int range = 5;
 	float shadow = 0;
 
 	for (int i = -range; i <= range; ++i)
@@ -180,7 +180,7 @@ float4 PS(VS_OUTPUT input) : SV_Target
 	
 	float4 final;
 	final = float4(
-		(1 - o) * (albedo.xyz * lit + s) + 
+		(1 - o) * ((albedo.xyz + s) * lit) + 
 		o * float3(1, 0.75, 0.25) * 0.05,
 		(albedo.w > 0) + o);
 

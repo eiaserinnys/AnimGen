@@ -13,6 +13,8 @@
 #include "ObjectRenderer.h"
 #include "DeferredRenderer.h"
 
+#include "Robot.h"
+
 #include "Logger.h"
 
 struct RenderContext
@@ -36,7 +38,9 @@ struct RenderContext
 
 	std::unique_ptr<ObjectBuffer> objBuffer;
 	std::unique_ptr<IMesh> floor;
-	std::vector<IMesh*> robot;
+	std::vector<IMesh*> etc;
+
+	std::unique_ptr<IRobot> robot;
 
 	std::unique_ptr<Logger> logger;
 };

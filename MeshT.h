@@ -73,6 +73,31 @@ public:
 		ind.push_back(indPtr + 3);
 	}
 
+	void Append(IMesh* mesh)
+	{
+		pos.reserve(pos.size() + mesh->Vertices().second);
+		col.reserve(col.size() + mesh->Colors().second);
+		nor.reserve(nor.size() + mesh->Normals().second);
+		ind.reserve(ind.size() + mesh->Indices().second);
+
+		UINT16 pivot = pos.size();
+		pos.insert(pos.end(), mesh->Vertices().first, mesh->Vertices().first + mesh->Vertices().second);
+		nor.insert(nor.end(), mesh->Normals().first, mesh->Normals().first + mesh->Normals().second);
+		col.insert(col.end(), mesh->Colors().first, mesh->Colors().first + mesh->Colors().second);
+
+		if (pivot > 0)
+		{
+			for (int i = 0; i < mesh->Indices().second; ++i)
+			{
+				ind.push_back(mesh->Indices().first[i] + pivot);
+			}
+		}
+		else
+		{
+			ind.insert(ind.end(), mesh->Indices().first, mesh->Indices().first + mesh->Indices().second);
+		}
+	}
+
 	virtual std::pair<const DirectX::XMFLOAT3*, UINT> Vertices() const
 		{ return make_pair(pos.empty() ? nullptr : &pos[0], (UINT)pos.size()); }
 	virtual std::pair<const DirectX::XMFLOAT3*, UINT> Normals() const

@@ -15,9 +15,6 @@
       <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
       <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
     </Filter>
-    <Filter Include="Visual\Scene">
-      <UniqueIdentifier>{99c7d3c4-fe7d-485c-86ad-6b5aec62ec8f}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Visual\Rendering">
       <UniqueIdentifier>{a5fbc745-de7d-4ee1-a400-e65a9078bfca}</UniqueIdentifier>
     </Filter>
@@ -26,6 +23,12 @@
     </Filter>
     <Filter Include="Visual\Rendering\Deferred">
       <UniqueIdentifier>{c0075188-2759-405f-adde-dee72c6ff609}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Robot">
+      <UniqueIdentifier>{c6faf65b-f0fd-47d6-bd6c-1f5ad5645b01}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Visual\Scene">
+      <UniqueIdentifier>{99c7d3c4-fe7d-485c-86ad-6b5aec62ec8f}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -58,6 +61,9 @@
     </ClCompile>
     <ClCompile Include="Logger.cpp">
       <Filter>Visual</Filter>
+    </ClCompile>
+    <ClCompile Include="Robot.cpp">
+      <Filter>Robot</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -93,6 +99,9 @@
     </ClInclude>
     <ClInclude Include="Logger.h">
       <Filter>Visual</Filter>
+    </ClInclude>
+    <ClInclude Include="Robot.h">
+      <Filter>Robot</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

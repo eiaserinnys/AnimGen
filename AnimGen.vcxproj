@@ -141,6 +141,7 @@
     </ClCompile>
     <ClCompile Include="RenderProcedure.cpp" />
     <ClCompile Include="RenderContext.cpp" />
+    <ClCompile Include="Robot.cpp" />
     <ClCompile Include="SceneDescriptor.cpp" />
     <ClCompile Include="ThisApp.cpp" />
     <ClCompile Include="WinMain.cpp" />
@@ -155,6 +156,7 @@
     <ClInclude Include="pch.h" />
     <ClInclude Include="RenderProcedure.h" />
     <ClInclude Include="RenderContext.h" />
+    <ClInclude Include="Robot.h" />
     <ClInclude Include="SceneDescriptor.h" />
     <ClInclude Include="ThisApp.h" />
   </ItemGroup>
