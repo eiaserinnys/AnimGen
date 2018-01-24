@@ -104,8 +104,6 @@ public:
 
 		blendState->Apply(devCtx);
 
-		context->sd->Set("deferred");
-
 		{
 			auto rt = context->rts->GetRenderTarget("deferred");
 			ID3D11ShaderResourceView* view[] = 
@@ -128,8 +126,11 @@ public:
 			shaderSampler->Apply(devCtx, 4);
 		}
 
-		devCtx->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-		devCtx->Draw(3, 0);
+		if (context->sd->Set("deferred"))
+		{ 
+			devCtx->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+			devCtx->Draw(3, 0);
+		}
 	}
 
 	//--------------------------------------------------------------------------

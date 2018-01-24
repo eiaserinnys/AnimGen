@@ -10,5 +10,7 @@ public:
 
 	void Clamp();
 
+	void Clear();
+
 	std::list<std::wstring> entry;
 };

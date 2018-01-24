@@ -93,7 +93,7 @@ RenderContext::RenderContext(HWND hwnd)
 	{
 		objBuffer.reset(new ObjectBuffer(d3d11->g_pd3dDevice));
 		floor.reset(IFloorMesh::Create(0x64808080, 0xff404040));
-		box.reset(IBoxMesh::Create(XMFLOAT3(0, 1.0f, 0), XMFLOAT3(0.5f, 1.0f, 0.4f), 0x06808080));
+		box.reset(IBoxMesh::Create(XMFLOAT3(0, 1.0f, 0), XMFLOAT3(0.5f, 1.0f, 0.4f), 0x068080ff));
 	}
 
 	textRenderer.reset(ITextRenderer::Create(d3d11->g_pd3dDevice, d3d11->immDevCtx));
@@ -110,6 +110,8 @@ RenderContext::~RenderContext()
 
 void RenderContext::Reload()
 {
+	logger->Clear();
+
 	sd->Reload();
 }
 

@@ -19,3 +19,8 @@ void Logger::Clamp()
 		entry.pop_front();
 	}
 }
+
+void Logger::Clear()
+{
+	entry.clear();
+}

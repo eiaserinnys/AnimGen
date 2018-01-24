@@ -101,9 +101,10 @@ public:
 		blendState->Apply(devCtx);
 
 		// ½¦ÀÌ´õ ¼³Á¤
-		context->sd->Set("ObjectShadow");
-
-		objBuffer->Draw(context->d3d11->immDevCtx);
+		if (context->sd->Set("ObjectShadow"))
+		{
+			objBuffer->Draw(context->d3d11->immDevCtx);
+		}
 	}
 
 	//--------------------------------------------------------------------------

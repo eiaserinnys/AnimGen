@@ -169,7 +169,7 @@ float4 PS(VS_OUTPUT input) : SV_Target
 	final = float4(
 		(1 - o) * (albedo.xyz * lit + s) + 
 		o * float3(1, 0.75, 0.25) * 0.05,
-		(albedo.w + o) > 0);
+		(albedo.w > 0) + o);
 
 	//final = float4(float3(o, o, o), 1);
 	//final = float4(float3(l, l, l) + float3(o, o, o), albedo.w);
