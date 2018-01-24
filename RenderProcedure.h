@@ -8,8 +8,6 @@
 
 #include <DirectXMath.h>
 #include <DX11Buffer.h>
-#include <SpriteBatch.h>
-#include <SpriteFont.h>
 
 #include "SceneDescriptor.h"
 
@@ -67,35 +65,6 @@ struct RenderTuple
 	int nodeCount = 0;
 };
 
-struct TextToRender
-{
-	TextToRender(
-		const DirectX::XMFLOAT3& p,
-		const std::wstring& t,
-		const DirectX::XMFLOAT4& c)
-		: pos(p), ofs(0, 0), is3d(true), text(t), clr(c) {}
-
-	TextToRender(
-		const DirectX::XMFLOAT3& p,
-		const DirectX::XMFLOAT2& o,
-		const std::wstring& t,
-		const DirectX::XMFLOAT4& c)
-		: pos(p), ofs(o), is3d(true), text(t), clr(c) {}
-
-	TextToRender(
-		const DirectX::XMFLOAT2& p,
-		const std::wstring& t,
-		const DirectX::XMFLOAT4& c)
-		: ofs(p), is3d(false), text(t), clr(c) {}
-
-	DirectX::XMFLOAT3 pos;
-	DirectX::XMFLOAT2 ofs;
-	bool is3d;
-
-	std::wstring text;
-	DirectX::XMFLOAT4 clr;
-};
-
 class RenderProcedure {
 public:
 	RenderProcedure(HWND hwnd, DX11Device* device, IRenderTargetManager* rts);
@@ -108,15 +77,8 @@ public:
 	void* operator new(std::size_t size) { return _aligned_malloc(size, 16); }
 	void operator delete(void* ptr) { return _aligned_free(ptr); }
 
-	void RenderText(const TextToRender& text) { textToRender.push_back(text); }
-	void RenderText(const DirectX::XMMATRIX& wvp);
-
 private:
 	DX11Device* device = nullptr;
 	IRenderTargetManager* rts = nullptr;
 	HWND hwnd;
-	std::list<TextToRender> textToRender;
-
-	std::unique_ptr<DirectX::SpriteBatch> spriteBatch;
-	std::unique_ptr<DirectX::SpriteFont> font;
 };

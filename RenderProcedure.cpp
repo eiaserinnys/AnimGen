@@ -20,8 +20,6 @@ IToRender::~IToRender()
 RenderProcedure::RenderProcedure(HWND hwnd, DX11Device* device, IRenderTargetManager* rts)
 	: hwnd(hwnd), device(device), rts(rts)
 {
-	spriteBatch.reset(new SpriteBatch(device->immDevCtx));
-	font.reset(new SpriteFont(device->g_pd3dDevice, L"Font/font12.spritefont"));
 }
 
 #if 0
@@ -76,50 +74,4 @@ void RenderProcedure::End()
 	device->g_pSwapChain->Present(0, 0);
 }
 
-//------------------------------------------------------------------------------
-void RenderProcedure::RenderText(const XMMATRIX& wvp_)
-{
-	if (!textToRender.empty())
-	{
-		rts->Restore();
-
-		spriteBatch->Begin();
-
-		XMMATRIX wvp = XMMatrixTranspose(wvp_);
-
-		for (auto tit = textToRender.begin(); tit != textToRender.end(); ++tit)
-		{
-			XMVECTOR pos;
-			if (tit->is3d)
-			{
-				pos = XMVector3Transform(XMLoadFloat3(&tit->pos), wvp);
-
-				pos.m128_f32[0] /= pos.m128_f32[3];
-				pos.m128_f32[1] /= pos.m128_f32[3];
-				pos.m128_f32[2] /= pos.m128_f32[3];
-				pos.m128_f32[3] /= pos.m128_f32[3];
-				pos.m128_f32[0] = (1 + pos.m128_f32[0]) / 2 * rts->GetWidth();
-				pos.m128_f32[1] = (1 - pos.m128_f32[1]) / 2 * rts->GetHeight();
-
-				pos = pos + XMLoadFloat2(&tit->ofs);
-			}
-			else
-			{
-				pos = XMLoadFloat2(&tit->ofs);
-			}
-
-			font->DrawString(
-				spriteBatch.get(),
-				tit->text.c_str(),
-				pos,
-				XMLoadFloat4(&tit->clr));
-		}
-
-		spriteBatch->End();
-
-		device->immDevCtx->ClearState();
-
-		textToRender.clear();
-	}
-}
 

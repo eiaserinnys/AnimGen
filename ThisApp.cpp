@@ -82,6 +82,31 @@ public:
 				global->deferredRenderer->Render(sceneDesc);
 			}
 
+			{
+				//global->d3d11->immDevCtx->ClearState();
+				//global->rts->Restore();
+
+				int y = 0;
+
+				for (auto 
+					it = global->logger->entry.begin(); 
+					it != global->logger->entry.end(); ++it)
+				{
+					global->textRenderer->Enqueue(TextToRender(
+						XMFLOAT2(50, 50 + y * 20),
+						*it,
+						XMFLOAT4(1, 0, 0, 1)));
+
+					y++;
+				}
+
+				global->textRenderer->Draw(
+					sceneDesc.worldViewProj,
+					XMFLOAT2(
+						global->rts->GetCurrent()->GetWidth(),
+						global->rts->GetCurrent()->GetHeight()));
+			}
+
 			render->End();
 		}
 	}

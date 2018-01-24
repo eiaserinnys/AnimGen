@@ -5,6 +5,7 @@
 #include <DX11Device.h>
 #include <RenderTargetManager.h>
 #include <ShaderDefineManager.h>
+#include <TextRenderer.h>
 
 #include "Mesh.h"
 #include "ObjectBuffer.h"
@@ -12,13 +13,14 @@
 #include "ObjectRenderer.h"
 #include "DeferredRenderer.h"
 
+#include "Logger.h"
+
 struct RenderContext
 {
 	RenderContext(HWND hwnd);
 	~RenderContext();
 
 	void Reload();
-	void ReloadShader();
 
 	void FillBuffer();
 
@@ -30,8 +32,11 @@ struct RenderContext
 	
 	std::unique_ptr<IObjectRenderer> objRenderer;
 	std::unique_ptr<IDeferredRenderer> deferredRenderer;
+	std::unique_ptr<ITextRenderer> textRenderer;
 
 	std::unique_ptr<ObjectBuffer> objBuffer;
 	std::unique_ptr<IMesh> floor;
 	std::unique_ptr<IMesh> box;
+
+	std::unique_ptr<Logger> logger;
 };

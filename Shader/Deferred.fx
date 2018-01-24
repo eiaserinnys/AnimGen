@@ -65,16 +65,23 @@ float3 GetShadow(float3 orgPos)
 	lightNdc = lightNdc / lightNdc.w;
 
 	float2 lightTex = float2((lightNdc.x + 1) / 2, (1 - lightNdc.y) / 2);
-	float shadowDepth = txShadow.Sample(smShadow, lightTex);
+	float shadowDepth = txShadow.Sample(smShadow, lightTex).x;
 
 	float shadow = shadowDepth + 0.0001 < lightSpaceDepth;
 	shadow = 1 - shadow;
-
+	
 	return float3(shadow, shadowDepth, lightSpaceDepth);
 }
 
 //------------------------------------------------------------------------------
-float GetOutline(float2 tex, float depth)
+float3 SampleNormal(float2 tex)
+{
+	float4 normal = txNormal.Sample(smNormal, tex);
+	return normalize(normal.xyz * 2 - 1);
+}
+
+//------------------------------------------------------------------------------
+float GetOutline(float3 vE, float3 vN, float2 tex, float depth)
 {
 	float2 txOfs = float2(1 / ViewportDesc.x, 1 / ViewportDesc.y);
 
@@ -84,34 +91,58 @@ float GetOutline(float2 tex, float depth)
 		txDepth.Sample(smDepth, tex + float2(0, -txOfs.y)).x,
 		txDepth.Sample(smDepth, tex + float2(0, +txOfs.y)).x);
 
-	return saturate(
-		depth - depthN.x +
-		depth - depthN.y +
-		depth - depthN.z +
-		depth - depthN.w);
+	float byDepth = saturate(
+		max(depthN.x - depth, 0) +
+		max(depthN.y - depth, 0) +
+		max(depthN.z - depth, 0) +
+		max(depthN.w - depth, 0));
+
+	float3 n[4] = 
+	{
+		SampleNormal(tex + float2(-txOfs.x, 0)),
+		SampleNormal(tex + float2(+txOfs.x, 0)),
+		SampleNormal(tex + float2(0, -txOfs.y)),
+		SampleNormal(tex + float2(0, +txOfs.y))
+	};
+
+	float bias = 0.1;
+	n[0] = lerp(n[0], vN, abs(depthN.x - depth) / bias);
+	n[1] = lerp(n[1], vN, abs(depthN.y - depth) / bias);
+	n[2] = lerp(n[2], vN, abs(depthN.z - depth) / bias);
+	n[3] = lerp(n[3], vN, abs(depthN.w - depth) / bias);
+
+	float a = 10;
+	float byNormal = saturate(
+		//max((1 - dot(vN, n[0])) * a, 0) +
+		max((1 - dot(vN, n[1])) * a, 0) +
+		//max((1 - dot(vN, n[2])) * a, 0) +
+		max((1 - dot(vN, n[3])) * a, 0));
+
+	//return byNormal;
+	//return byDepth;
+	return saturate(byNormal * 0.75 + byDepth);
 }
 
 //------------------------------------------------------------------------------
 float4 PS(VS_OUTPUT input) : SV_Target
 {
 	float4 albedo = txAlbedo.Sample(smAlbedo, input.Tex);
-	float4 normal = txNormal.Sample(smNormal, input.Tex);
 	float depth = txDepth.Sample(smDepth, input.Tex).x;
+	float3 vN = SampleNormal(input.Tex);
 
 	// 원래 월드 공간으로 역 트랜스폼
 	float4 orgPos = GetOriginalPosition(float3(input.Tex.xy, depth));
+	float3 vE = normalize(EyePosition.xyz - orgPos.xyz);
 
 	// 라이트 공간에서 텍스처 좌표를 계산
 	float3 shadowResult = GetShadow(orgPos.xyz);
 	float shadow = shadowResult.x;
 
 	// 외곽선 계산
-	float o = GetOutline(input.Tex, depth);
+	float o = GetOutline(vE, vN, input.Tex, depth);
 
 	// 라이팅
 	float3 vL = -MainLightDir.xyz;
-	float3 vE = normalize(EyePosition - orgPos.xyz);
-	float3 vN = normalize(normal.xyz * 2 - 1);
 	float3 vH = normalize(vL + vE);
 
 	float l = saturate(dot(vL, vN)) * shadow;
@@ -133,16 +164,16 @@ float4 PS(VS_OUTPUT input) : SV_Target
 	lit.xyz = lit.xyz + saturate(dot(vN, -normalize(float3(+1, +1, -1)))) * ambient / mag * floorRef;
 	lit.xyz = lit.xyz + saturate(dot(vN, -normalize(float3(-1, +1, +1)))) * ambient / mag * floorRef;
 	lit.xyz = lit.xyz + saturate(dot(vN, -normalize(float3(-1, +1, -1)))) * ambient / mag * floorRef;
-
+	
 	float4 final;
 	final = float4(
-		albedo.xyz * lit + 
-		s + 
-		float3(o, o, o), 
+		(1 - o) * (albedo.xyz * lit + s) + 
+		o * float3(1, 0.75, 0.25) * 0.05,
 		(albedo.w + o) > 0);
 
+	//final = float4(float3(o, o, o), 1);
 	//final = float4(float3(l, l, l) + float3(o, o, o), albedo.w);
-	//final = float4(normal.xyz + float3(o, o, o), albedo.w);
+	//final = float4(vN.xyz, 1);
 	//final = float4(shadow, shadow, shadow, 1);
 	//final = float4(shadowResult.y, shadowResult.y, shadowResult.y, 1);
 	//final = float4(lightSpaceDepth, 0, shadowDepth, 1);

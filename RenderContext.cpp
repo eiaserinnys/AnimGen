@@ -9,6 +9,8 @@ using namespace DirectX;
 RenderContext::RenderContext(HWND hwnd)
 	: hwnd(hwnd)
 {
+	logger.reset(new Logger);
+
 	d3d11.reset(new DX11Device(hwnd));
 
 	if (FAILED(d3d11->hr))
@@ -60,6 +62,7 @@ RenderContext::RenderContext(HWND hwnd)
 	// 쉐이더 정의를 만든다
 	{
 		sd.reset(IShaderDefineManager::Create(d3d11.get()));
+		sd->SetCompileLogger(logger.get());
 
 		{
 			D3D11_INPUT_ELEMENT_DESC layout[] =
@@ -92,6 +95,8 @@ RenderContext::RenderContext(HWND hwnd)
 		floor.reset(IFloorMesh::Create(0x64808080, 0xff404040));
 		box.reset(IBoxMesh::Create(XMFLOAT3(0, 1.0f, 0), XMFLOAT3(0.5f, 1.0f, 0.4f), 0x06808080));
 	}
+
+	textRenderer.reset(ITextRenderer::Create(d3d11->g_pd3dDevice, d3d11->immDevCtx));
 }
 
 RenderContext::~RenderContext()
@@ -105,14 +110,7 @@ RenderContext::~RenderContext()
 
 void RenderContext::Reload()
 {
-	//d3d11->ReloadTexture();
-	ReloadShader();
-}
-
-void RenderContext::ReloadShader()
-{
-	//dxr->quadVS.reset(new DX11VertexShader(d3d11->g_pd3dDevice, L"Shaders/DX11FullScreenQuad.fx"));
-	//dxr->quadPS.reset(new DX11PixelShader(d3d11->g_pd3dDevice, L"Shaders/DX11FullScreenQuad.fx"));
+	sd->Reload();
 }
 
 void RenderContext::FillBuffer()
