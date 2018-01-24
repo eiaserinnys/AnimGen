@@ -67,24 +67,22 @@ float3 GetShadow(float3 orgPos)
 	float2 lightTex = float2((lightNdc.x + 1) / 2, (1 - lightNdc.y) / 2);
 	float2 txOfs = float2(1 / ShadowExtent.x, 1 / ShadowExtent.y);
 
-	float shadowSamples[5] = {
-		txShadow.Sample(smShadow, lightTex).x, 
-		txShadow.Sample(smShadow, lightTex + float2(+1, +0) * txOfs).x,
-		txShadow.Sample(smShadow, lightTex + float2(-1, +0) * txOfs).x,
-		txShadow.Sample(smShadow, lightTex + float2(+0, +1) * txOfs).x,
-		txShadow.Sample(smShadow, lightTex + float2(+0, -1) * txOfs).x,
-	};
-
 	float bias = 0.0005;
-	float shadow = 
-		(shadowSamples[0] + bias < lightSpaceDepth) +
-		(shadowSamples[1] + bias < lightSpaceDepth) +
-		(shadowSamples[2] + bias < lightSpaceDepth) +
-		(shadowSamples[3] + bias < lightSpaceDepth) +
-		(shadowSamples[4] + bias < lightSpaceDepth);
-	shadow = 1 - shadow / 5;
+	int range = 2;
+	float shadow = 0;
+
+	for (int i = -range; i <= range; ++i)
+	{
+		for (int j = -range; j <= range; ++j)
+		{
+			float shadowSample = txShadow.Sample(smShadow, lightTex + float2(j, i) * txOfs).x;
+			shadow = shadow + (shadowSample + bias < lightSpaceDepth);
+		}
+	}
+
+	shadow = 1 - shadow / (range * 2 + 1) / (range * 2 + 1);
 	
-	return float3(shadow, shadowSamples[0], lightSpaceDepth);
+	return float3(shadow, txShadow.Sample(smShadow, lightTex).x, lightSpaceDepth);
 }
 
 //------------------------------------------------------------------------------

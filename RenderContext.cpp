@@ -131,6 +131,16 @@ RenderContext::RenderContext(HWND hwnd)
 			XMFLOAT3(-0.1f, 0.3f, 0), XMFLOAT3(0.14f, 0.4f, 0.14f), color));
 		robot.push_back(IBoxMesh::Create(
 			XMFLOAT3(-0.1f, 0.045f, -0.05f), XMFLOAT3(0.14f, 0.09f, 0.25f), color));
+
+		// 화살표도 테스트
+		XMMATRIX id = XMMatrixIdentity();
+		robot.push_back(ICoordinateAxisMesh::Create(id, 3, 0.3f, 0.02f, 0.04f, 8));
+
+		XMMATRIX r = 
+			XMMatrixRotationY(30.0f / 180.0f * 3.1415) *
+			XMMatrixTranslation(1, 1, 1);
+
+		robot.push_back(ICoordinateAxisMesh::Create(r, 1, 0.3f, 0.02f, 0.04f, 8));
 	}
 
 	textRenderer.reset(ITextRenderer::Create(d3d11->g_pd3dDevice, d3d11->immDevCtx));

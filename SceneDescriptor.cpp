@@ -16,7 +16,7 @@ void SceneDescriptor::Build(
 {
 	zRange = XMFLOAT2(0.5f, 30.0f);
 
-	lightDir = Normalize(XMFLOAT3(1, -2, 2));
+	lightDir = Normalize(XMFLOAT3(-1, -2, -2));
 
 	world = XMMatrixIdentity();
 

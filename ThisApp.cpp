@@ -1,6 +1,9 @@
 #include "pch.h"
 #include "ThisApp.h"
 
+#define _USE_MATH_DEFINES
+#include <math.h>
+
 #include <DirectXMath.h>
 
 #include <WindowsUtility.h>
@@ -30,7 +33,8 @@ public:
 		global.reset(new RenderContext(hWnd));
 		render.reset(new RenderProcedure(hWnd, global->d3d11.get(), global->rts.get()));
 
-		arcBall.reset(IEulerControl::Create());
+		arcBall.reset(IEulerControl::Create(
+			210 / 180.0f * M_PI, 20 / 180.0f * M_PI));
 	}
 
 	//--------------------------------------------------------------------------

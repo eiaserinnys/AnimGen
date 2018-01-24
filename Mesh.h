@@ -22,3 +22,26 @@ public:
 		const DirectX::XMFLOAT3& extent,
 		DWORD clr);
 };
+
+class IArrowMesh : public IMesh {
+public:
+	static IArrowMesh* Create(
+		const DirectX::XMFLOAT3& start,
+		const DirectX::XMFLOAT3& end,
+		float headLen,
+		float radius1,
+		float radius2,
+		int granulity, 
+		DWORD clr);
+};
+
+class ICoordinateAxisMesh : public IMesh {
+public:
+	static ICoordinateAxisMesh* Create(
+		const DirectX::XMMATRIX& frame, 
+		float length, 
+		float headLen,
+		float radius1,
+		float radius2,
+		int granulity);
+};
