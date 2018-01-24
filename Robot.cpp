@@ -25,7 +25,7 @@ public:
 	{
 		// 화살표는 하나만 쓴다
 		{
-			float len = 0.5f;
+			float len = 0.6f;
 			float headLen = 0.2f;
 			float r1 = 0.0125f;
 			float r2 = 0.025f;
@@ -52,15 +52,58 @@ public:
 			AppendBody(body);
 		}
 
-		// 오른 허벅지
 		XMMATRIX leg = XMMatrixRotationZ(-90.0f / 180 * M_PI);
+		float margin = 0.05f;
 
+		// 오른 허벅지
+		{
+			auto body = new RobotBody;
+			body->mesh.reset(IBoxMesh::Create(XMFLOAT3(0.21f - margin, 0, 0), XMFLOAT3(0.4f, 0.17f, 0.17f), color));
+			body->worldTx = leg * XMMatrixTranslation(0, 0.91f - margin, 0.115f);
+			AppendBody(body);
+		}
+
+		// 왼 허벅지
+		{
+			auto body = new RobotBody;
+			body->mesh.reset(IBoxMesh::Create(XMFLOAT3(0.21f - margin, 0, 0), XMFLOAT3(0.4f, 0.17f, 0.17f), color));
+			body->worldTx = leg * XMMatrixTranslation(0, 0.91f - margin, -0.115f);
+			AppendBody(body);
+		}
+
+		// 오른 종아리
+		{
+			auto body = new RobotBody;
+			body->mesh.reset(IBoxMesh::Create(XMFLOAT3(0.21f - margin, 0, 0), XMFLOAT3(0.4f, 0.16f, 0.16f), color));
+			body->worldTx = leg * XMMatrixTranslation(0, 0.5f - margin, 0.1f);
+			AppendBody(body);
+		}
+
+		// 왼 종아리
+		{
+			auto body = new RobotBody;
+			body->mesh.reset(IBoxMesh::Create(XMFLOAT3(0.21f - margin, 0, 0), XMFLOAT3(0.4f, 0.16f, 0.16f), color));
+			body->worldTx = leg * XMMatrixTranslation(0, 0.5f - margin, - 0.1f);
+			AppendBody(body);
+		}
+
+		// 오른 발
 		{
 			auto body = new RobotBody;
 			body->mesh.reset(IBoxMesh::Create(
-				XMFLOAT3(0.21f, 0, 0), 
-				XMFLOAT3(0.4f, 0.17f, 0.17f), color));
-			body->worldTx = leg * XMMatrixTranslation(0, 0.91f, 0.115f);
+				XMFLOAT3(0.05f, 0, 0), 
+				XMFLOAT3(0.25f, 0.09f, 0.16f), color));
+			body->worldTx = XMMatrixTranslation(0.00f, 0.045f, 0.1f);
+			AppendBody(body);
+		}
+
+		// 왼발
+		{
+			auto body = new RobotBody;
+			body->mesh.reset(IBoxMesh::Create(
+				XMFLOAT3(0.05f, 0, 0),
+				XMFLOAT3(0.25f, 0.09f, 0.16f), color));
+			body->worldTx = XMMatrixTranslation(0.00f, 0.045f, -0.1f);
 			AppendBody(body);
 		}
 
