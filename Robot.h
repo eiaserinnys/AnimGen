@@ -4,9 +4,11 @@
 
 class IRobot : public IMesh {
 public:
-	virtual void Update_Test(DWORD elapsed) = 0;
+	virtual void Animate_Test(DWORD elapsed) = 0;
+	virtual void Update() = 0;
 
 	virtual DirectX::XMFLOAT3 GetWorldPosition(const std::string& name) = 0;
+	virtual void SetWorldPosition(const std::string& name, const DirectX::XMFLOAT3& pos) = 0;
 
 	static IRobot* Create();
 };

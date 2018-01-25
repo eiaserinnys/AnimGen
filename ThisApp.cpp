@@ -87,10 +87,12 @@ public:
 
 		if (advance)
 		{
-			global->robot->Update_Test(elapsed);
+			global->robot->Animate_Test(elapsed);
 		}
 
 		ikPicking->Update(global->robot.get(), sceneDesc, global.get());
+
+		global->robot->Update();
 
 		global->FillBuffer();
 

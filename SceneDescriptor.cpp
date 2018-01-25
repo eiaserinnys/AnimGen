@@ -46,6 +46,8 @@ void SceneDescriptor::Build(
 				nullptr, XMMatrixMultiply(view, world)));
 
 		worldViewProjT = XMMatrixTranspose(worldViewProj);
+
+		invWorldViewProjT = XMMatrixInverse(nullptr, worldViewProjT);
 	}
 }
 
@@ -79,7 +81,7 @@ pair<XMMATRIX, XMFLOAT4>
 }
 
 //------------------------------------------------------------------------------
-XMFLOAT3 SceneDescriptor::GetNdcCoordinate(const XMFLOAT3& pos) const
+XMFLOAT4 SceneDescriptor::GetNdc(const XMFLOAT3& pos) const
 {
 	XMFLOAT4 posProj;
 
@@ -87,19 +89,53 @@ XMFLOAT3 SceneDescriptor::GetNdcCoordinate(const XMFLOAT3& pos) const
 		&posProj,
 		XMVector3Transform(XMLoadFloat3(&pos), worldViewProjT));
 
-	return XMFLOAT3(
-		posProj.x / posProj.w, 
-		posProj.y / posProj.w,
-		posProj.z / posProj.w);
+	return posProj;
+}
+
+//------------------------------------------------------------------------------
+XMFLOAT3 SceneDescriptor::GetWorldPositionByNdc(const XMFLOAT4& ndc) const
+{
+	XMFLOAT3 posProj;
+
+	XMStoreFloat3(
+		&posProj,
+		XMVector4Transform(XMLoadFloat4(&ndc), invWorldViewProjT));
+
+	return posProj;
 }
 
 //------------------------------------------------------------------------------
 XMFLOAT3 SceneDescriptor::GetScreenCoordinate(const XMFLOAT3& pos) const
 {
-	auto ndc = GetNdcCoordinate(pos);
+	auto posProj = GetNdc(pos);
 
 	return XMFLOAT3(
-		(1 + ndc.x) / 2 * width,
-		(1 - ndc.y) / 2 * height,
+		(1 + posProj.x / posProj.w) / 2 * width,
+		(1 - posProj.y / posProj.w) / 2 * height,
 		pos.z);
+}
+
+//------------------------------------------------------------------------------
+XMFLOAT4 SceneDescriptor::GetNdcByScreenCoordinate(
+	const XMFLOAT2& pos,
+	float w) const
+{
+	float z = -w;
+
+	XMFLOAT4 ndc(
+		((pos.x / width) * 2 - 1) * w,
+		(1 - (pos.y / height) * 2) * w,
+		(proj.r[2].m128_f32[2] * z + proj.r[2].m128_f32[3]),
+		w);
+
+	return ndc;
+}
+
+//------------------------------------------------------------------------------
+XMFLOAT3 SceneDescriptor::GetWorldPositionByScreenCoordinate(
+	const XMFLOAT2& pos,
+	float w) const
+{
+	auto ndc = GetNdcByScreenCoordinate(pos, w);
+	return GetWorldPositionByNdc(ndc);
 }

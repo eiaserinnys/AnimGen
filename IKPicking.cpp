@@ -17,32 +17,41 @@ public:
 		posW[0] = robot->GetWorldPosition("LFoot");
 		posW[1] = robot->GetWorldPosition("RFoot");
 
+		posN[0] = sceneDesc.GetNdc(posW[0]);
+		posN[1] = sceneDesc.GetNdc(posW[1]);
+
 		posS[0] = sceneDesc.GetScreenCoordinate(posW[0]);
 		posS[1] = sceneDesc.GetScreenCoordinate(posW[1]);
 
-		XMFLOAT2 dragOfs(
-			mousePos.x - mouseDownPos.x,
-			mousePos.y - mouseDownPos.y);
+		XMFLOAT2 dragPos(
+			scrPos.x + mousePos.x - mouseDownPos.x,
+			scrPos.y + mousePos.y - mouseDownPos.y);
 
 		for (int i = 0; i < COUNT_OF(posS); ++i)
 		{
 			bool drag = dragIndex == i;
 
 			context->uiRenderer->Enqueue(
-				XMFLOAT2(
-					posS[i].x + (drag ? dragOfs.x : 0),
-					posS[i].y + (drag ? dragOfs.y : 0)),
+				drag ? dragPos : XMFLOAT2(posS[i].x, posS[i].y),
 				radius,
 				0.01f,
 				drag ?
 					0xd0ffffff :
 					(mouseOn[i] ? 0x60ffffff : 0x20ffffff));
+
+			if (drag)
+			{
+				auto posW = sceneDesc.GetWorldPositionByScreenCoordinate(dragPos, posN[i].w);
+
+				robot->SetWorldPosition(i == 0 ? "LFoot" : "RFoot", posW);
+			}
 		}
 
 		scrValid = true;
 	}
 
 	XMFLOAT3 posW[2];
+	XMFLOAT4 posN[2];
 	XMFLOAT3 posS[2];
 	
 	bool mouseOn[2] = { false, false };
@@ -52,6 +61,7 @@ public:
 	int dragIndex = -1;
 	XMFLOAT3 mouseDownPos;
 	XMFLOAT3 mousePos;
+	XMFLOAT3 scrPos;
 
 	bool IsDragging() const { return dragIndex >= 0; }
 
@@ -65,6 +75,7 @@ public:
 			SetCapture(hWnd);
 			mouseDownPos = mouseDownPos_;
 			mousePos = mouseDownPos_;
+			scrPos = posS[dragIndex];
 			return true;
 		}
 		return false;

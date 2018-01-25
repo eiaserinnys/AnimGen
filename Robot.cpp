@@ -220,7 +220,7 @@ public:
 		return it != nameToIndex.end() ? it->second : -1;
 	}
 
-	void Update_Test(DWORD elapsed)
+	void Animate_Test(DWORD elapsed)
 	{
 		total += elapsed;
 
@@ -243,9 +243,11 @@ public:
 		bodies[GetBoneIndex("RLeg2")]->localTx = XMMatrixRotationZ(-leg2Swing);
 		bodies[GetBoneIndex("LLeg1")]->localTx = XMMatrixRotationZ(-leg1Swing);
 		bodies[GetBoneIndex("LLeg2")]->localTx = XMMatrixRotationZ(-leg2Swing);
+	}
 
+	void Update()
+	{
 		UpdateWorldTransform();
-
 		TransformMesh();
 	}
 
@@ -261,6 +263,33 @@ public:
 				worldTx.r[3].m128_f32[2]);
 		}
 		return XMFLOAT3(0, 0, 0);
+	}
+
+	void SetWorldPosition(const string& name, const XMFLOAT3& pos)
+	{
+		auto index = GetBoneIndex(name);
+		if (index > 0)
+		{
+			auto& worldTx = bodies[index]->worldTx;
+			worldTx.r[3].m128_f32[0] = pos.x;
+			worldTx.r[3].m128_f32[1] = pos.y;
+			worldTx.r[3].m128_f32[2] = pos.z;
+
+			auto& localTx = bodies[index]->localTx;
+			if (bodies[index]->parentIndex >= 0)
+			{
+				auto parent = bodies[bodies[index]->parentIndex];
+
+				localTx = worldTx *
+					XMMatrixInverse(nullptr, parent->worldTx) *
+					XMMatrixInverse(nullptr, bodies[index]->linkTx);
+			}
+			else
+			{
+				localTx = worldTx *
+					XMMatrixInverse(nullptr, bodies[index]->linkTx);
+			}
+		}
 	}
 
 	~Robot()
