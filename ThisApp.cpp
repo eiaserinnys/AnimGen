@@ -33,7 +33,7 @@ public:
 		: hWnd(hWnd)
 	{
 		global.reset(new RenderContext(hWnd));
-		render.reset(new RenderProcedure(hWnd, global->d3d11.get(), global->rts.get()));
+		render.reset(new RenderProcedure(global.get()));
 
 		arcBall.reset(IEulerControl::Create(
 			210 / 180.0f * (float)M_PI, 
@@ -78,63 +78,14 @@ public:
 		DWORD elapsed = lastTime > 0 ? cur - lastTime : 0;
 		lastTime = cur;
 
-		global->robot->Update_Test(elapsed);
+		//global->robot->Update_Test(elapsed);
 
-		global->uiRenderer->Enqueue(
-			global->robot->GetWorldPosition("LFoot"),
-			0.01f);
-		global->uiRenderer->Enqueue(
-			global->robot->GetWorldPosition("RFoot"),
-			0.01f);
+		global->uiRenderer->Enqueue(global->robot->GetWorldPosition("LFoot"), 0.01f, 0x800000ff);
+		global->uiRenderer->Enqueue(global->robot->GetWorldPosition("RFoot"), 0.01f, 0x80ff0000);
 
 		global->FillBuffer();
 
-		{
-			render->Begin();
-
-			global->objRenderer->RenderShadow(sceneDesc, global->objBuffer.get());
-
-			global->objRenderer->Render(sceneDesc, global->objBuffer.get());
-
-			{
-				global->d3d11->immDevCtx->ClearState();
-				global->rts->Restore();
-
-				global->deferredRenderer->Render(sceneDesc);
-			}
-
-			{
-				int y = 0;
-
-				for (auto 
-					it = global->logger->entry.begin(); 
-					it != global->logger->entry.end(); ++it)
-				{
-					global->textRenderer->Enqueue(TextToRender(
-						XMFLOAT2(50.0f, 50.0f + y * 20),
-						*it,
-						XMFLOAT4(1, 0, 0, 1)));
-
-					y++;
-				}
-
-				{
-					global->d3d11->immDevCtx->ClearState();
-					global->rts->Restore();
-					global->uiRenderer->Render(
-						sceneDesc, 
-						XMFLOAT2(1280.0f, 720.0f));
-				}
-
-				global->textRenderer->Draw(
-					sceneDesc.worldViewProj,
-					XMFLOAT2(
-						(float)global->rts->GetCurrent()->GetWidth(),
-						(float)global->rts->GetCurrent()->GetHeight()));
-			}
-
-			render->End();
-		}
+		render->Render(sceneDesc);
 	}
 
 	//--------------------------------------------------------------------------

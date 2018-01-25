@@ -339,16 +339,17 @@ ICoordinateAxisMesh* ICoordinateAxisMesh::Create(
 class UIMesh : public BasicMeshT<IUIMesh, XMFLOAT3, UINT16> {
 public:
 	UIMesh(
-		const XMFLOAT3& posLU,
-		const XMFLOAT3& posRD,
+		const XMFLOAT2& posLU,
+		const XMFLOAT2& posRD,
+		float zDepth,
 		DWORD color)
 	{
-		UINT16 pivot = pos.size();
+		UINT16 pivot = (UINT16)pos.size();
 
-		pos.push_back(posLU);
-		pos.push_back(XMFLOAT3(posRD.x, posLU.y, posLU.z));
-		pos.push_back(XMFLOAT3(posLU.x, posRD.y, posLU.z));
-		pos.push_back(posRD);
+		pos.push_back(XMFLOAT3(posLU.x, posLU.y, zDepth));
+		pos.push_back(XMFLOAT3(posRD.x, posLU.y, zDepth));
+		pos.push_back(XMFLOAT3(posLU.x, posRD.y, zDepth));
+		pos.push_back(XMFLOAT3(posRD.x, posRD.y, zDepth));
 
 		col.push_back(color);
 		col.push_back(color);
@@ -390,9 +391,10 @@ IUIMesh::~IUIMesh()
 
 //------------------------------------------------------------------------------
 IUIMesh* IUIMesh::CreateBasicQuad(
-	const XMFLOAT3& posLU,
-	const XMFLOAT3& posRD,
+	const XMFLOAT2& posLU,
+	const XMFLOAT2& posRD,
+	float zDepth, 
 	DWORD color)
 {
-	return new UIMesh(posLU, posRD, color);
+	return new UIMesh(posLU, posRD, zDepth, color);
 }

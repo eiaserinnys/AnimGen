@@ -86,6 +86,13 @@ public:
 		blendState.reset(IDX11BlendState::Create_AlphaBlend(d3dDev));
 
 		{
+			D3D11_DEPTH_STENCIL_DESC desc;
+			IDX11DepthStencilState::DefaultDesc(desc);
+			desc.DepthFunc = D3D11_COMPARISON_LESS_EQUAL;
+			depthState.reset(IDX11DepthStencilState::Create(d3dDev, desc));
+		}
+
+		{
 			D3D11_SAMPLER_DESC sampDesc;
 			IDX11SamplerState::DefaultDesc(sampDesc);
 			sampDesc.AddressU = D3D11_TEXTURE_ADDRESS_BORDER;
@@ -137,9 +144,10 @@ public:
 				posProj.y = (1 - posProj.y / posProj.w) / 2 * extent.y;
 
 				unique_ptr<IUIMesh> mesh(IUIMesh::CreateBasicQuad(
-					XMFLOAT3(posProj.x - 25, posProj.y - 25, quad->zDepth),
-					XMFLOAT3(posProj.x + 25, posProj.y + 25, quad->zDepth),
-					0xffffffff));
+					XMFLOAT2(posProj.x - 25, posProj.y - 25), 
+					XMFLOAT2(posProj.x + 25, posProj.y + 25), 
+					quad->zDepth,
+					quad->color));
 
 				buffer->Append(mesh.get());
 
@@ -151,6 +159,7 @@ public:
 			if (buffer->Vertices().second > 0 &&
 				buffer->Indices().second > 0)
 			{
+				depthState->Apply(devCtx);
 				blendState->Apply(devCtx);
 				constants->Update(devCtx, extent);
 
@@ -176,15 +185,16 @@ public:
 	}
 
 	//--------------------------------------------------------------------------
-	void Enqueue(const XMFLOAT3& pos, float zDepth)
+	void Enqueue(const XMFLOAT3& pos, float zDepth, DWORD color)
 	{
-		quads.push_back(new Quad{ pos, zDepth });
+		quads.push_back(new Quad{ pos, zDepth, color });
 	}
 
 	struct Quad
 	{
 		XMFLOAT3 pos;
 		float zDepth;
+		DWORD color;
 	};
 
 	list<Quad*> quads;
@@ -194,6 +204,7 @@ public:
 
 	unique_ptr<UIBuffer> buffer;
 
+	unique_ptr<IDX11DepthStencilState> depthState;
 	unique_ptr<IDX11BlendState> blendState;
 	unique_ptr<IDX11SamplerState> shaderSampler;
 	unique_ptr<UIConstants> constants;

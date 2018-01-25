@@ -60,7 +60,8 @@ public:
 	virtual const std::pair<const UINT16*, UINT> Indices() const = 0;
 
 	static IUIMesh* CreateBasicQuad(
-		const DirectX::XMFLOAT3& posLU,
-		const DirectX::XMFLOAT3& posRD,
+		const DirectX::XMFLOAT2& posLU,
+		const DirectX::XMFLOAT2& posRD,
+		float zDepth, 
 		DWORD color);
 };

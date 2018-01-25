@@ -9,7 +9,10 @@ class IUIRenderer {
 public:
 	virtual ~IUIRenderer();
 
-	virtual void Enqueue(const DirectX::XMFLOAT3& pos, float zDepth) = 0;
+	virtual void Enqueue(
+		const DirectX::XMFLOAT3& pos, 
+		float zDepth,
+		DWORD color) = 0;
 
 	virtual void Render(
 		const SceneDescriptor& sceneDesc, 
