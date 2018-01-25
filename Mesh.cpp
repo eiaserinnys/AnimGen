@@ -13,10 +13,6 @@ using namespace DirectX;
 IMesh::~IMesh()
 {}
 
-//------------------------------------------------------------------------------
-IUIMesh::~IUIMesh()
-{}
-
 ////////////////////////////////////////////////////////////////////////////////
 
 //------------------------------------------------------------------------------
@@ -168,15 +164,15 @@ public:
 
 		// 작은 쪽 캡을 만든다
 		{
-			UINT16 centerInd = pos.size();
+			UINT16 centerInd = (UINT16)pos.size();
 			pos.push_back(start);
 			nor.push_back(-dir);
 			col.push_back(clr);
 
-			UINT16 pivotInd = pos.size();
+			UINT16 pivotInd = (UINT16)pos.size();
 			for (int i = 0; i < granulity; ++i)
 			{
-				float angle = ((float)i / granulity) * M_PI * 2;
+				float angle = ((float)i / granulity) * (float)M_PI * 2;
 				XMFLOAT3 p = start + x * cosf(angle) * radius1 + y * sinf(angle) * radius1;
 				pos.push_back(p);
 				nor.push_back(-dir);
@@ -190,10 +186,10 @@ public:
 
 		// 실린더를 만든다
 		{
-			UINT16 pivotInd = pos.size();
+			UINT16 pivotInd = (UINT16)pos.size();
 			for (int i = 0; i < granulity; ++i)
 			{
-				float angle = ((float)i / granulity) * M_PI * 2;
+				float angle = ((float)i / granulity) * (float)M_PI * 2;
 				XMFLOAT3 p = start + x * cosf(angle) * radius1 + y * sinf(angle) * radius1;
 				pos.push_back(p);
 				nor.push_back(x * cosf(angle) + y * sinf(angle));
@@ -217,10 +213,10 @@ public:
 		
 		// 헤드 쪽 캡을 만든다
 		{
-			UINT16 pivotInd = pos.size();
+			UINT16 pivotInd = (UINT16)pos.size();
 			for (int i = 0; i < granulity; ++i)
 			{
-				float angle = ((float)i / granulity) * M_PI * 2;
+				float angle = ((float)i / granulity) * (float)M_PI * 2;
 				XMFLOAT3 p = start + dir * bodyLen + x * cosf(angle) * radius1 + y * sinf(angle) * radius1;
 				pos.push_back(p);
 				nor.push_back(-dir);
@@ -244,15 +240,15 @@ public:
 
 		// 헤드를 닫는다
 		{
-			UINT16 centerInd = pos.size();
+			UINT16 centerInd = (UINT16)pos.size();
 			pos.push_back(end);
 			nor.push_back(dir);
 			col.push_back(clr);
 
-			UINT16 pivotInd = pos.size();
+			UINT16 pivotInd = (UINT16)pos.size();
 			for (int i = 0; i < granulity; ++i)
 			{
-				float angle = ((float)i / granulity) * M_PI * 2;
+				float angle = ((float)i / granulity) * (float)M_PI * 2;
 				XMFLOAT3 p = start + dir * bodyLen + x * cosf(angle) * radius2 + y * sinf(angle) * radius2;
 				pos.push_back(p);
 				nor.push_back(x * cosf(angle) + y * sinf(angle));
@@ -336,4 +332,67 @@ ICoordinateAxisMesh* ICoordinateAxisMesh::Create(
 	int granulity)
 {
 	return new CoordinateAxisMesh(frame, length, headLen, radius1, radius2, granulity);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+class UIMesh : public BasicMeshT<IUIMesh, XMFLOAT3, UINT16> {
+public:
+	UIMesh(
+		const XMFLOAT3& posLU,
+		const XMFLOAT3& posRD,
+		DWORD color)
+	{
+		UINT16 pivot = pos.size();
+
+		pos.push_back(posLU);
+		pos.push_back(XMFLOAT3(posRD.x, posLU.y, posLU.z));
+		pos.push_back(XMFLOAT3(posLU.x, posRD.y, posLU.z));
+		pos.push_back(posRD);
+
+		col.push_back(color);
+		col.push_back(color);
+		col.push_back(color);
+		col.push_back(color);
+
+		tex.push_back(XMFLOAT2(0, 0));
+		tex.push_back(XMFLOAT2(1, 0));
+		tex.push_back(XMFLOAT2(0, 1));
+		tex.push_back(XMFLOAT2(1, 1));
+
+		ind.push_back(pivot + 0);
+		ind.push_back(pivot + 1);
+		ind.push_back(pivot + 2);
+
+		ind.push_back(pivot + 1);
+		ind.push_back(pivot + 3);
+		ind.push_back(pivot + 2);
+	}
+
+	const pair<const DWORD*, UINT> Colors() const
+	{
+		return StreamContent(col);
+	}
+
+	const pair<const XMFLOAT2*, UINT> Textures() const
+	{
+		return StreamContent(tex);
+	}
+
+protected:
+	vector<XMFLOAT2> tex;
+	vector<DWORD> col;
+};
+
+//------------------------------------------------------------------------------
+IUIMesh::~IUIMesh()
+{}
+
+//------------------------------------------------------------------------------
+IUIMesh* IUIMesh::CreateBasicQuad(
+	const XMFLOAT3& posLU,
+	const XMFLOAT3& posRD,
+	DWORD color)
+{
+	return new UIMesh(posLU, posRD, color);
 }

@@ -249,6 +249,20 @@ public:
 		TransformMesh();
 	}
 
+	XMFLOAT3 GetWorldPosition(const string& name)
+	{
+		auto index = GetBoneIndex(name);
+		if (index > 0)
+		{
+			auto& worldTx = bodies[index]->worldTx;
+			return XMFLOAT3(
+				worldTx.r[3].m128_f32[0],
+				worldTx.r[3].m128_f32[1],
+				worldTx.r[3].m128_f32[2]);
+		}
+		return XMFLOAT3(0, 0, 0);
+	}
+
 	~Robot()
 	{
 		for (auto it = bodies.begin(); it != bodies.end(); ++it)

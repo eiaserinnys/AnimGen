@@ -5,6 +5,7 @@
 #include <DX11Device.h>
 #include <RenderTargetManager.h>
 #include <ShaderDefineManager.h>
+#include <TextureManager.h>
 #include <TextRenderer.h>
 
 #include "Mesh.h"
@@ -32,6 +33,7 @@ struct RenderContext
 	std::unique_ptr<DX11Device> d3d11;
 	std::unique_ptr<IRenderTargetManager> rts;
 	std::unique_ptr<IShaderDefineManager> sd;
+	std::unique_ptr<ITextureManager> textures;
 	
 	std::unique_ptr<IObjectRenderer> objRenderer;
 	std::unique_ptr<IDeferredRenderer> deferredRenderer;

@@ -87,10 +87,14 @@ RenderContext::RenderContext(HWND hwnd)
 			{
 				{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
 				{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 1, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+				{ "COLOR", 0, DXGI_FORMAT_R8G8B8A8_UNORM, 2, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 }
 			};
 			sd->Load("UI", L"Shader/UI.fx", layout, COUNT_OF(layout));
 		}
 	}
+
+	// 텍스처 매니저를 만든다
+	textures.reset(ITextureManager::Create(d3d11->g_pd3dDevice));
 
 	// 렌더러를 만든다
 	{

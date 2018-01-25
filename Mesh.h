@@ -54,6 +54,13 @@ public:
 
 	virtual ~IUIMesh();
 
-	virtual const std::pair<const DirectX::XMFLOAT2*, UINT> Vertices() const = 0;
+	virtual const std::pair<const DirectX::XMFLOAT3*, UINT> Vertices() const = 0;
+	virtual const std::pair<const DirectX::XMFLOAT2*, UINT> Textures() const = 0;
+	virtual const std::pair<const DWORD*, UINT> Colors() const = 0;
 	virtual const std::pair<const UINT16*, UINT> Indices() const = 0;
+
+	static IUIMesh* CreateBasicQuad(
+		const DirectX::XMFLOAT3& posLU,
+		const DirectX::XMFLOAT3& posRD,
+		DWORD color);
 };

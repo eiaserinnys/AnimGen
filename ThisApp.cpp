@@ -80,6 +80,13 @@ public:
 
 		global->robot->Update_Test(elapsed);
 
+		global->uiRenderer->Enqueue(
+			global->robot->GetWorldPosition("LFoot"),
+			0.01f);
+		global->uiRenderer->Enqueue(
+			global->robot->GetWorldPosition("RFoot"),
+			0.01f);
+
 		global->FillBuffer();
 
 		{
@@ -97,9 +104,6 @@ public:
 			}
 
 			{
-				//global->d3d11->immDevCtx->ClearState();
-				//global->rts->Restore();
-
 				int y = 0;
 
 				for (auto 
@@ -112,6 +116,14 @@ public:
 						XMFLOAT4(1, 0, 0, 1)));
 
 					y++;
+				}
+
+				{
+					global->d3d11->immDevCtx->ClearState();
+					global->rts->Restore();
+					global->uiRenderer->Render(
+						sceneDesc, 
+						XMFLOAT2(1280.0f, 720.0f));
 				}
 
 				global->textRenderer->Draw(

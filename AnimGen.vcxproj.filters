@@ -126,7 +126,7 @@
     <FxCompile Include="Shader\Shadow.fx">
       <Filter>Visual\Rendering\Object</Filter>
     </FxCompile>
-    <FxCompile Include="UI.fx">
+    <FxCompile Include="Shader\UI.fx">
       <Filter>Visual\Rendering\UI</Filter>
     </FxCompile>
   </ItemGroup>
