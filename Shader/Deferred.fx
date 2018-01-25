@@ -180,7 +180,7 @@ float4 PS(VS_OUTPUT input) : SV_Target
 	
 	float4 final;
 	final = float4(
-		(1 - o) * ((albedo.xyz + s) * lit) + 
+		(1 - o) * (albedo.xyz * lit + s * shadow) + 
 		o * float3(1, 0.75, 0.25) * 0.05,
 		(albedo.w > 0) + o);
 

@@ -4,6 +4,8 @@
 #define _USE_MATH_DEFINES
 #include <math.h>
 
+#include <timeapi.h>
+
 #include <DirectXMath.h>
 
 #include <WindowsUtility.h>
@@ -61,14 +63,21 @@ public:
 	{
 		SceneDescriptor sceneDesc;
 
-		XMFLOAT3 target = XMFLOAT3(0, 1.5f, 0);
-		arcBall->Update(target, 12.5);
+		XMFLOAT3 target = XMFLOAT3(0, 1.25f, 0);
+		arcBall->Update(target, 10);
 
 		sceneDesc.Build(
 			hWnd, 
 			arcBall->GetEyePosition(), 
 			target, 
 			arcBall->GetRotationMatrix());
+
+		static DWORD lastTime = 0;
+		DWORD cur = timeGetTime();
+		DWORD elapsed = lastTime > 0 ? cur - lastTime : 0;
+		lastTime = cur;
+
+		global->robot->Update_Test(elapsed);
 
 		global->FillBuffer();
 
