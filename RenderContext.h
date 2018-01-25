@@ -10,6 +10,7 @@
 #include "Mesh.h"
 #include "ObjectBuffer.h"
 
+#include "UIRenderer.h"
 #include "ObjectRenderer.h"
 #include "DeferredRenderer.h"
 
@@ -35,6 +36,7 @@ struct RenderContext
 	std::unique_ptr<IObjectRenderer> objRenderer;
 	std::unique_ptr<IDeferredRenderer> deferredRenderer;
 	std::unique_ptr<ITextRenderer> textRenderer;
+	std::unique_ptr<IUIRenderer> uiRenderer;
 
 	std::unique_ptr<ObjectBuffer> objBuffer;
 	std::unique_ptr<IMesh> floor;

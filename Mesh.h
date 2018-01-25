@@ -2,12 +2,14 @@
 
 class IMesh {
 public:
+	typedef IMesh MeshType;
+
 	virtual ~IMesh();
 
-	virtual std::pair<const DirectX::XMFLOAT3*, UINT> Vertices() const = 0;
-	virtual std::pair<const DirectX::XMFLOAT3*, UINT> Normals() const = 0;
-	virtual std::pair<const DWORD*, UINT> Colors() const = 0;
-	virtual std::pair<const UINT16*, UINT> Indices() const = 0;
+	virtual const std::pair<const DirectX::XMFLOAT3*, UINT> Vertices() const = 0;
+	virtual const std::pair<const DirectX::XMFLOAT3*, UINT> Normals() const = 0;
+	virtual const std::pair<const DWORD*, UINT> Colors() const = 0;
+	virtual const std::pair<const UINT16*, UINT> Indices() const = 0;
 };
 
 class IFloorMesh : public IMesh {
@@ -44,4 +46,14 @@ public:
 		float radius1,
 		float radius2,
 		int granulity);
+};
+
+class IUIMesh {
+public:
+	typedef IUIMesh MeshType;
+
+	virtual ~IUIMesh();
+
+	virtual const std::pair<const DirectX::XMFLOAT2*, UINT> Vertices() const = 0;
+	virtual const std::pair<const UINT16*, UINT> Indices() const = 0;
 };

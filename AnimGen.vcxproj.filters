@@ -30,6 +30,9 @@
     <Filter Include="Visual\Scene">
       <UniqueIdentifier>{99c7d3c4-fe7d-485c-86ad-6b5aec62ec8f}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Visual\Rendering\UI">
+      <UniqueIdentifier>{2cd53e8a-e2fa-4998-9b7b-71e6e39a0384}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="RenderContext.cpp">
@@ -64,6 +67,9 @@
     </ClCompile>
     <ClCompile Include="Robot.cpp">
       <Filter>Robot</Filter>
+    </ClCompile>
+    <ClCompile Include="UIRenderer.cpp">
+      <Filter>Visual\Rendering\UI</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -103,6 +109,12 @@
     <ClInclude Include="Robot.h">
       <Filter>Robot</Filter>
     </ClInclude>
+    <ClInclude Include="UIRenderer.h">
+      <Filter>Visual\Rendering\UI</Filter>
+    </ClInclude>
+    <ClInclude Include="BasicMeshT.h">
+      <Filter>Visual\Scene</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Shader\Object.fx">
@@ -113,6 +125,9 @@
     </FxCompile>
     <FxCompile Include="Shader\Shadow.fx">
       <Filter>Visual\Rendering\Object</Filter>
+    </FxCompile>
+    <FxCompile Include="UI.fx">
+      <Filter>Visual\Rendering\UI</Filter>
     </FxCompile>
   </ItemGroup>
 </Project>

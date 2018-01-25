@@ -2,10 +2,14 @@
 
 #include <Utility.h>
 
+#include "BasicMeshT.h"
+
 //------------------------------------------------------------------------------
 template <typename BaseClass>
-class MeshT : public BaseClass {
+class MeshT : public BasicMeshT<BaseClass, DirectX::XMFLOAT3, UINT16> {
 public:
+	typedef BasicMeshT<BaseClass, DirectX::XMFLOAT3, UINT16> BasicMesh;
+
 	void AddRectangle(
 		const DirectX::XMFLOAT3& c,
 		const DirectX::XMFLOAT3& rHalf,
@@ -73,43 +77,24 @@ public:
 		ind.push_back(indPtr + 3);
 	}
 
-	void Append(IMesh* mesh)
+	void Append(typename BaseClass::MeshType* mesh)
 	{
-		pos.reserve(pos.size() + mesh->Vertices().second);
-		col.reserve(col.size() + mesh->Colors().second);
-		nor.reserve(nor.size() + mesh->Normals().second);
-		ind.reserve(ind.size() + mesh->Indices().second);
-
-		UINT16 pivot = pos.size();
-		pos.insert(pos.end(), mesh->Vertices().first, mesh->Vertices().first + mesh->Vertices().second);
-		nor.insert(nor.end(), mesh->Normals().first, mesh->Normals().first + mesh->Normals().second);
-		col.insert(col.end(), mesh->Colors().first, mesh->Colors().first + mesh->Colors().second);
-
-		if (pivot > 0)
-		{
-			for (int i = 0; i < mesh->Indices().second; ++i)
-			{
-				ind.push_back(mesh->Indices().first[i] + pivot);
-			}
-		}
-		else
-		{
-			ind.insert(ind.end(), mesh->Indices().first, mesh->Indices().first + mesh->Indices().second);
-		}
+		BasicMesh::Append(mesh);
+		AppendStream(col, mesh->Colors());
+		AppendStream(nor, mesh->Normals());
 	}
 
-	virtual std::pair<const DirectX::XMFLOAT3*, UINT> Vertices() const
-		{ return make_pair(pos.empty() ? nullptr : &pos[0], (UINT)pos.size()); }
-	virtual std::pair<const DirectX::XMFLOAT3*, UINT> Normals() const
-		{ return make_pair(nor.empty() ? nullptr : &nor[0], (UINT)nor.size()); }
-	virtual std::pair<const DWORD*, UINT> Colors() const
-		{ return make_pair(col.empty() ? nullptr : &col[0], (UINT)col.size()); }
-	virtual std::pair<const UINT16*, UINT> Indices() const
-		{ return make_pair(ind.empty() ? nullptr : &ind[0], (UINT) ind.size()); }
+	const std::pair<const DirectX::XMFLOAT3*, UINT> Normals() const
+	{ 
+		return StreamContent(nor); 
+	}
+
+	const std::pair<const DWORD*, UINT> Colors() const 
+	{ 
+		return StreamContent(col); 
+	}
 
 protected:
-	std::vector<DirectX::XMFLOAT3> pos;
 	std::vector<DirectX::XMFLOAT3> nor;
 	std::vector<DWORD> col;
-	std::vector<UINT16> ind;
 };

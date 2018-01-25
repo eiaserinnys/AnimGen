@@ -26,17 +26,17 @@ public:
 	{
 		// 화살표는 하나만 쓴다
 		{
-			float len = 0.6f;
-			float headLen = 0.2f;
-			float r1 = 0.0125f;
-			float r2 = 0.025f;
+			float len = 0.3f;
+			float headLen = 0.1f;
+			float r1 = 0.0125f / sqrtf(2);
+			float r2 = 0.025f / sqrtf(2);
 			frame.reset(ICoordinateAxisMesh::Create(
 				XMMatrixIdentity(), len, headLen, r1, r2, 8));
 		}
 
 		DWORD color = 0x0aa0a0ff;
 
-		XMMATRIX leg = XMMatrixRotationZ(-90.0f / 180 * M_PI);
+		XMMATRIX leg = XMMatrixRotationZ(-90.0f / 180 * (float)M_PI);
 		float margin = 0.05f;
 
 		struct BodyDesc
@@ -130,7 +130,7 @@ public:
 
 		DWORD color = 0x0aa0a0ff;
 
-		nameToIndex.insert(make_pair(name, bodies.size()));
+		nameToIndex.insert(make_pair(name, (int)bodies.size()));
 
 		auto body = new RobotBody;
 		body->name = name;
@@ -192,7 +192,7 @@ public:
 
 			auto transform = [&](IMesh* mesh)
 			{
-				for (int i = 0; i < mesh->Vertices().second; ++i)
+				for (size_t i = 0; i < mesh->Vertices().second; ++i)
 				{
 					XMStoreFloat3(
 						&pos[offset],
@@ -224,15 +224,15 @@ public:
 	{
 		total += elapsed;
 
-		float angle = total / 5000.0f * 2 * M_PI;
+		float angle = total / 5000.0f * 2 * (float)M_PI;
 
-		float headSwing = sin(angle) * M_PI * 0.3f;
-		float leg1Swing = sin(angle) * M_PI * 0.3f;
-		float leg2Swing = (1 - cos(angle)) / 2 * M_PI / 2;
-		float armSwing = (1 - cos(angle)) / 2 * M_PI;
-		float armSwing2 = (1 - cos(angle)) / 2 * M_PI / 2;
+		float headSwing = sin(angle) * (float)M_PI * 0.3f;
+		float leg1Swing = sin(angle) * (float)M_PI * 0.3f;
+		float leg2Swing = (1 - cos(angle)) / 2 * (float)M_PI / 2;
+		float armSwing = (1 - cos(angle)) / 2 * (float)M_PI;
+		float armSwing2 = (1 - cos(angle)) / 2 * (float)M_PI / 2;
 
-		//bodies[GetBoneIndex("Body")]->localTx = XMMatrixRotationY(angle);
+		bodies[GetBoneIndex("Body")]->localTx = XMMatrixRotationZ(angle);
 		bodies[GetBoneIndex("Head")]->localTx = XMMatrixRotationY(headSwing);
 		bodies[GetBoneIndex("RArm1")]->localTx = XMMatrixRotationY(-armSwing2) * XMMatrixRotationZ(armSwing);
 		bodies[GetBoneIndex("RArm2")]->localTx = XMMatrixRotationZ(leg2Swing);

@@ -81,12 +81,22 @@ RenderContext::RenderContext(HWND hwnd)
 			};
 			sd->Load("ObjectShadow", L"Shader/Shadow.fx", layout, COUNT_OF(layout));
 		}
+
+		{
+			D3D11_INPUT_ELEMENT_DESC layout[] =
+			{
+				{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+				{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 1, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+			};
+			sd->Load("UI", L"Shader/UI.fx", layout, COUNT_OF(layout));
+		}
 	}
 
 	// ·»´õ·¯¸¦ ¸¸µç´Ù
 	{
 		objRenderer.reset(IObjectRenderer::Create(this));
 		deferredRenderer.reset(IDeferredRenderer::Create(this));
+		uiRenderer.reset(IUIRenderer::Create(this));
 	}
 
 	// ¾ÀÀ» ¸¸µç´Ù (ÀÓ½Ã)
@@ -96,54 +106,14 @@ RenderContext::RenderContext(HWND hwnd)
 
 		robot.reset(IRobot::Create());
 
-#if 0
-		DWORD color = 0x0aa0a0ff;
-
-		// ¸Ó¸®
-		etc.push_back(IBoxMesh::Create(
-			XMFLOAT3(0, 1.665f, 0), XMFLOAT3(0.22f, 0.25f, 0.22f), color));
-
-		// ¸ö
-		etc.push_back(IBoxMesh::Create(
-			XMFLOAT3(0, 1.22f, 0), XMFLOAT3(0.25f, 0.61f, 0.4f), color));
-
-		// ¿À¸¥ÆÈ
-		etc.push_back(IBoxMesh::Create(
-			XMFLOAT3(0, 1.355f, 0.265f), XMFLOAT3(0.11f, 0.35f, 0.11f), color));
-		etc.push_back(IBoxMesh::Create(
-			XMFLOAT3(0, 0.995f, 0.265f), XMFLOAT3(0.11f, 0.35f, 0.11f), color));
-
-		// ¿ÞÆÈ
-		etc.push_back(IBoxMesh::Create(
-			XMFLOAT3(0, 1.355f, -0.265f), XMFLOAT3(0.11f, 0.35f, 0.11f), color));
-		etc.push_back(IBoxMesh::Create(
-			XMFLOAT3(0, 0.995f, -0.265f), XMFLOAT3(0.11f, 0.35f, 0.11f), color));
-
-		// ¿À¸¥´Ù¸®
-		etc.push_back(IBoxMesh::Create(
-			XMFLOAT3(0, 0.71f, 0.115f), XMFLOAT3(0.17f, 0.4f, 0.17f), color));
-		etc.push_back(IBoxMesh::Create(
-			XMFLOAT3(0, 0.3f, 0.1f), XMFLOAT3(0.14f, 0.4f, 0.14f), color));
-		etc.push_back(IBoxMesh::Create(
-			XMFLOAT3(0.05f, 0.045f, 0.1f), XMFLOAT3(0.25f, 0.09f, 0.14f), color));
-
-		// ¿Þ´Ù¸®
-		etc.push_back(IBoxMesh::Create(
-			XMFLOAT3(0, 0.71f, -0.115f), XMFLOAT3(0.17f, 0.4f, 0.17f), color));
-		etc.push_back(IBoxMesh::Create(
-			XMFLOAT3(0, 0.3f, -0.1f), XMFLOAT3(0.14f, 0.4f, 0.14f), color));
-		etc.push_back(IBoxMesh::Create(
-			XMFLOAT3(0.05f, 0.045f, -0.1f), XMFLOAT3(0.25f, 0.09f, 0.14f), color));
-#endif
-
 		// È­»ìÇ¥µµ Å×½ºÆ®
 		XMMATRIX id = XMMatrixIdentity();
-		etc.push_back(ICoordinateAxisMesh::Create(id, 0.5, 0.1f, 0.02f, 0.04f, 8));
+		//etc.push_back(ICoordinateAxisMesh::Create(id, 0.5, 0.1f, 0.02f, 0.04f, 8));
 
-		//XMMATRIX r = 
-		//	XMMatrixRotationY(30.0f / 180.0f * 3.1415) *
-		//	XMMatrixTranslation(1, 2, 1);
-		//etc.push_back(ICoordinateAxisMesh::Create(r, 1, 0.3f, 0.02f, 0.04f, 8));
+		XMMATRIX r = 
+			//XMMatrixRotationY(30.0f / 180.0f * 3.1415) *
+			XMMatrixTranslation(-1, 1, -1);
+		etc.push_back(ICoordinateAxisMesh::Create(r, 1, 0.3f, 0.02f, 0.04f, 8));
 	}
 
 	textRenderer.reset(ITextRenderer::Create(d3d11->g_pd3dDevice, d3d11->immDevCtx));
@@ -175,13 +145,13 @@ void RenderContext::FillBuffer()
 {
 	objBuffer->Begin();
 
-	objBuffer->Fill(floor.get());
+	objBuffer->Append(floor.get());
 
-	objBuffer->Fill(robot.get());
+	objBuffer->Append(robot.get());
 
 	for (size_t i = 0; i < etc.size(); ++i)
 	{
-		objBuffer->Fill(etc[i]);
+		objBuffer->Append(etc[i]);
 	}
 
 	objBuffer->End(d3d11->immDevCtx);
