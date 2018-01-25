@@ -131,21 +131,13 @@ public:
 		{
 			buffer->Clear();
 
-			XMMATRIX wvp = XMMatrixTranspose(sceneDesc.worldViewProj);
-
 			for (auto it = quads.begin(); it != quads.end(); ++it)
 			{
 				auto quad = *it;
 
-				XMFLOAT4 posProj;
-				XMStoreFloat4(&posProj, XMVector3Transform(XMLoadFloat3(&quad->pos), wvp));
-
-				posProj.x = (1 + posProj.x / posProj.w) / 2 * extent.x;
-				posProj.y = (1 - posProj.y / posProj.w) / 2 * extent.y;
-
 				unique_ptr<IUIMesh> mesh(IUIMesh::CreateBasicQuad(
-					XMFLOAT2(posProj.x - 25, posProj.y - 25), 
-					XMFLOAT2(posProj.x + 25, posProj.y + 25), 
+					XMFLOAT2(quad->pos.x - quad->radiusInPixel, quad->pos.y - quad->radiusInPixel),
+					XMFLOAT2(quad->pos.x + quad->radiusInPixel, quad->pos.y + quad->radiusInPixel),
 					quad->zDepth,
 					quad->color));
 
@@ -185,14 +177,15 @@ public:
 	}
 
 	//--------------------------------------------------------------------------
-	void Enqueue(const XMFLOAT3& pos, float zDepth, DWORD color)
+	void Enqueue(const XMFLOAT2& pos, float radiusInPixel, float zDepth, DWORD color)
 	{
-		quads.push_back(new Quad{ pos, zDepth, color });
+		quads.push_back(new Quad{ pos, radiusInPixel, zDepth, color });
 	}
 
 	struct Quad
 	{
-		XMFLOAT3 pos;
+		XMFLOAT2 pos;
+		float radiusInPixel;
 		float zDepth;
 		DWORD color;
 	};

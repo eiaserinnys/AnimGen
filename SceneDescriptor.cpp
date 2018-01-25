@@ -29,8 +29,8 @@ void SceneDescriptor::Build(
 	{
 		RECT rc;
 		GetClientRect(hwnd, &rc);
-		UINT width = rc.right - rc.left;
-		UINT height = rc.bottom - rc.top;
+		width = rc.right - rc.left;
+		height = rc.bottom - rc.top;
 
 		proj = XMMatrixTranspose(
 			XMMatrixPerspectiveFovRH(
@@ -44,6 +44,8 @@ void SceneDescriptor::Build(
 		invWorldViewT = XMMatrixTranspose(
 			XMMatrixInverse(
 				nullptr, XMMatrixMultiply(view, world)));
+
+		worldViewProjT = XMMatrixTranspose(worldViewProj);
 	}
 }
 
@@ -74,4 +76,30 @@ pair<XMMATRIX, XMFLOAT4>
 	return make_pair(
 		XMMatrixMultiply(proj, view),
 		XMFLOAT4(lightEye.x, lightEye.y, lightEye.z, 1));
+}
+
+//------------------------------------------------------------------------------
+XMFLOAT3 SceneDescriptor::GetNdcCoordinate(const XMFLOAT3& pos) const
+{
+	XMFLOAT4 posProj;
+
+	XMStoreFloat4(
+		&posProj,
+		XMVector3Transform(XMLoadFloat3(&pos), worldViewProjT));
+
+	return XMFLOAT3(
+		posProj.x / posProj.w, 
+		posProj.y / posProj.w,
+		posProj.z / posProj.w);
+}
+
+//------------------------------------------------------------------------------
+XMFLOAT3 SceneDescriptor::GetScreenCoordinate(const XMFLOAT3& pos) const
+{
+	auto ndc = GetNdcCoordinate(pos);
+
+	return XMFLOAT3(
+		(1 + ndc.x) / 2 * width,
+		(1 - ndc.y) / 2 * height,
+		pos.z);
 }

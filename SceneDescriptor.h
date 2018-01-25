@@ -10,8 +10,11 @@ struct SceneDescriptor
 	
 	DirectX::XMMATRIX world, view, proj;
 	DirectX::XMMATRIX worldViewProj;
+	DirectX::XMMATRIX worldViewProjT;
 	DirectX::XMMATRIX invWorldViewT;
 	DirectX::XMFLOAT2 zRange;
+
+	UINT width, height;
 
 	void Build(
 		HWND hwnd,
@@ -22,4 +25,7 @@ struct SceneDescriptor
 	std::pair<
 		DirectX::XMMATRIX,
 		DirectX::XMFLOAT4> GetLightTransform() const;
+
+	DirectX::XMFLOAT3 GetNdcCoordinate(const DirectX::XMFLOAT3& pos) const;
+	DirectX::XMFLOAT3 GetScreenCoordinate(const DirectX::XMFLOAT3& pos) const;
 };

@@ -15,6 +15,8 @@
 #include "RenderContext.h"
 #include "RenderProcedure.h"
 
+#include "IKPicking.h"
+
 using namespace std;
 using namespace DirectX;
 
@@ -25,8 +27,11 @@ public:
 	HWND hWnd;
 
 	unique_ptr<IEulerControl> arcBall;
+	unique_ptr<IIKPicking> ikPicking;
 
 	bool init = false;
+
+	bool advance = false;
 
 	//--------------------------------------------------------------------------
 	ThisApp(HWND hWnd)
@@ -38,6 +43,8 @@ public:
 		arcBall.reset(IEulerControl::Create(
 			210 / 180.0f * (float)M_PI, 
 			20 / 180.0f * (float)M_PI));
+
+		ikPicking.reset(IIKPicking::Create());
 	}
 
 	//--------------------------------------------------------------------------
@@ -78,10 +85,12 @@ public:
 		DWORD elapsed = lastTime > 0 ? cur - lastTime : 0;
 		lastTime = cur;
 
-		//global->robot->Update_Test(elapsed);
+		if (advance)
+		{
+			global->robot->Update_Test(elapsed);
+		}
 
-		global->uiRenderer->Enqueue(global->robot->GetWorldPosition("LFoot"), 0.01f, 0x800000ff);
-		global->uiRenderer->Enqueue(global->robot->GetWorldPosition("RFoot"), 0.01f, 0x80ff0000);
+		ikPicking->Update(global->robot.get(), sceneDesc, global.get());
 
 		global->FillBuffer();
 
@@ -92,8 +101,15 @@ public:
 	virtual pair<bool, LRESULT> HandleMessage(
 		HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	{
-		auto result = arcBall->HandleMessages(hWnd, message, wParam, lParam);
-		if (result) { return make_pair(true, result); }
+		{
+			auto result = ikPicking->HandleMessages(hWnd, message, wParam, lParam);
+			if (result) { return make_pair(true, result); }
+		}
+
+		{
+			auto result = arcBall->HandleMessages(hWnd, message, wParam, lParam);
+			if (result) { return make_pair(true, result); }
+		}
 
 		switch (message) {
 		case WM_KEYDOWN:
@@ -118,8 +134,9 @@ public:
 				MessageBox(hWnd, L"Reload Error", L"Reload Error", MB_OK);
 			}
 		}
-		if (wParam == VK_F1)
+		if (wParam == VK_SPACE)
 		{
+			advance = !advance;
 		}
 	}
 };

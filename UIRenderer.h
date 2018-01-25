@@ -10,7 +10,8 @@ public:
 	virtual ~IUIRenderer();
 
 	virtual void Enqueue(
-		const DirectX::XMFLOAT3& pos, 
+		const DirectX::XMFLOAT2& pos, 
+		float radiusInPixel, 
 		float zDepth,
 		DWORD color) = 0;
 

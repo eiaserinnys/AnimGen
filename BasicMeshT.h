@@ -56,7 +56,7 @@ protected:
 	std::pair<const ElementType*, UINT> StreamContent(
 		const std::vector<ElementType>& stream) const
 	{
-		return make_pair(
+		return std::make_pair(
 			stream.empty() ? nullptr : &stream[0],
 			(UINT)stream.size());
 	}

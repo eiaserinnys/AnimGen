@@ -33,6 +33,9 @@
     <Filter Include="Visual\Rendering\UI">
       <UniqueIdentifier>{2cd53e8a-e2fa-4998-9b7b-71e6e39a0384}</UniqueIdentifier>
     </Filter>
+    <Filter Include="ThisApp\IKPicking">
+      <UniqueIdentifier>{3bb2ea68-d810-463b-bcf5-31e0c448bc18}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="RenderContext.cpp">
@@ -70,6 +73,9 @@
     </ClCompile>
     <ClCompile Include="UIRenderer.cpp">
       <Filter>Visual\Rendering\UI</Filter>
+    </ClCompile>
+    <ClCompile Include="IKPicking.cpp">
+      <Filter>ThisApp\IKPicking</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -114,6 +120,9 @@
     </ClInclude>
     <ClInclude Include="BasicMeshT.h">
       <Filter>Visual\Scene</Filter>
+    </ClInclude>
+    <ClInclude Include="IKPicking.h">
+      <Filter>ThisApp\IKPicking</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
