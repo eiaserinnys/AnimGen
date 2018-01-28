@@ -8,7 +8,8 @@ public:
 	virtual void Update() = 0;
 
 	virtual DirectX::XMFLOAT3 GetWorldPosition(const std::string& name) = 0;
-	virtual void SetWorldPosition(const std::string& name, const DirectX::XMFLOAT3& pos) = 0;
+	
+	virtual void SetFootPosition(bool left, const DirectX::XMFLOAT3& pos) = 0;
 
 	static IRobot* Create();
 };

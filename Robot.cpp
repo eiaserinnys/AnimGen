@@ -1,8 +1,7 @@
 #include "pch.h"
 #include "Robot.h"
 
-#define _USE_MATH_DEFINES
-#include <math.h>
+#include "FrameHelper.h"
 
 #include "MeshT.h"
 #include "ObjectBuffer.h"
@@ -96,6 +95,15 @@ public:
 				desc[i].position, 
 				desc[i].extent, 
 				desc[i].worldTx);
+		}
+
+		{
+			auto l1 = GetWorldPosition("LLeg1");
+			auto l2 = GetWorldPosition("LLeg2");
+			auto l3 = GetWorldPosition("LFoot");
+
+			legLen.x = Distance(l1, l2);
+			legLen.y = Distance(l2, l3);
 		}
 
 		BuildLinkMatrix();
@@ -265,32 +273,104 @@ public:
 		return XMFLOAT3(0, 0, 0);
 	}
 
-	void SetWorldPosition(const string& name, const XMFLOAT3& pos)
+	static void SetTranslation(XMMATRIX& tx, const XMFLOAT3& pos)
 	{
-		auto index = GetBoneIndex(name);
-		if (index > 0)
-		{
-			auto& worldTx = bodies[index]->worldTx;
-			worldTx.r[3].m128_f32[0] = pos.x;
-			worldTx.r[3].m128_f32[1] = pos.y;
-			worldTx.r[3].m128_f32[2] = pos.z;
-
-			auto& localTx = bodies[index]->localTx;
-			if (bodies[index]->parentIndex >= 0)
-			{
-				auto parent = bodies[bodies[index]->parentIndex];
-
-				localTx = worldTx *
-					XMMatrixInverse(nullptr, parent->worldTx) *
-					XMMatrixInverse(nullptr, bodies[index]->linkTx);
-			}
-			else
-			{
-				localTx = worldTx *
-					XMMatrixInverse(nullptr, bodies[index]->linkTx);
-			}
-		}
+		tx.r[3].m128_f32[0] = pos.x;
+		tx.r[3].m128_f32[1] = pos.y;
+		tx.r[3].m128_f32[2] = pos.z;
 	}
+
+	static XMFLOAT3 GetTranslation(const XMMATRIX& tx)
+	{
+		return XMFLOAT3(tx.r[3].m128_f32[0], tx.r[3].m128_f32[1], tx.r[3].m128_f32[2]);
+	}
+
+	void SetFootPosition(bool left, const XMFLOAT3& pos_)
+	{
+		const auto& comTx = bodies[0]->worldTx;
+
+		int index[] = 
+		{
+			GetBoneIndex(left ? "LLeg1" : "RLeg1"),
+			GetBoneIndex(left ? "LLeg2" : "RLeg2"),
+			GetBoneIndex(left ? "LFoot" : "RFoot")
+		};
+
+		XMFLOAT3 orgPos[] =
+		{
+			GetTranslation(bodies[index[0]]->worldTx),
+			GetTranslation(bodies[index[1]]->worldTx),
+			GetTranslation(bodies[index[2]]->worldTx),
+		};
+
+		XMFLOAT3 pos = orgPos[2];
+
+		XMFLOAT3 comAxis[] = 
+		{
+			FrameHelper::GetX(comTx),
+			FrameHelper::GetY(comTx),
+			FrameHelper::GetZ(comTx),
+		};
+
+		auto center = (orgPos[0] + pos) / 2;
+		XMFLOAT3 x = Normalize(pos - orgPos[0]);
+
+		// X축 방향을 부모 트랜스폼으로 보낸다
+		XMFLOAT3 xInCom(
+			Dot(comAxis[0], x),
+			Dot(comAxis[1], x),
+			Dot(comAxis[2], x));
+
+		// y는 그대로 Z축 회전이 된다
+		float rotZ = asinf(xInCom.y);
+		float cosZ = sqrtf(1 - xInCom.y * xInCom.y);
+
+		float rotY = 0;
+		if (cosZ > 0.00001f)
+		{
+			rotY = atan2f(xInCom.x / cosZ, xInCom.z / (-cosZ));
+		}
+
+		XMMATRIX testTx = XMMatrixIdentity();
+		testTx = XMMatrixRotationZ(rotZ) * XMMatrixRotationY(rotY);
+
+		{
+			auto& worldTx = bodies[index[0]]->worldTx;
+			worldTx = testTx;
+
+			SetTranslation(worldTx, orgPos[0]);
+
+			auto& localTx = bodies[index[0]]->localTx;
+			auto parent = bodies[bodies[index[0]]->parentIndex];
+			localTx = worldTx *
+				XMMatrixInverse(nullptr, parent->worldTx) *
+				XMMatrixInverse(nullptr, bodies[index[0]]->linkTx);
+		}
+
+		{
+			auto& worldTx = bodies[index[1]]->worldTx;
+			worldTx = testTx;
+
+			SetTranslation(worldTx, center);
+
+			auto& localTx = bodies[index[1]]->localTx;
+			auto parent = bodies[bodies[index[1]]->parentIndex];
+			localTx = worldTx *
+				XMMatrixInverse(nullptr, parent->worldTx) *
+				XMMatrixInverse(nullptr, bodies[index[1]]->linkTx);
+		}
+
+		{
+			auto& worldTx = bodies[index[2]]->worldTx;
+			SetTranslation(worldTx, pos);
+
+			auto& localTx = bodies[index[2]]->localTx;
+			auto parent = bodies[bodies[index[2]]->parentIndex];
+			localTx = worldTx *
+				XMMatrixInverse(nullptr, parent->worldTx) *
+				XMMatrixInverse(nullptr, bodies[index[2]]->linkTx);
+		}
+}
 
 	~Robot()
 	{
@@ -305,6 +385,8 @@ protected:
 	unique_ptr<IMesh> frame;
 	vector<RobotBody*> bodies;
 	map<string, int> nameToIndex;
+
+	XMFLOAT2 legLen;
 
 	DWORD total = 0;
 };

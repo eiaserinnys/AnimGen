@@ -43,7 +43,7 @@ public:
 			{
 				auto posW = sceneDesc.GetWorldPositionByScreenCoordinate(dragPos, posN[i].w);
 
-				robot->SetWorldPosition(i == 0 ? "LFoot" : "RFoot", posW);
+				robot->SetFootPosition(i == 0, posW);
 			}
 		}
 

@@ -129,7 +129,9 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="AngleHelper.cpp" />
     <ClCompile Include="DeferredRendrerer.cpp" />
+    <ClCompile Include="FrameHelper.cpp" />
     <ClCompile Include="IKPicking.cpp" />
     <ClCompile Include="Logger.cpp" />
     <ClCompile Include="Mesh.cpp" />
@@ -149,8 +151,10 @@
     <ClCompile Include="WinMain.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="AngleHelper.h" />
     <ClInclude Include="BasicMeshT.h" />
     <ClInclude Include="DeferredRenderer.h" />
+    <ClInclude Include="FrameHelper.h" />
     <ClInclude Include="IKPicking.h" />
     <ClInclude Include="Logger.h" />
     <ClInclude Include="Mesh.h" />

@@ -28,6 +28,8 @@ struct RenderContext
 
 	void FillBuffer();
 
+	void BuildIKRefSphere();
+
 	HWND hwnd;
 
 	std::unique_ptr<DX11Device> d3d11;

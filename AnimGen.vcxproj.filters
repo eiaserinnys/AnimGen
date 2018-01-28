@@ -36,6 +36,9 @@
     <Filter Include="ThisApp\IKPicking">
       <UniqueIdentifier>{3bb2ea68-d810-463b-bcf5-31e0c448bc18}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Mathematics">
+      <UniqueIdentifier>{409951d6-3b90-48e4-b7b9-f887df21c59b}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="RenderContext.cpp">
@@ -76,6 +79,12 @@
     </ClCompile>
     <ClCompile Include="IKPicking.cpp">
       <Filter>ThisApp\IKPicking</Filter>
+    </ClCompile>
+    <ClCompile Include="FrameHelper.cpp">
+      <Filter>Mathematics</Filter>
+    </ClCompile>
+    <ClCompile Include="AngleHelper.cpp">
+      <Filter>Mathematics</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -123,6 +132,12 @@
     </ClInclude>
     <ClInclude Include="IKPicking.h">
       <Filter>ThisApp\IKPicking</Filter>
+    </ClInclude>
+    <ClInclude Include="FrameHelper.h">
+      <Filter>Mathematics</Filter>
+    </ClInclude>
+    <ClInclude Include="AngleHelper.h">
+      <Filter>Mathematics</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
