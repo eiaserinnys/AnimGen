@@ -20,8 +20,61 @@ struct RobotBody
 	unique_ptr<IMesh> mesh;
 };
 
+struct BodyDesc
+{
+	string name;
+	string parentName;
+	XMFLOAT3 position;
+	XMFLOAT3 extent;
+	XMMATRIX worldTx;
+};
+
+static const float g_margin = 0.05f;
+static const XMMATRIX g_legRot = XMMatrixRotationZ(-90.0f / 180 * (float)M_PI);
+
+static BodyDesc desc[] =
+{
+
+	// ¸öÅë
+	{ "Body", string(), XMFLOAT3(0, 0, 0), XMFLOAT3(0.25f, 0.61f, 0.4f), XMMatrixTranslation(0, 1.22f, 0) },
+
+	// ¸Ó¸®
+	{ "Head", "Body", XMFLOAT3(0, 0.125f, 0), XMFLOAT3(0.22f, 0.25f, 0.22f), XMMatrixTranslation(0, 1.54f, 0) },
+
+	// ¿À¸¥À­ÆÈ
+	{ "RArm1", "Body", XMFLOAT3(0.175f - g_margin, 0, 0), XMFLOAT3(0.35f, 0.11f, 0.11f), g_legRot * XMMatrixTranslation(0, 1.53f - g_margin, 0.265f) },
+
+	// ¿À¸¥ ¾Æ·§ÆÈ
+	{ "RArm2", "RArm1", XMFLOAT3(0.175f - g_margin, 0, 0), XMFLOAT3(0.35f, 0.11f, 0.11f), g_legRot * XMMatrixTranslation(0, 1.17f - g_margin, 0.265f) },
+
+	// ¿ÞÀ­ÆÈ
+	{ "LArm1", "Body", XMFLOAT3(0.175f - g_margin, 0, 0), XMFLOAT3(0.35f, 0.11f, 0.11f), g_legRot * XMMatrixTranslation(0, 1.53f - g_margin, -0.265f) },
+
+	// ¿Þ¾Æ·§ÆÈ
+	{ "LArm2", "LArm1", XMFLOAT3(0.175f - g_margin, 0, 0), XMFLOAT3(0.35f, 0.11f, 0.11f), g_legRot * XMMatrixTranslation(0, 1.17f - g_margin, -0.265f) },
+
+	// ¿À¸¥ Çã¹÷Áö
+	{ "RLeg1", "Body", XMFLOAT3(0.21f - g_margin, 0, 0), XMFLOAT3(0.4f, 0.17f, 0.17f), g_legRot * XMMatrixTranslation(0, 0.91f - g_margin, 0.115f) },
+
+	// ¿À¸¥ Á¾¾Æ¸®
+	{ "RLeg2", "RLeg1", XMFLOAT3(0.21f - g_margin, 0, 0), XMFLOAT3(0.4f, 0.16f, 0.16f), g_legRot * XMMatrixTranslation(0, 0.5f - g_margin, 0.1f) },
+
+	// ¿À¸¥ ¹ß
+	{ "RFoot", "RLeg2", XMFLOAT3(0.05f, 0, 0), XMFLOAT3(0.25f, 0.09f, 0.16f), XMMatrixTranslation(0.00f, 0.045f, 0.1f) },
+
+	// ¿Þ Çã¹÷Áö
+	{ "LLeg1", "Body", XMFLOAT3(0.21f - g_margin, 0, 0), XMFLOAT3(0.4f, 0.17f, 0.17f), g_legRot * XMMatrixTranslation(0, 0.91f - g_margin, -0.115f) },
+
+	// ¿Þ Á¾¾Æ¸®
+	{ "LLeg2", "LLeg1", XMFLOAT3(0.21f - g_margin, 0, 0), XMFLOAT3(0.4f, 0.16f, 0.16f), g_legRot * XMMatrixTranslation(0, 0.5f - g_margin, -0.1f) },
+
+	// ¿Þ¹ß
+	{ "LFoot", "LLeg2", XMFLOAT3(0.05f, 0, 0), XMFLOAT3(0.25f, 0.09f, 0.16f), XMMatrixTranslation(0.00f, 0.045f, -0.1f) },
+};
+
 class Robot : public MeshT<IRobot> {
 public:
+	//--------------------------------------------------------------------------
 	Robot()
 	{
 		// È­»ìÇ¥´Â ÇÏ³ª¸¸ ¾´´Ù
@@ -35,58 +88,6 @@ public:
 		}
 
 		DWORD color = 0x0aa0a0ff;
-
-		XMMATRIX leg = XMMatrixRotationZ(-90.0f / 180 * (float)M_PI);
-		float margin = 0.05f;
-
-		struct BodyDesc
-		{
-			string name;
-			string parentName;
-			XMFLOAT3 position;
-			XMFLOAT3 extent;
-			XMMATRIX worldTx;
-		};
-
-		BodyDesc desc[] =
-		{
-
-			// ¸öÅë
-			{ "Body", string(), XMFLOAT3(0, 0, 0), XMFLOAT3(0.25f, 0.61f, 0.4f), XMMatrixTranslation(0, 1.22f, 0) },
-
-			// ¸Ó¸®
-			{ "Head", "Body", XMFLOAT3(0, 0.125f, 0), XMFLOAT3(0.22f, 0.25f, 0.22f), XMMatrixTranslation(0, 1.54f, 0) },
-
-			// ¿À¸¥À­ÆÈ
-			{ "RArm1", "Body", XMFLOAT3(0.175f - margin, 0, 0), XMFLOAT3(0.35f, 0.11f, 0.11f), leg * XMMatrixTranslation(0, 1.53f - margin, 0.265f) },
-
-			// ¿À¸¥ ¾Æ·§ÆÈ
-			{ "RArm2", "RArm1", XMFLOAT3(0.175f - margin, 0, 0), XMFLOAT3(0.35f, 0.11f, 0.11f), leg * XMMatrixTranslation(0, 1.17f - margin, 0.265f) },
-
-			// ¿ÞÀ­ÆÈ
-			{ "LArm1", "Body", XMFLOAT3(0.175f - margin, 0, 0), XMFLOAT3(0.35f, 0.11f, 0.11f), leg * XMMatrixTranslation(0, 1.53f - margin, -0.265f) },
-
-			// ¿Þ¾Æ·§ÆÈ
-			{ "LArm2", "LArm1", XMFLOAT3(0.175f - margin, 0, 0), XMFLOAT3(0.35f, 0.11f, 0.11f), leg * XMMatrixTranslation(0, 1.17f - margin, -0.265f) },
-
-			// ¿À¸¥ Çã¹÷Áö
-			{ "RLeg1", "Body", XMFLOAT3(0.21f - margin, 0, 0), XMFLOAT3(0.4f, 0.17f, 0.17f), leg * XMMatrixTranslation(0, 0.91f - margin, 0.115f) },
-
-			// ¿À¸¥ Á¾¾Æ¸®
-			{ "RLeg2", "RLeg1", XMFLOAT3(0.21f - margin, 0, 0), XMFLOAT3(0.4f, 0.16f, 0.16f), leg * XMMatrixTranslation(0, 0.5f - margin, 0.1f) },
-
-			// ¿À¸¥ ¹ß
-			{ "RFoot", "RLeg2", XMFLOAT3(0.05f, 0, 0), XMFLOAT3(0.25f, 0.09f, 0.16f), XMMatrixTranslation(0.00f, 0.045f, 0.1f) },
-
-			// ¿Þ Çã¹÷Áö
-			{ "LLeg1", "Body", XMFLOAT3(0.21f - margin, 0, 0), XMFLOAT3(0.4f, 0.17f, 0.17f), leg * XMMatrixTranslation(0, 0.91f - margin, -0.115f) },
-
-			// ¿Þ Á¾¾Æ¸®
-			{ "LLeg2", "LLeg1", XMFLOAT3(0.21f - margin, 0, 0), XMFLOAT3(0.4f, 0.16f, 0.16f), leg * XMMatrixTranslation(0, 0.5f - margin, -0.1f) },
-
-			// ¿Þ¹ß
-			{ "LFoot", "LLeg2", XMFLOAT3(0.05f, 0, 0), XMFLOAT3(0.25f, 0.09f, 0.16f), XMMatrixTranslation(0.00f, 0.045f, -0.1f) },
-		};
 
 		for (int i = 0; i < COUNT_OF(desc); ++i)
 		{
@@ -114,6 +115,7 @@ public:
 		TransformMesh();
 	}
 
+	//--------------------------------------------------------------------------
 	void CreateBody(
 		const string& name, 
 		const string& parentName,
@@ -152,6 +154,7 @@ public:
 		Append(frame.get());
 	}
 
+	//--------------------------------------------------------------------------
 	void BuildLinkMatrix()
 	{
 		// ·ÎÄÃ Æ®·£½ºÆûÀÌ ¾ø´Ù°í °¡Á¤ÇÏ¸é
@@ -174,6 +177,7 @@ public:
 		}
 	}
 
+	//--------------------------------------------------------------------------
 	void UpdateWorldTransform()
 	{
 		for (auto it = bodies.begin(); it != bodies.end(); ++it)
@@ -192,6 +196,7 @@ public:
 		}
 	}
 
+	//--------------------------------------------------------------------------
 	void TransformMesh()
 	{
 		int offset = 0;
@@ -223,12 +228,14 @@ public:
 		}
 	}
 
+	//--------------------------------------------------------------------------
 	int GetBoneIndex(const string& name) const
 	{
 		auto it = nameToIndex.find(name);
 		return it != nameToIndex.end() ? it->second : -1;
 	}
 
+	//--------------------------------------------------------------------------
 	void Animate_Test(DWORD elapsed)
 	{
 		total += elapsed;
@@ -254,12 +261,14 @@ public:
 		bodies[GetBoneIndex("LLeg2")]->localTx = XMMatrixRotationZ(-leg2Swing);
 	}
 
+	//--------------------------------------------------------------------------
 	void Update()
 	{
 		UpdateWorldTransform();
 		TransformMesh();
 	}
 
+	//--------------------------------------------------------------------------
 	XMFLOAT3 GetWorldPosition(const string& name)
 	{
 		auto index = GetBoneIndex(name);
@@ -274,18 +283,7 @@ public:
 		return XMFLOAT3(0, 0, 0);
 	}
 
-	static void SetTranslation(XMMATRIX& tx, const XMFLOAT3& pos)
-	{
-		tx.r[3].m128_f32[0] = pos.x;
-		tx.r[3].m128_f32[1] = pos.y;
-		tx.r[3].m128_f32[2] = pos.z;
-	}
-
-	static XMFLOAT3 GetTranslation(const XMMATRIX& tx)
-	{
-		return XMFLOAT3(tx.r[3].m128_f32[0], tx.r[3].m128_f32[1], tx.r[3].m128_f32[2]);
-	}
-
+	//--------------------------------------------------------------------------
 	void SetFootPosition(bool left, const XMFLOAT3& pos_)
 	{
 		const auto& comTx = bodies[0]->worldTx;
@@ -299,9 +297,9 @@ public:
 
 		XMFLOAT3 orgPos[] =
 		{
-			GetTranslation(bodies[index[0]]->worldTx),
-			GetTranslation(bodies[index[1]]->worldTx),
-			GetTranslation(bodies[index[2]]->worldTx),
+			FrameHelper::GetTranslation(bodies[index[0]]->worldTx),
+			FrameHelper::GetTranslation(bodies[index[1]]->worldTx),
+			FrameHelper::GetTranslation(bodies[index[2]]->worldTx),
 		};
 
 		XMFLOAT3 pos = pos_;// orgPos[2];
@@ -327,44 +325,20 @@ public:
 
 		XMFLOAT3 z = Cross(x, y);
 
-		XMMATRIX legTx = XMMatrixIdentity();
-		FrameHelper::SetX(legTx, x);
-		FrameHelper::SetY(legTx, y);
-		FrameHelper::SetZ(legTx, z);
-
-		XMMATRIX footTx = XMMatrixIdentity();
-		FrameHelper::SetX(footTx, y);
-		FrameHelper::SetY(footTx, -x);
-		FrameHelper::SetZ(footTx, z);
-
 		if (newLegLen > legLen.x + legLen.y)
 		{
 			auto kneePos = (orgPos[0] + pos) * (legLen.x / (legLen.x + legLen.y));
 
 			{
 				auto& worldTx = bodies[index[0]]->worldTx;
-
-				worldTx = legTx;
-				SetTranslation(worldTx, orgPos[0]);
-
-				auto& localTx = bodies[index[0]]->localTx;
-				auto parent = bodies[bodies[index[0]]->parentIndex];
-				localTx = worldTx *
-					XMMatrixInverse(nullptr, parent->worldTx) *
-					XMMatrixInverse(nullptr, bodies[index[0]]->linkTx);
+				FrameHelper::Set(worldTx, x, y, z);
+				FrameHelper::SetTranslation(worldTx, orgPos[0]);
 			}
 
 			{
 				auto& worldTx = bodies[index[1]]->worldTx;
-
-				worldTx = legTx;
-				SetTranslation(worldTx, kneePos);
-
-				auto& localTx = bodies[index[1]]->localTx;
-				auto parent = bodies[bodies[index[1]]->parentIndex];
-				localTx = worldTx *
-					XMMatrixInverse(nullptr, parent->worldTx) *
-					XMMatrixInverse(nullptr, bodies[index[1]]->linkTx);
+				FrameHelper::Set(worldTx, x, y, z);
+				FrameHelper::SetTranslation(worldTx, kneePos);
 			}
 		}
 		else
@@ -385,21 +359,9 @@ public:
 				XMFLOAT3 z1 = Normalize(Cross(x1, y));
 				XMFLOAT3 y1 = Normalize(Cross(z1, x1));
 
-				XMMATRIX legTx = XMMatrixIdentity();
-				FrameHelper::SetX(legTx, x1);
-				FrameHelper::SetY(legTx, y1);
-				FrameHelper::SetZ(legTx, z1);
-
 				auto& worldTx = bodies[index[0]]->worldTx;
-
-				worldTx = legTx;
-				SetTranslation(worldTx, orgPos[0]);
-
-				auto& localTx = bodies[index[0]]->localTx;
-				auto parent = bodies[bodies[index[0]]->parentIndex];
-				localTx = worldTx *
-					XMMatrixInverse(nullptr, parent->worldTx) *
-					XMMatrixInverse(nullptr, bodies[index[0]]->linkTx);
+				FrameHelper::Set(worldTx, x1, y1, z1);
+				FrameHelper::SetTranslation(worldTx, orgPos[0]);
 			}
 
 			{
@@ -407,38 +369,24 @@ public:
 				XMFLOAT3 z1 = Normalize(Cross(x1, y));
 				XMFLOAT3 y1 = Normalize(Cross(z1, x1));
 
-				XMMATRIX legTx = XMMatrixIdentity();
-				FrameHelper::SetX(legTx, x1);
-				FrameHelper::SetY(legTx, y1);
-				FrameHelper::SetZ(legTx, z1);
-
 				auto& worldTx = bodies[index[1]]->worldTx;
-
-				worldTx = legTx;
-				SetTranslation(worldTx, kneePos);
-
-				auto& localTx = bodies[index[1]]->localTx;
-				auto parent = bodies[bodies[index[1]]->parentIndex];
-				localTx = worldTx *
-					XMMatrixInverse(nullptr, parent->worldTx) *
-					XMMatrixInverse(nullptr, bodies[index[1]]->linkTx);
+				FrameHelper::Set(worldTx, x1, y1, z1);
+				FrameHelper::SetTranslation(worldTx, kneePos);
 			}
 		}
 
 		{
 			auto& worldTx = bodies[index[2]]->worldTx;
-
-			worldTx = footTx;
-			SetTranslation(worldTx, pos);
-
-			auto& localTx = bodies[index[2]]->localTx;
-			auto parent = bodies[bodies[index[2]]->parentIndex];
-			localTx = worldTx *
-				XMMatrixInverse(nullptr, parent->worldTx) *
-				XMMatrixInverse(nullptr, bodies[index[2]]->linkTx);
+			FrameHelper::Set(worldTx, y, -x, z);
+			FrameHelper::SetTranslation(worldTx, pos);
 		}
-}
 
+		CalculateLocalTransform(index[0]);
+		CalculateLocalTransform(index[1]);
+		CalculateLocalTransform(index[2]);
+	}
+
+	//--------------------------------------------------------------------------
 	~Robot()
 	{
 		for (auto it = bodies.begin(); it != bodies.end(); ++it)
@@ -446,6 +394,25 @@ public:
 			delete *it;
 		}
 		bodies.clear();
+	}
+
+	//--------------------------------------------------------------------------
+	void CalculateLocalTransform(int index)
+	{
+		auto& localTx = bodies[index]->localTx;
+
+		if (bodies[index]->parentIndex >= 0)
+		{
+			auto parent = bodies[bodies[index]->parentIndex];
+			localTx = bodies[index]->worldTx *
+				XMMatrixInverse(nullptr, parent->worldTx) *
+				XMMatrixInverse(nullptr, bodies[index]->linkTx);
+		}
+		else
+		{
+			localTx = bodies[index]->worldTx *
+				XMMatrixInverse(nullptr, bodies[index]->linkTx);
+		}
 	}
 
 protected:
@@ -458,9 +425,11 @@ protected:
 	DWORD total = 0;
 };
 
+//------------------------------------------------------------------------------
 IRobot* IRobot::Create()
 { return new Robot; }
 
+//------------------------------------------------------------------------------
 XMFLOAT3 IRobot::GetFootDirection(const XMFLOAT3& legDir_)
 {
 	XMFLOAT3 legDir = Normalize(legDir_);
