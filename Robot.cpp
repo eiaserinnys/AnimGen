@@ -313,22 +313,17 @@ public:
 			FrameHelper::GetZ(comTx),
 		};
 
-		auto center = (orgPos[0] + pos) / 2;
-		XMFLOAT3 x = Normalize(pos - orgPos[0]);
+		XMFLOAT3 x = pos - orgPos[0];
+		float newLegLen = Length(x);
+		x = Normalize(x);
 
 		// X축 방향을 부모 트랜스폼으로 보낸다
-		XMFLOAT3 xInCom(
-			Dot(comAxis[0], x),
-			Dot(comAxis[1], x),
-			Dot(comAxis[2], x));
+		XMFLOAT3 xInCom(Dot(comAxis[0], x), Dot(comAxis[1], x), Dot(comAxis[2], x));
 
 		// IK로 발 방향을 구한다 (Y축 방향)
 		auto footInCom = GetFootDirection(xInCom);
 
-		XMFLOAT3 y =
-			comAxis[0] * footInCom.x +
-			comAxis[1] * footInCom.y +
-			comAxis[2] * footInCom.z;
+		XMFLOAT3 y = comAxis[0] * footInCom.x + comAxis[1] * footInCom.y + comAxis[2] * footInCom.z;
 
 		XMFLOAT3 z = Cross(x, y);
 
@@ -342,30 +337,92 @@ public:
 		FrameHelper::SetY(footTx, -x);
 		FrameHelper::SetZ(footTx, z);
 
+		if (newLegLen > legLen.x + legLen.y)
 		{
-			auto& worldTx = bodies[index[0]]->worldTx;
+			auto kneePos = (orgPos[0] + pos) * (legLen.x / (legLen.x + legLen.y));
 
-			worldTx = legTx;
-			SetTranslation(worldTx, orgPos[0]);
+			{
+				auto& worldTx = bodies[index[0]]->worldTx;
 
-			auto& localTx = bodies[index[0]]->localTx;
-			auto parent = bodies[bodies[index[0]]->parentIndex];
-			localTx = worldTx *
-				XMMatrixInverse(nullptr, parent->worldTx) *
-				XMMatrixInverse(nullptr, bodies[index[0]]->linkTx);
+				worldTx = legTx;
+				SetTranslation(worldTx, orgPos[0]);
+
+				auto& localTx = bodies[index[0]]->localTx;
+				auto parent = bodies[bodies[index[0]]->parentIndex];
+				localTx = worldTx *
+					XMMatrixInverse(nullptr, parent->worldTx) *
+					XMMatrixInverse(nullptr, bodies[index[0]]->linkTx);
+			}
+
+			{
+				auto& worldTx = bodies[index[1]]->worldTx;
+
+				worldTx = legTx;
+				SetTranslation(worldTx, kneePos);
+
+				auto& localTx = bodies[index[1]]->localTx;
+				auto parent = bodies[bodies[index[1]]->parentIndex];
+				localTx = worldTx *
+					XMMatrixInverse(nullptr, parent->worldTx) *
+					XMMatrixInverse(nullptr, bodies[index[1]]->linkTx);
+			}
 		}
-
+		else
 		{
-			auto& worldTx = bodies[index[1]]->worldTx;
+			// 굽힌 케이스
+			// http://mathworld.wolfram.com/Sphere-SphereIntersection.html
+			float d = newLegLen;
+			float R = legLen.x;
+			float r = legLen.y;
+			float d1 = (d * d - r * r + R * R) / (2 * d);
+			float a = 1 / d * sqrtf((-d + r - R) * (-d - r + R) * (-d + r + R) *(d + r + R));
 
-			worldTx = legTx;
-			SetTranslation(worldTx, center);
+			// 새 무릎 위치
+			XMFLOAT3 kneePos = x * d1 + y * (a / 2) + orgPos[0];
 
-			auto& localTx = bodies[index[1]]->localTx;
-			auto parent = bodies[bodies[index[1]]->parentIndex];
-			localTx = worldTx *
-				XMMatrixInverse(nullptr, parent->worldTx) *
-				XMMatrixInverse(nullptr, bodies[index[1]]->linkTx);
+			{
+				XMFLOAT3 x1 = Normalize(kneePos - orgPos[0]);
+				XMFLOAT3 z1 = Normalize(Cross(x1, y));
+				XMFLOAT3 y1 = Normalize(Cross(z1, x1));
+
+				XMMATRIX legTx = XMMatrixIdentity();
+				FrameHelper::SetX(legTx, x1);
+				FrameHelper::SetY(legTx, y1);
+				FrameHelper::SetZ(legTx, z1);
+
+				auto& worldTx = bodies[index[0]]->worldTx;
+
+				worldTx = legTx;
+				SetTranslation(worldTx, orgPos[0]);
+
+				auto& localTx = bodies[index[0]]->localTx;
+				auto parent = bodies[bodies[index[0]]->parentIndex];
+				localTx = worldTx *
+					XMMatrixInverse(nullptr, parent->worldTx) *
+					XMMatrixInverse(nullptr, bodies[index[0]]->linkTx);
+			}
+
+			{
+				XMFLOAT3 x1 = Normalize(orgPos[2] - kneePos);
+				XMFLOAT3 z1 = Normalize(Cross(x1, y));
+				XMFLOAT3 y1 = Normalize(Cross(z1, x1));
+
+				XMMATRIX legTx = XMMatrixIdentity();
+				FrameHelper::SetX(legTx, x1);
+				FrameHelper::SetY(legTx, y1);
+				FrameHelper::SetZ(legTx, z1);
+
+				auto& worldTx = bodies[index[1]]->worldTx;
+
+				worldTx = legTx;
+				SetTranslation(worldTx, kneePos);
+
+				auto& localTx = bodies[index[1]]->localTx;
+				auto parent = bodies[bodies[index[1]]->parentIndex];
+				localTx = worldTx *
+					XMMatrixInverse(nullptr, parent->worldTx) *
+					XMMatrixInverse(nullptr, bodies[index[1]]->linkTx);
+			}
 		}
 
 		{
