@@ -2,6 +2,7 @@
 #include "Robot.h"
 
 #include "FrameHelper.h"
+#include "AngleHelper.h"
 
 #include "MeshT.h"
 #include "ObjectBuffer.h"
@@ -303,7 +304,7 @@ public:
 			GetTranslation(bodies[index[2]]->worldTx),
 		};
 
-		XMFLOAT3 pos = orgPos[2];
+		XMFLOAT3 pos = pos_;// orgPos[2];
 
 		XMFLOAT3 comAxis[] = 
 		{
@@ -321,23 +322,30 @@ public:
 			Dot(comAxis[1], x),
 			Dot(comAxis[2], x));
 
-		// y는 그대로 Z축 회전이 된다
-		float rotZ = asinf(xInCom.y);
-		float cosZ = sqrtf(1 - xInCom.y * xInCom.y);
+		// IK로 발 방향을 구한다 (Y축 방향)
+		auto footInCom = GetFootDirection(xInCom);
 
-		float rotY = 0;
-		if (cosZ > 0.00001f)
-		{
-			rotY = atan2f(xInCom.x / cosZ, xInCom.z / (-cosZ));
-		}
+		XMFLOAT3 y =
+			comAxis[0] * footInCom.x +
+			comAxis[1] * footInCom.y +
+			comAxis[2] * footInCom.z;
 
-		XMMATRIX testTx = XMMatrixIdentity();
-		testTx = XMMatrixRotationZ(rotZ) * XMMatrixRotationY(rotY);
+		XMFLOAT3 z = Cross(x, y);
+
+		XMMATRIX legTx = XMMatrixIdentity();
+		FrameHelper::SetX(legTx, x);
+		FrameHelper::SetY(legTx, y);
+		FrameHelper::SetZ(legTx, z);
+
+		XMMATRIX footTx = XMMatrixIdentity();
+		FrameHelper::SetX(footTx, y);
+		FrameHelper::SetY(footTx, -x);
+		FrameHelper::SetZ(footTx, z);
 
 		{
 			auto& worldTx = bodies[index[0]]->worldTx;
-			worldTx = testTx;
 
+			worldTx = legTx;
 			SetTranslation(worldTx, orgPos[0]);
 
 			auto& localTx = bodies[index[0]]->localTx;
@@ -349,8 +357,8 @@ public:
 
 		{
 			auto& worldTx = bodies[index[1]]->worldTx;
-			worldTx = testTx;
 
+			worldTx = legTx;
 			SetTranslation(worldTx, center);
 
 			auto& localTx = bodies[index[1]]->localTx;
@@ -362,6 +370,8 @@ public:
 
 		{
 			auto& worldTx = bodies[index[2]]->worldTx;
+
+			worldTx = footTx;
 			SetTranslation(worldTx, pos);
 
 			auto& localTx = bodies[index[2]]->localTx;
@@ -393,3 +403,81 @@ protected:
 
 IRobot* IRobot::Create()
 { return new Robot; }
+
+XMFLOAT3 IRobot::GetFootDirection(const XMFLOAT3& legDir_)
+{
+	XMFLOAT3 legDir = Normalize(legDir_);
+
+	// 좌표에서 다시 각도를 구해서 각도를 기준으로 처리하자
+	// (실제로 IK 처리 시에는 좌표만 주어질 것이므로)
+	float angleZ_R = acosf(-legDir.y);
+
+	float angleY_R = abs(angleZ_R) > 0.0001f ? atan2f(
+		legDir.z / -sinf(angleZ_R),
+		legDir.x / sinf(angleZ_R)) : 0;
+
+	XMFLOAT3 footDir(
+		cosf(angleZ_R) * cosf(angleY_R),
+		sinf(angleZ_R),
+		-cosf(angleZ_R) * sinf(angleY_R));
+
+	// 다리 방향이 뒤로 향하는 경우는 바깥이 아니라 몸 안 쪽을 보게 한다
+	if (legDir.x < 0)
+	{
+		footDir = -footDir;
+	}
+
+	// Y축 회전이 +/-45~135도 범위일 때는 발 방향이 앞을 보게 한다
+	float h1Factor = 0;
+	if (angleY_R > AngleHelperF::DegreeToRadian(-135) &&
+		angleY_R < AngleHelperF::DegreeToRadian(-45))
+	{
+		if (angleY_R > AngleHelperF::DegreeToRadian(-90) &&
+			angleY_R < AngleHelperF::DegreeToRadian(-45))
+		{
+			// -45 ~ -90
+			h1Factor = 1 - (90 + AngleHelperF::RadianToDegree(angleY_R)) / 45.0f;
+		}
+		else
+		{
+			// -90 ~ -135
+			h1Factor = (135 + AngleHelperF::RadianToDegree(angleY_R)) / 45.0f;
+		}
+	}
+	else if (
+		angleY_R > AngleHelperF::DegreeToRadian(45) &&
+		angleY_R < AngleHelperF::DegreeToRadian(135))
+	{
+		if (angleY_R > AngleHelperF::DegreeToRadian(45) &&
+			angleY_R < AngleHelperF::DegreeToRadian(90))
+		{
+			// 45 ~ 90
+			h1Factor = (AngleHelperF::RadianToDegree(angleY_R) - 45) / 45.0f;
+		}
+		else
+		{
+			// 90 ~ 135
+			h1Factor = 1 - (AngleHelperF::RadianToDegree(angleY_R) - 90) / 45.0f;
+		}
+	}
+
+	// Z축 회전이 90도를 넘어가면 그냥 원래 앞 방향을 보게 한다
+	float h2Factor =
+		angleZ_R > AngleHelperF::DegreeToRadian(90) ?
+		(AngleHelperF::RadianToDegree(angleZ_R) - 90) / 90.0f :
+		0;
+
+	XMFLOAT3 footDirH;
+	XMStoreFloat3(
+		&footDirH,
+		XMVectorLerp(
+			XMVectorLerp(
+				XMLoadFloat3(&footDir),
+				XMLoadFloat3(&XMFLOAT3(1, 0, 0)),
+				h1Factor),
+			XMLoadFloat3(&footDir),
+			h2Factor));
+	footDirH = Normalize(footDirH);
+
+	return footDirH;
+}

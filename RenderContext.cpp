@@ -1,13 +1,17 @@
 #include "pch.h"
 #include "RenderContext.h"
 
+#include <WindowsUtility.h>
 #include <Utility.h>
 
 #include "AngleHelper.h"
 #include "FrameHelper.h"
+#include "Robot.h"
 
 using namespace std;
 using namespace DirectX;
+
+#define SHOW_IK_SPHERE 0
 
 RenderContext::RenderContext(HWND hwnd)
 	: hwnd(hwnd)
@@ -118,7 +122,9 @@ RenderContext::RenderContext(HWND hwnd)
 		//etc.push_back(ICoordinateAxisMesh::Create(id, 0.5, 0.1f, 0.02f, 0.04f, 8));
 	}
 
+#if SHOW_IK_SPHERE
 	BuildIKRefSphere();
+#endif
 
 	textRenderer.reset(ITextRenderer::Create(d3d11->g_pd3dDevice, d3d11->immDevCtx));
 }
@@ -140,9 +146,15 @@ void RenderContext::BuildIKRefSphere()
 	float granulity = 11;
 
 	{
+		float step = -45.0f / 2 /2;
+		int i = 0;
+
 		float angle[] = 
 		{
-			0, -22.5, -45, -56.25, -67.5, -78.75
+			(i++) * step, (i++) * step, (i++) * step, (i++) * step,
+			(i++) * step, (i++) * step, (i++) * step, (i++) * step,
+			(i++) * step, (i++) * step, (i++) * step, (i++) * step,
+			(i++) * step, (i++) * step, (i++) * step, (i++) * step,
 		};
 
 		for (int a = 0; a < COUNT_OF(angle); ++a)
@@ -151,50 +163,22 @@ void RenderContext::BuildIKRefSphere()
 
 			auto angleY = AngleHelperF::DegreeToRadian(curAngle);
 
-			XMMATRIX rotY = XMMatrixRotationY(
-				AngleHelperF::DegreeToRadian(curAngle));
-
-			float h1Factor = curAngle < -45 ? 1 - (90 + curAngle) / 45.0f: 0;
-
-			//for (int i = -granulity + 1; i <= granulity - 1; ++i)
-			for (int i = 0; i <= granulity - 1; ++i)
+			for (int i = -granulity + 1; i <= granulity - 1; ++i)
 			{
-				float angle = i / granulity * (float)M_PI;
+				float angleZ = i / granulity * (float)M_PI;
 
 				// 먼저 좌표를 구한 다음
-				XMFLOAT3 legDirT = XMFLOAT3(
-					sinf(angle) * cosf(angleY),
-					-cosf(angle),
-					-sinf(angle) * sinf(angleY)
+				XMFLOAT3 legDir = XMFLOAT3(
+					sinf(angleZ) * cosf(angleY),
+					-cosf(angleZ),
+					-sinf(angleZ) * sinf(angleY)
 				);
 
-				// 좌표에서 다시 각도를 구해서 각도를 기준으로 처리하자
-				// (실제로 IK 처리 시에는 좌표만 주어질 것이므로)
-
-				XMFLOAT3 footDir = TransformNormal(
-					XMFLOAT3(cosf(angle), sinf(angle), 0), rotY);
-
-				XMFLOAT3 footDirH;
-				XMStoreFloat3(
-					&footDirH,
-					XMVectorLerp(
-						XMLoadFloat3(&footDir),
-						XMLoadFloat3(&XMFLOAT3(1, 0, 0)),
-						h1Factor));
-				footDirH = Normalize(footDirH);
+				auto footDirH = IRobot::GetFootDirection(legDir);
 
 				etc.push_back(IArrowMesh::Create(
-					center + legDirT * innerRadius,
-					center + legDirT * radius,
-					0.1f,
-					0.0125f,
-					0.025f,
-					arrowGranulity,
-					0xff0000ff));
-
-				etc.push_back(IArrowMesh::Create(
-					center + legDirT * radius,
-					center + legDirT * radius + footDirH * tipLen,
+					center + legDir * radius,
+					center + legDir * radius + footDirH * tipLen,
 					0.1f,
 					0.0125f,
 					0.025f,
@@ -203,110 +187,6 @@ void RenderContext::BuildIKRefSphere()
 			}
 		}
 	}
-
-#if 0
-	{
-		XMMATRIX rotY = XMMatrixRotationY(AngleHelperF::DegreeToRadian(45));
-		for (int i = -granulity + 1; i <= granulity - 1; ++i)
-		{
-			float angle = i / granulity * (float)M_PI;
-
-			XMFLOAT3 legDir = XMFLOAT3(sinf(angle), cosf(angle + (float)M_PI), 0);
-
-			XMFLOAT3 legDirT = TransformNormal(legDir, rotY);
-
-			XMFLOAT3 footDir = TransformNormal(
-				XMFLOAT3(cosf(angle), sinf(angle), 0), rotY);
-
-			etc.push_back(IArrowMesh::Create(
-				center + legDirT * innerRadius,
-				center + legDirT * radius,
-				0.1f,
-				0.0125f,
-				0.025f,
-				arrowGranulity,
-				0xff0000ff));
-
-			etc.push_back(IArrowMesh::Create(
-				center + legDirT * radius,
-				center + legDirT * radius + footDir * tipLen,
-				0.1f,
-				0.0125f,
-				0.025f,
-				arrowGranulity,
-				0xff00ff00));
-		}
-	}
-
-	{
-		XMMATRIX rotY = XMMatrixRotationY(AngleHelperF::DegreeToRadian(67.5));
-		for (int i = -granulity + 1; i <= granulity - 1; ++i)
-		{
-			float angle = i / granulity * (float)M_PI;
-
-			XMFLOAT3 legDir = XMFLOAT3(sinf(angle), cosf(angle + (float)M_PI), 0);
-
-			XMFLOAT3 legDirT = TransformNormal(legDir, rotY);
-
-			XMFLOAT3 footDir = TransformNormal(
-				XMFLOAT3(cosf(angle), sinf(angle), 0), rotY);
-
-			etc.push_back(IArrowMesh::Create(
-				center + legDirT * innerRadius,
-				center + legDirT * radius,
-				0.1f,
-				0.0125f,
-				0.025f,
-				arrowGranulity,
-				0xff0000ff));
-
-			etc.push_back(IArrowMesh::Create(
-				center + legDirT * radius,
-				center + legDirT * radius + footDir * tipLen,
-				0.1f,
-				0.0125f,
-				0.025f,
-				arrowGranulity,
-				0xff00ff00));
-		}
-	}
-#endif
-
-#if 1
-	// Z=0 방향
-	XMMATRIX rotY = XMMatrixRotationY(AngleHelperF::DegreeToRadian(90));
-	for (int i = -granulity + 1; i <= granulity - 1; ++i)
-	{
-		float angle = i / granulity * (float)M_PI;
-
-		XMFLOAT3 legDir = XMFLOAT3(sinf(angle), cosf(angle + (float)M_PI), 0);
-
-		XMFLOAT3 legDirT;
-		XMStoreFloat3(
-			&legDirT,
-			XMVector3Transform(XMLoadFloat3(&legDir), rotY));
-
-		XMFLOAT3 footDir = XMFLOAT3(1, 0, 0);
-
-		etc.push_back(IArrowMesh::Create(
-			center + legDirT * innerRadius,
-			center + legDirT * radius,
-			0.1f,
-			0.0125f,
-			0.025f,
-			arrowGranulity,
-			0xff0000ff));
-
-		etc.push_back(IArrowMesh::Create(
-			center + legDirT * radius,
-			center + legDirT * radius + footDir * tipLen,
-			0.1f,
-			0.0125f,
-			0.025f,
-			arrowGranulity,
-			0xff00ff00));
-	}
-#endif
 }
 
 RenderContext::~RenderContext()
@@ -337,7 +217,7 @@ void RenderContext::FillBuffer()
 
 	objBuffer->Append(floor.get());
 
-	//objBuffer->Append(robot.get());
+	objBuffer->Append(robot.get());
 
 	for (size_t i = 0; i < etc.size(); ++i)
 	{
