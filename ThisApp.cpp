@@ -94,6 +94,40 @@ public:
 
 		global->robot->Update();
 
+		static const char* name[] =
+		{
+			"Body",
+			"LLeg1", 
+			"LLeg2",
+			"LFoot",
+			"RLeg1",
+			"RLeg2",
+			"RFoot",
+		};
+		
+		for (int i = 0; i < COUNT_OF(name); ++i)
+		{
+			auto expMap = global->robot->GetLocalRotation(name[i]);
+			auto quat = global->robot->GetLocalQuaternion(name[i]);
+			auto quatV = global->robot->GetLocalQuaternionVerify(name[i]);
+
+			auto diff = Distance(quat, quatV);
+
+			XMFLOAT4 color = XMFLOAT4(1, 1, 1, 1);
+			if (diff > 0.001) { color = XMFLOAT4(0.5f, 0.5f, 1, 1); }
+			if (diff > 0.01) { color = XMFLOAT4(0, 0, 1, 1); }
+
+			global->textRenderer->Enqueue(
+				TextToRender(
+					XMFLOAT2(50, i * 15 + 50),
+					Utility::FormatW(
+						L"Q(%+.4f,%+.4f,%+.4f,%+.4f) -> E(%+.4f,%+.4f,%+.4f) -> Q(%+.4f,%+.4f,%+.4f,%+.4f)",
+						quat.x, quat.y, quat.z, quat.w,
+						expMap[0], expMap[1], expMap[2],
+						quatV.x, quatV.y, quatV.z, quatV.w),
+					color));
+		}
+
 		global->FillBuffer();
 
 		render->Render(sceneDesc);

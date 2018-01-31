@@ -131,6 +131,7 @@
   <ItemGroup>
     <ClCompile Include="AngleHelper.cpp" />
     <ClCompile Include="DeferredRendrerer.cpp" />
+    <ClCompile Include="exp-map.cpp" />
     <ClCompile Include="FrameHelper.cpp" />
     <ClCompile Include="IKPicking.cpp" />
     <ClCompile Include="Logger.cpp" />
@@ -154,6 +155,7 @@
     <ClInclude Include="AngleHelper.h" />
     <ClInclude Include="BasicMeshT.h" />
     <ClInclude Include="DeferredRenderer.h" />
+    <ClInclude Include="exp-map.h" />
     <ClInclude Include="FrameHelper.h" />
     <ClInclude Include="IKPicking.h" />
     <ClInclude Include="Logger.h" />

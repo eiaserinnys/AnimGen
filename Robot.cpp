@@ -7,6 +7,8 @@
 #include "MeshT.h"
 #include "ObjectBuffer.h"
 
+#include "exp-map.h"
+
 using namespace std;
 using namespace DirectX;
 
@@ -14,8 +16,13 @@ struct RobotBody
 {
 	string name;
 	int parentIndex;
-	XMMATRIX localTx = XMMatrixIdentity();
 	XMMATRIX linkTx = XMMatrixIdentity();
+
+	XMMATRIX localTx = XMMatrixIdentity();
+	XMFLOAT4 quat = XMFLOAT4(0, 0, 0, 0);
+	double expMap[3] = { 0, 0, 0 };
+	XMFLOAT4 quatVerify = XMFLOAT4(0, 0, 0, 0);
+
 	XMMATRIX worldTx = XMMatrixIdentity();
 	unique_ptr<IMesh> mesh;
 };
@@ -178,6 +185,17 @@ public:
 	}
 
 	//--------------------------------------------------------------------------
+	void CalculateLocalRotation()
+	{
+		for (auto it = bodies.begin(); it != bodies.end(); ++it)
+		{
+			auto body = *it;
+
+			CalculateLocalRotation(body);
+		}
+	}
+
+	//--------------------------------------------------------------------------
 	void UpdateWorldTransform()
 	{
 		for (auto it = bodies.begin(); it != bodies.end(); ++it)
@@ -264,8 +282,23 @@ public:
 	//--------------------------------------------------------------------------
 	void Update()
 	{
+		CalculateLocalRotation();
 		UpdateWorldTransform();
 		TransformMesh();
+	}
+
+	//--------------------------------------------------------------------------
+	RobotBody* Find(const string& name)
+	{
+		auto index = GetBoneIndex(name);
+		if (index > 0) { return bodies[index]; }
+		return nullptr;
+	}
+
+	//--------------------------------------------------------------------------
+	const RobotBody* Find(const string& name) const
+	{
+		return const_cast<Robot*>(this)->Find(name);
 	}
 
 	//--------------------------------------------------------------------------
@@ -415,10 +448,90 @@ public:
 		}
 	}
 
+	//--------------------------------------------------------------------------
+	// 일단 몸, 다리, 발만 계산한다
+	void CalculateGeneralCoordinate()
+	{
+		coord.bodyPos = GetWorldPosition("Body");
+		//coord.bodyROt = GetLocalRotation("Body");
+	}
+
+	//--------------------------------------------------------------------------
+	const double* GetLocalRotation(const string& name)
+	{
+		// 먼저 쿼터니언으로 바꾼 뒤
+		auto found = Find(name);
+		if (found != nullptr) { return found->expMap; }
+
+		static double identity[] = { 0, 0, 0 };
+		return identity;
+	}
+
+	//--------------------------------------------------------------------------
+	const XMFLOAT4 GetLocalQuaternion(const string& name)
+	{
+		// 먼저 쿼터니언으로 바꾼 뒤
+		auto found = Find(name);
+		if (found != nullptr) { return found->quat; }
+		return XMFLOAT4(0, 0, 0, 1);
+	}
+
+	//--------------------------------------------------------------------------
+	const XMFLOAT4 GetLocalQuaternionVerify(const string& name)
+	{
+		// 먼저 쿼터니언으로 바꾼 뒤
+		auto found = Find(name);
+		if (found != nullptr) { return found->quatVerify; }
+		return XMFLOAT4(0, 0, 0, 1);
+	}
+
+	//--------------------------------------------------------------------------
+	void CalculateLocalRotation(RobotBody* found)
+	{
+		static const double epsilon = sqrt(sqrt(0.000001f));
+
+		auto& quat = found->quat;
+
+		XMStoreFloat4(&quat, XMQuaternionRotationMatrix(found->localTx));
+
+		double theta = acos(quat.w) * 2;
+
+		double sinHalfTheta = sin(theta / 2);
+
+		double m = 0;
+
+		if (abs(theta) < epsilon)
+		{
+			// 테일러 전개에 의해서
+			m = 1 / (1.0 / 2 + theta * theta / 48);
+		}
+		else
+		{
+			m = theta / sinHalfTheta;
+		}
+
+		found->expMap[0] = m * quat.x;
+		found->expMap[1] = m * quat.y;
+		found->expMap[2] = m * quat.z;
+
+		double quatV[4] = { 0, 0, 0, 0 };
+
+		EM_To_Q(found->expMap, quatV, 0);
+
+		found->quatVerify.x = quatV[0];
+		found->quatVerify.y = quatV[1];
+		found->quatVerify.z = quatV[2];
+		found->quatVerify.w = quatV[3];
+	}
+
+	virtual const GeneralCoordinate& Current() const { return coord; }
+
 protected:
 	unique_ptr<IMesh> frame;
 	vector<RobotBody*> bodies;
 	map<string, int> nameToIndex;
+
+	GeneralCoordinate coord;
 
 	XMFLOAT2 legLen;
 

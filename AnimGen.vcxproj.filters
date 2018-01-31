@@ -86,6 +86,9 @@
     <ClCompile Include="AngleHelper.cpp">
       <Filter>Mathematics</Filter>
     </ClCompile>
+    <ClCompile Include="exp-map.cpp">
+      <Filter>Mathematics</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="RenderContext.h">
@@ -137,6 +140,9 @@
       <Filter>Mathematics</Filter>
     </ClInclude>
     <ClInclude Include="AngleHelper.h">
+      <Filter>Mathematics</Filter>
+    </ClInclude>
+    <ClInclude Include="exp-map.h">
       <Filter>Mathematics</Filter>
     </ClInclude>
   </ItemGroup>
