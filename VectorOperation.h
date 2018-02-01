@@ -4,19 +4,23 @@
 // +
 namespace VectorOperation
 {
+	//--------------------------------------------------------------------------
+	// Assign
 	struct Assign
 	{
 		template <typename V, typename Arg>
-		static void Evaluate(const int i, V& v, const Arg& arg)
+		__forceinline static void Evaluate(const int i, V& v, const Arg& arg)
 		{
 			v.m[i] = arg.Evaluate(i);
 		}
 	};
 
+	//--------------------------------------------------------------------------
+	// Unary
 	struct Plus
 	{
 		template <typename Arg>
-		static const typename Arg::ValueType Evaluate(const int i, const Arg& arg)
+		__forceinline static const typename Arg::ValueType Evaluate(const int i, const Arg& arg)
 		{
 			return arg.Evaluate(i);
 		}
@@ -25,16 +29,17 @@ namespace VectorOperation
 	struct Minus
 	{
 		template <typename Arg>
-		static const typename Arg::ValueType Evaluate(const int i, const Arg& arg)
+		__forceinline static const typename Arg::ValueType Evaluate(const int i, const Arg& arg)
 		{
 			return - arg.Evaluate(i);
 		}
 	};
 
+	//--------------------------------------------------------------------------
 	struct Add
 	{
 		template <typename Lhs, typename Rhs>
-		static const typename Lhs::ValueType Evaluate(const int i, const Lhs& lhs, const Rhs& rhs)
+		__forceinline static const typename Lhs::ValueType Evaluate(const int i, const Lhs& lhs, const Rhs& rhs)
 		{
 			return lhs.Evaluate(i) + rhs.Evaluate(i);
 		}
@@ -43,7 +48,7 @@ namespace VectorOperation
 	struct Subtract
 	{
 		template <typename Lhs, typename Rhs>
-		static const typename Lhs::ValueType Evaluate(const int i, const Lhs& lhs, const Rhs& rhs)
+		__forceinline static const typename Lhs::ValueType Evaluate(const int i, const Lhs& lhs, const Rhs& rhs)
 		{
 			return lhs.Evaluate(i) - rhs.Evaluate(i);
 		}
@@ -52,7 +57,7 @@ namespace VectorOperation
 	struct Multiply
 	{
 		template <typename Lhs, typename Rhs>
-		static const typename Lhs::ValueType Evaluate(const int i, const Lhs& lhs, const Rhs& rhs)
+		__forceinline static const typename Lhs::ValueType Evaluate(const int i, const Lhs& lhs, const Rhs& rhs)
 		{
 			return lhs.Evaluate(i) * rhs.Evaluate(i);
 		}
@@ -61,7 +66,7 @@ namespace VectorOperation
 	struct Divide
 	{
 		template <typename Lhs, typename Rhs>
-		static const typename Lhs::ValueType Evaluate(const int i, const Lhs& lhs, const Rhs& rhs)
+		__forceinline static const typename Lhs::ValueType Evaluate(const int i, const Lhs& lhs, const Rhs& rhs)
 		{
 			return lhs.Evaluate(i) / rhs.Evaluate(i);
 		}
@@ -70,7 +75,7 @@ namespace VectorOperation
 	struct Dot
 	{
 		template <typename Lhs, typename Rhs>
-		static const typename Lhs::ValueType Evaluate(const int i, const Lhs& lhs, const Rhs& rhs)
+		__forceinline static const typename Lhs::ValueType Evaluate(const int i, const Lhs& lhs, const Rhs& rhs)
 		{
 			typename Lhs::ValueType result = 0;
 			for (int j = 0; j < Lhs::Dimension; ++j)
@@ -81,10 +86,28 @@ namespace VectorOperation
 		}
 	};
 
+	struct Length
+	{
+		template <typename Lhs, typename Rhs>
+		__forceinline static const typename Lhs::ValueType Evaluate(const int i, const Lhs& lhs, const Rhs& rhs)
+		{
+			return std::sqrt(Dot::Evaluate(i, lhs, rhs));
+		}
+	};
+
+	struct Distance
+	{
+		template <typename Lhs, typename Rhs>
+		__forceinline static const typename Lhs::ValueType Evaluate(const int i, const Lhs& lhs, const Rhs& rhs)
+		{
+			return std::sqrt(Dot::Evaluate(i, lhs - rhs, lhs - rhs));
+		}
+	};
+
 	struct Cross2D
 	{
 		template <typename Lhs, typename Rhs>
-			static const typename Lhs::ValueType Evaluate(const int i, const Lhs& lhs, const Rhs& rhs)
+		__forceinline static const typename Lhs::ValueType Evaluate(const int i, const Lhs& lhs, const Rhs& rhs)
 		{
 			return 
 				lhs.Evaluate(0) * rhs.Evaluate(1) - 
@@ -95,7 +118,7 @@ namespace VectorOperation
 	struct Cross3D
 	{
 		template <typename Lhs, typename Rhs>
-		static const typename Lhs::ValueType Evaluate(const int i, const Lhs& lhs, const Rhs& rhs)
+		__forceinline static const typename Lhs::ValueType Evaluate(const int i, const Lhs& lhs, const Rhs& rhs)
 		{
 			const int d = Lhs::Dimension;
 			return 
@@ -106,27 +129,27 @@ namespace VectorOperation
 }
 
 template <typename Arg>
-const VectorUnaryExpression<Arg, VectorOperation::Plus> operator + (const Arg& arg)
+const auto operator + (const Arg& arg)
 { return VectorUnaryExpression<Arg, VectorOperation::Plus>(arg); }
 
 template <typename Arg>
-const VectorUnaryExpression<Arg, VectorOperation::Minus> operator - (const Arg& arg)
+const auto operator - (const Arg& arg)
 { return VectorUnaryExpression<Arg, VectorOperation::Minus>(arg); }
 
 template <typename Lhs, typename Rhs>
-const VectorBinaryExpression<Lhs, Rhs, VectorOperation::Add> operator + (const Lhs& lhs, const Rhs& rhs)
+const auto operator + (const Lhs& lhs, const Rhs& rhs)
 { return VectorBinaryExpression<Lhs, Rhs, VectorOperation::Add>(lhs, rhs); }
 
 template <typename Lhs, typename Rhs>
-const VectorBinaryExpression<Lhs, Rhs, VectorOperation::Subtract> operator - (const Lhs& lhs, const Rhs& rhs)
+const auto operator - (const Lhs& lhs, const Rhs& rhs)
 { return VectorBinaryExpression<Lhs, Rhs, VectorOperation::Subtract>(lhs, rhs); }
 
 template <typename Lhs, typename Rhs>
-const VectorBinaryExpression<Lhs, Rhs, VectorOperation::Multiply> operator * (const Lhs& lhs, const Rhs& rhs)
+const auto operator * (const Lhs& lhs, const Rhs& rhs)
 { return VectorBinaryExpression<Lhs, Rhs, VectorOperation::Multiply>(lhs, rhs); }
 
 template <typename Lhs, typename Rhs>
-const VectorBinaryExpression<Lhs, Rhs, VectorOperation::Divide> operator / (const Lhs& lhs, const Rhs& rhs)
+const auto operator / (const Lhs& lhs, const Rhs& rhs)
 { return VectorBinaryExpression<Lhs, Rhs, VectorOperation::Divide>(lhs, rhs); }
 
 template <
@@ -134,8 +157,20 @@ template <
 	typename Rhs,
 	typename = std::enable_if_t<
 		VectorArgument<Lhs>::Dimension == VectorArgument<Rhs>::Dimension, void>>
-const VectorBinaryExpression<Lhs, Rhs, VectorOperation::Dot, 1> Dot(const Lhs& lhs, const Rhs& rhs)
+const auto Dot(const Lhs& lhs, const Rhs& rhs)
 { return VectorBinaryExpression<Lhs, Rhs, VectorOperation::Dot, 1>(lhs, rhs); }
+
+template <typename Arg>
+const auto Length(const Arg& arg)
+{ return VectorBinaryExpression<Arg, Arg, VectorOperation::Length, 1>(arg, arg); }
+
+template <
+	typename Lhs, 
+	typename Rhs,
+	typename = std::enable_if_t<
+		VectorArgument<Lhs>::Dimension == VectorArgument<Rhs>::Dimension, void>>
+const auto Distance(const Lhs& lhs, const Rhs& rhs)
+{ return VectorBinaryExpression<Lhs, Rhs, VectorOperation::Distance, 1>(lhs, rhs); }
 
 template <
 	typename Lhs, 

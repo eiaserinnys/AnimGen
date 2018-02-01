@@ -12,7 +12,7 @@ public:
 
 	VectorArgument(const V& arg) : arg(arg) {}
 
-	typename const V::ValueType Evaluate(const int index) const
+	__forceinline typename const V::ValueType Evaluate(const int index) const
 	{ return arg.Evaluate(index); }
 
 private:
@@ -28,7 +28,7 @@ public:
 
 	VectorArgument(const float arg) : arg(arg) {}
 
-	typename const float Evaluate(const int index) const { return arg; }
+	__forceinline typename const float Evaluate(const int index) const { return arg; }
 
 private:
 	float arg;
@@ -43,7 +43,7 @@ public:
 
 	VectorArgument(const double arg) : arg(arg) {}
 
-	typename const double Evaluate(const int index) const { return arg; }
+	__forceinline typename const double Evaluate(const int index) const { return arg; }
 
 private:
 	double arg;
@@ -61,8 +61,16 @@ public:
 
 	VectorUnaryExpression(const Arg& arg) : arg(arg) {}
 
-	typename const ArgType::ValueType Evaluate(const int index) const
-	{ return Op::Evaluate(index, arg); }
+	__forceinline typename const ArgType::ValueType Evaluate(const int index) const
+	{ 
+		return Op::Evaluate(index, arg); 
+	}
+
+	template <typename = std::enable_if_t<Dimension == 1, void>>
+	__forceinline operator ValueType() const
+	{ 
+		return Op::Evaluate(0, arg); 
+	}
 
 private:
 	const ArgType arg;
@@ -98,11 +106,11 @@ public:
 		void>>
 	VectorBinaryExpression(const Lhs& lhs, const Rhs& rhs) : lhs(lhs), rhs(rhs) {}
 
-	typename const LhsType::ValueType Evaluate(const int index) const
+	__forceinline typename const LhsType::ValueType Evaluate(const int index) const
 	{ return Op::Evaluate(index, lhs, rhs); }
 
 	template <typename = std::enable_if_t<Dimension == 1, void>>
-	operator ValueType() const
+	__forceinline operator ValueType() const
 	{ return Op::Evaluate(0, lhs, rhs); }
 
 private:
@@ -123,7 +131,7 @@ public:
 			Expr::Dimension == 1
 		),
 		void>>
-	static void Evaluate(V& target, const Expr& expr)
+	__forceinline static void Evaluate(V& target, const Expr& expr)
 	{
 		for (int i = 0; i < V::Dimension; ++i)
 		{

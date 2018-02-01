@@ -1,8 +1,16 @@
 #include "pch.h"
 #include "Vector.h"
 
+#include <assert.h>
+
 using namespace std;
 using namespace DirectX;
+
+template <typename Scalar>
+Scalar Square(Scalar v)
+{
+	return v * v;
+}
 
 template <int D>
 const PackedDouble<D> operator + (const PackedDouble<D>& lhs, const PackedDouble<D>& rhs)
@@ -12,59 +20,68 @@ const PackedDouble<D> operator + (const PackedDouble<D>& lhs, const PackedDouble
 
 void TestVector()
 {
-	Vector2D a2(1, 2);
-	Vector2D b2(3, 4);
+	Vector2D a(1, 2);
+	assert(a.x == 1 && a.y == 2);
 
-	Vector2D av;
+	Vector2D b(3, 4);
+	Vector2D c(5, 6);
+	Vector2D r;
 
-	av = a2 + a2 + b2;
+	r = a + b;
+	assert(r.x == a.x + b.x && r.y == a.y + b.y);
 
-	av = a2 + 1.0;
+	r = a + 1.0;
+	assert(r.x == a.x + 1.0 && r.y == a.y + 1.0);
 
-	av = 1.0 + a2;
+	r = 1.0 + a;
+	assert(r.x == 1.0 + a.x && r.y == 1.0 + a.y);
 
-	av = 1.0 + a2 - 5.0;
+	r = a - 1.0;
+	assert(r.x == a.x - 1.0 && r.y == a.y - 1.0);
 
-	av = +a2;
+	r = 1.0 - a;
+	assert(r.x == 1.0 - a.x && r.y == 1.0 - a.y);
 
-	av = -a2;
+	r = 1.0 + a - 5.0;
+	assert(r.x == 1.0 + a.x - 5.0 && r.y == 1.0 + a.y - 5.0);
 
-	av = - (a2 + b2);
+	r = a;
+	assert(r.x == a.x && r.y == a.y);
 
-	auto d = Dot(a2, b2);
-	auto dr = d.Evaluate(0);
+	r = +a;
+	assert(r.x == a.x && r.y == a.y);
 
-	dr = Dot(a2, b2);
+	r = -a;
+	assert(r.x == - a.x && r.y == - a.y);
 
-	dr = Dot(a2 + b2, b2);
+	r = - (a + b);
+	assert(r.x == -(a.x + b.x) && r.y == -(a.y + b.y));
 
-	double c = Cross(a2, b2);
+	r = -(a + b / c);
+	assert(r.x == -(a.x + b.x / c.x) && r.y == -(a.y + b.y / c.y));
 
-	Vector3D ccc = Cross(Vector3D(1, 2, 3), Vector3D(4, 5, 6));
+	double dot = Dot(a, b);
+	assert(dot == a.x * b.x + a.y * b.y);
 
-	XMVECTOR cv = XMVector3Cross(
-		XMLoadFloat3(&XMFLOAT3(1, 2, 3)),
-		XMLoadFloat3(&XMFLOAT3(4, 5, 6)));
+	double dot2 = Dot(-a, b);
+	assert(dot2 == -a.x * b.x + -a.y * b.y);
 
+	double dot3 = Dot(a - 5.0, b);
+	assert(dot3 == (a.x - 5.0) * b.x + (a.y - 5) * b.y);
+
+	double cross = Cross(a, b);
+	assert(cross == a.x * b.y - a.y * b.x);
+
+	double len = Length(a);
+	assert(len == std::sqrt(a.x * a.x + a.y * a.y));
+
+	double dist = Distance(a, c);
+	assert(dist == std::sqrt(Square(a.x - c.x) + Square(a.y - c.y)));
+
+	double dist2 = Distance(a + b, c);
+	assert(dist2 == std::sqrt(Square(a.x + b.x - c.x) + Square(a.y + b.y - c.y)));
 
 #if 0
-	bool f2d = is_convertible<float, double>::value;
-	bool d2f = is_convertible<float, double>::value;
-
-	Vector3D a3(1, 2, 3);
-
-	Vector4D a4(1, 2, 3, 4);
-
-
-
-	__m256d a, b, res;
-
-	for (int i = 0; i < sizeof(__m256d) / sizeof(double); i++)
-	{
-		a.m256d_f64[i] = i;
-		b.m256d_f64[i] = 2 * i;
-	}
-
 	// Perform __4__ adds.
 	res = _mm256_add_pd(a, b);
 

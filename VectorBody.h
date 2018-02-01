@@ -14,18 +14,18 @@ public:
 	// constructor
 	VectorT() = default;
 
-	VectorT(const VectorT& rhs) { operator = (rhs); }
+	__forceinline VectorT(const VectorT& rhs) { operator = (rhs); }
 
 	template <typename = std::enable_if_t<Dimension == 2, ValueType>>
-	VectorT(ValueType x, ValueType y)
+	__forceinline VectorT(ValueType x, ValueType y)
 	{ m[0] = x; m[1] = y; }
 
 	template <typename = std::enable_if_t<Dimension == 3, ValueType>>
-	VectorT(ValueType x, ValueType y, ValueType z)
+	__forceinline VectorT(ValueType x, ValueType y, ValueType z)
 	{ m[0] = x; m[1] = y; m[2] = z; }
 
 	template <typename = std::enable_if_t<Dimension == 4, ValueType>>
-	VectorT(ValueType x, ValueType y, ValueType z, ValueType w)
+	__forceinline VectorT(ValueType x, ValueType y, ValueType z, ValueType w)
 	{ m[0] = x; m[1] = y; m[2] = z; m[3] = w; }
 
 	template <
@@ -40,7 +40,7 @@ public:
 				VectorArgument<Arg>::Dimension == 1
 			),
 		void>>
-		VectorT(const VectorUnaryExpression<Arg, Op>& expr)
+	__forceinline VectorT(const VectorUnaryExpression<Arg, Op>& expr)
 	{
 		VectorAssignment<
 			VectorT,
@@ -61,7 +61,7 @@ public:
 				VectorArgument<Lhs>::Dimension == 1
 			),
 		void>>
-		VectorT(const VectorBinaryExpression<Lhs, Rhs, Op>& expr)
+	__forceinline VectorT(const VectorBinaryExpression<Lhs, Rhs, Op>& expr)
 	{
 		VectorAssignment<
 			VectorT,
@@ -69,7 +69,7 @@ public:
 			VectorOperation::Assign>::Evaluate(*this, expr);
 	}
 
-	VectorT& operator = (const VectorT& rhs)
+	__forceinline VectorT& operator = (const VectorT& rhs)
 	{
 		ForEach([&](int i) { m[i] = rhs.m[i]; }); return *this;
 	}
@@ -88,7 +88,7 @@ public:
 				VectorArgument<Arg>::Dimension == 1
 			),
 		void>>
-	VectorT& operator = (const VectorUnaryExpression<Arg, Op>& expr)
+	__forceinline VectorT& operator = (const VectorUnaryExpression<Arg, Op>& expr)
 	{
 		VectorAssignment<
 			VectorT,
@@ -110,7 +110,7 @@ public:
 				VectorArgument<Rhs>::Dimension == 1
 			),
 		void>>
-	VectorT& operator = (const VectorBinaryExpression<Lhs, Rhs, Op>& expr)
+	__forceinline VectorT& operator = (const VectorBinaryExpression<Lhs, Rhs, Op>& expr)
 	{
 		VectorAssignment<
 			VectorT,
@@ -121,17 +121,17 @@ public:
 
 	//--------------------------------------------------------------------------
 	// etc
-	VectorT& ForEach(const std::function<void(int)>& functor)
+	__forceinline VectorT& ForEach(const std::function<void(int)>& functor)
 	{
 		for (int i = 0; i < Dimension; ++i) { functor(i); }
 		return *this;
 	}
 
-	VectorT& ForEach(const std::function<void(VectorT&, int)>& functor)
+	__forceinline VectorT& ForEach(const std::function<void(VectorT&, int)>& functor)
 	{
 		for (int i = 0; i < Dimension; ++i) { functor(*this, i); }
 		return *this;
 	}
 
-	const ValueType Evaluate(int index) const { return m[index]; }
+	__forceinline const ValueType Evaluate(int index) const { return m[index]; }
 };
