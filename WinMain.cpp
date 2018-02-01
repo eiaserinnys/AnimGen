@@ -12,6 +12,8 @@ using namespace std;
 
 static unique_ptr<IThisApp> thisApp;
 
+extern void TestVector();
+
 //------------------------------------------------------------------------------
 INT WINAPI wWinMain(
 	HINSTANCE hInstance, 
@@ -21,6 +23,8 @@ INT WINAPI wWinMain(
 {
 	UNREFERENCED_PARAMETER(hPrevInstance);
 	UNREFERENCED_PARAMETER(lpCmdLine);
+
+	TestVector();
 
 	auto ret = WindowsUtility::RegisterAndCreateOverlappedWindow(
 		hInstance,

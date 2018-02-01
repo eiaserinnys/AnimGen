@@ -39,6 +39,9 @@
     <Filter Include="Mathematics">
       <UniqueIdentifier>{409951d6-3b90-48e4-b7b9-f887df21c59b}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Mathematics\Vector">
+      <UniqueIdentifier>{372cd03f-f00f-4388-a033-dd2eb22aa822}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="RenderContext.cpp">
@@ -88,6 +91,9 @@
     </ClCompile>
     <ClCompile Include="exp-map.cpp">
       <Filter>Mathematics</Filter>
+    </ClCompile>
+    <ClCompile Include="Vector.cpp">
+      <Filter>Mathematics\Vector</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -144,6 +150,18 @@
     </ClInclude>
     <ClInclude Include="exp-map.h">
       <Filter>Mathematics</Filter>
+    </ClInclude>
+    <ClInclude Include="Vector.h">
+      <Filter>Mathematics\Vector</Filter>
+    </ClInclude>
+    <ClInclude Include="VectorDescriptor.h">
+      <Filter>Mathematics\Vector</Filter>
+    </ClInclude>
+    <ClInclude Include="VectorExpression.h">
+      <Filter>Mathematics\Vector</Filter>
+    </ClInclude>
+    <ClInclude Include="VectorIntrinsic.h">
+      <Filter>Mathematics\Vector</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
