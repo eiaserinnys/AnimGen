@@ -2,6 +2,7 @@
 #include "Vector.h"
 
 using namespace std;
+using namespace DirectX;
 
 template <int D>
 const PackedDouble<D> operator + (const PackedDouble<D>& lhs, const PackedDouble<D>& rhs)
@@ -14,16 +15,7 @@ void TestVector()
 	Vector2D a2(1, 2);
 	Vector2D b2(3, 4);
 
-	Vector2F f2(5, 7);
-
-	PackedDouble<2> p = a2;
-
-	auto add = a2 + b2;
-
-	auto s1 = add.Evaluate(0);
-	auto s2 = add.Evaluate(1);
-
-	Vector2D av = add;
+	Vector2D av;
 
 	av = a2 + a2 + b2;
 
@@ -31,16 +23,33 @@ void TestVector()
 
 	av = 1.0 + a2;
 
-	av = 1.0 + a2 + 1.0;
+	av = 1.0 + a2 - 5.0;
 
-	//a2 + b2;
+	av = +a2;
+
+	av = -a2;
+
+	av = - (a2 + b2);
+
+	auto d = Dot(a2, b2);
+	auto dr = d.Evaluate(0);
+
+	dr = Dot(a2, b2);
+
+	dr = Dot(a2 + b2, b2);
+
+	double c = Cross(a2, b2);
+
+	Vector3D ccc = Cross(Vector3D(1, 2, 3), Vector3D(4, 5, 6));
+
+	XMVECTOR cv = XMVector3Cross(
+		XMLoadFloat3(&XMFLOAT3(1, 2, 3)),
+		XMLoadFloat3(&XMFLOAT3(4, 5, 6)));
+
 
 #if 0
-
-	Vector2D c2;
-
-	c2 += b2;
-#endif
+	bool f2d = is_convertible<float, double>::value;
+	bool d2f = is_convertible<float, double>::value;
 
 	Vector3D a3(1, 2, 3);
 
@@ -64,4 +73,5 @@ void TestVector()
 		printf("%f + %f = %f\n", a.m256d_f64[i], b.m256d_f64[i], res.m256d_f64[i]);
 	}
 	puts("");
+#endif
 }

@@ -50,7 +50,26 @@ private:
 };
 
 //------------------------------------------------------------------------------
-template <typename Lhs, typename Rhs, typename Op>
+template <typename Arg, typename Op>
+class VectorUnaryExpression {
+public:
+	typedef VectorArgument<Arg> ArgType;
+
+	typedef typename ArgType::ValueType ValueType;
+
+	enum { Dimension = ArgType::Dimension };
+
+	VectorUnaryExpression(const Arg& arg) : arg(arg) {}
+
+	typename const ArgType::ValueType Evaluate(const int index) const
+	{ return Op::Evaluate(index, arg); }
+
+private:
+	const ArgType arg;
+};
+
+//------------------------------------------------------------------------------
+template <typename Lhs, typename Rhs, typename Op, int D = 0>
 class VectorBinaryExpression {
 public:
 	typedef VectorArgument<Lhs> LhsType;
@@ -60,8 +79,11 @@ public:
 
 	enum 
 	{ 
-		Dimension = LhsType::Dimension > RhsType::Dimension ? 
-			LhsType::Dimension : RhsType::Dimension 
+		Dimension = 
+			D == 0 ? 
+				(LhsType::Dimension > RhsType::Dimension ? 
+					LhsType::Dimension : RhsType::Dimension) :
+				D
 	};
 
 	template <typename = std::enable_if_t<
@@ -79,13 +101,17 @@ public:
 	typename const LhsType::ValueType Evaluate(const int index) const
 	{ return Op::Evaluate(index, lhs, rhs); }
 
+	template <typename = std::enable_if_t<Dimension == 1, void>>
+	operator ValueType() const
+	{ return Op::Evaluate(0, lhs, rhs); }
+
 private:
 	const LhsType lhs;
 	const RhsType rhs;
 };
 
 //------------------------------------------------------------------------------
-template <typename V, typename Expr>
+template <typename V, typename Expr, typename Op>
 struct VectorAssignment {
 public:
 	template <typename = std::enable_if_t<
@@ -101,7 +127,7 @@ public:
 	{
 		for (int i = 0; i < V::Dimension; ++i)
 		{
-			target.m[i] = expr.Evaluate(i);
+			Op::Evaluate(i, target, expr);
 		}
 	}
 };

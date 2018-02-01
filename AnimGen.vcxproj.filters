@@ -163,6 +163,12 @@
     <ClInclude Include="VectorIntrinsic.h">
       <Filter>Mathematics\Vector</Filter>
     </ClInclude>
+    <ClInclude Include="VectorOperation.h">
+      <Filter>Mathematics\Vector</Filter>
+    </ClInclude>
+    <ClInclude Include="VectorBody.h">
+      <Filter>Mathematics\Vector</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Shader\Object.fx">
