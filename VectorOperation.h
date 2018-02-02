@@ -258,7 +258,7 @@ const auto operator / (const Lhs& lhs, const Rhs& rhs)
 { return VectorBinaryExpression<Lhs, Rhs, VectorOperation::Divide>(lhs, rhs); }
 
 template <typename Lhs, typename Rhs,
-	ENABLE_IF(HAS_SAME_DIMENSION(VectorArgument<Lhs>, VectorArgument<Rhs>))>
+	ENABLE_IF(HAS_SAME_DIMENSION(VectorExpressionArgument<Lhs>, VectorExpressionArgument<Rhs>))>
 const auto Dot(const Lhs& lhs, const Rhs& rhs)
 { 
 	return VectorBinaryExpression<
@@ -268,7 +268,7 @@ const auto Dot(const Lhs& lhs, const Rhs& rhs)
 
 template <
 	typename Lhs, typename Rhs,
-	ENABLE_IF(HAS_SAME_DIMENSION(VectorArgument<Lhs>, VectorArgument<Rhs>))>
+	ENABLE_IF(HAS_SAME_DIMENSION(VectorExpressionArgument<Lhs>, VectorExpressionArgument<Rhs>))>
 const auto Distance(const Lhs& lhs, const Rhs& rhs)
 { 
 	return VectorBinaryExpression<
@@ -278,13 +278,13 @@ const auto Distance(const Lhs& lhs, const Rhs& rhs)
 
 template <
 	typename Lhs, typename Rhs,
-	ENABLE_IF(DIM(VectorArgument<Lhs>) == 2 && DIM(VectorArgument<Rhs>) == 2)>
+	ENABLE_IF(DIM(VectorExpressionArgument<Lhs>) == 2 && DIM(VectorExpressionArgument<Rhs>) == 2)>
 const VectorBinaryExpression<Lhs, Rhs, VectorOperation::Cross2D, 1> Cross(const Lhs& lhs, const Rhs& rhs)
 { return VectorBinaryExpression<Lhs, Rhs, VectorOperation::Cross2D, 1>(lhs, rhs); }
 
 template <
 	typename Lhs, typename Rhs,
-	ENABLE_IF(DIM(VectorArgument<Lhs>) == 3 && DIM(VectorArgument<Rhs>) == 3)>
+	ENABLE_IF(DIM(VectorExpressionArgument<Lhs>) == 3 && DIM(VectorExpressionArgument<Rhs>) == 3)>
 __forceinline auto Cross(const Lhs& lhs, const Rhs& rhs)
 { 
 	return VectorBinaryExpression<

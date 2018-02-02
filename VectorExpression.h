@@ -7,12 +7,12 @@ class VectorT;
 
 //------------------------------------------------------------------------------
 template <typename V>
-class VectorArgument {
+class VectorExpressionArgument {
 public:
 	typedef typename V::ValueType ValueType;
 	enum { Dimension = V::Dimension };
 
-	VectorArgument(const V& arg) : arg(arg) {}
+	VectorExpressionArgument(const V& arg) : arg(arg) {}
 
 	__forceinline void PreEvaluate() const
 	{
@@ -30,12 +30,12 @@ private:
 
 //------------------------------------------------------------------------------
 template <>
-class VectorArgument<int> {
+class VectorExpressionArgument<int> {
 public:
 	typedef int ValueType;
 	enum { Dimension = 1 };
 
-	VectorArgument(const int arg) : arg(arg) {}
+	VectorExpressionArgument(const int arg) : arg(arg) {}
 
 	__forceinline void PreEvaluate() const
 	{
@@ -52,12 +52,12 @@ private:
 
 //------------------------------------------------------------------------------
 template <>
-class VectorArgument<float> {
+class VectorExpressionArgument<float> {
 public:
 	typedef float ValueType;
 	enum { Dimension = 1 };
 
-	VectorArgument(const float arg) : arg(arg) {}
+	VectorExpressionArgument(const float arg) : arg(arg) {}
 
 	__forceinline void PreEvaluate() const
 	{
@@ -74,12 +74,12 @@ private:
 
 //------------------------------------------------------------------------------
 template <>
-class VectorArgument<double> {
+class VectorExpressionArgument<double> {
 public:
 	typedef double ValueType;
 	enum { Dimension = 1 };
 
-	VectorArgument(const double arg) : arg(arg) 
+	VectorExpressionArgument(const double arg) : arg(arg) 
 	{
 	}
 
@@ -100,7 +100,7 @@ private:
 template <typename Arg, typename Op, int D = 0>
 class VectorUnaryExpression {
 public:
-	typedef VectorArgument<Arg> ArgType;
+	typedef VectorExpressionArgument<Arg> ArgType;
 
 	typedef typename ArgType::ValueType ValueType;
 
@@ -140,8 +140,8 @@ private:
 template <typename Lhs, typename Rhs, typename Op, int D = 0>
 class VectorBinaryExpression {
 public:
-	typedef VectorArgument<Lhs> LhsType;
-	typedef VectorArgument<Rhs> RhsType;
+	typedef VectorExpressionArgument<Lhs> LhsType;
+	typedef VectorExpressionArgument<Rhs> RhsType;
 
 	typedef typename MoreGenericType<
 		typename LhsType::ValueType, 

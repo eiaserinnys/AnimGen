@@ -18,14 +18,37 @@ const PackedDouble<D> operator + (const PackedDouble<D>& lhs, const PackedDouble
 	return PackedDouble<D>(_mm256_add_pd(lhs.p, rhs.p));
 }
 
-static void TestVector2()
+//------------------------------------------------------------------------------
+static void TestVector2_Arithmetic_Unary()
 {
 	Vector2D a(1, 2);
-	assert(a.x == 1 && a.y == 2);
-	assert(a.m[0] == 1 && a.m[1] == 2);
-
 	Vector2D b(3, 4);
 	Vector2D c(5, 6);
+	Vector2D r;
+
+	r = +a;
+	assert(r.x == a.x && r.y == a.y);
+
+	r = -a;
+	assert(r.x == -a.x && r.y == -a.y);
+
+	r = -(a + b);
+	assert(r.x == -(a.x + b.x) && r.y == -(a.y + b.y));
+
+	r = +(a + b / c);
+	assert(r.x == +(a.x + b.x / c.x) && r.y == +(a.y + b.y / c.y));
+
+	r = -(a + b / c);
+	assert(r.x == -(a.x + b.x / c.x) && r.y == -(a.y + b.y / c.y));
+}
+
+//------------------------------------------------------------------------------
+static void TestVector2_Arithmetic()
+{
+	Vector2D a(1, 2);
+	Vector2D b(3, 4);
+	Vector2D c(5, 6);
+	Vector2F d(7.0f, 8.0f);
 	Vector2D r;
 
 	r = a + b;
@@ -49,59 +72,66 @@ static void TestVector2()
 	r = 1.0 + a - 5.0;
 	assert(r.x == 1.0 + a.x - 5.0 && r.y == 1.0 + a.y - 5.0);
 
-	Vector2F d(7.0f, 8.0f);
-	Vector2F rf;
-
-	// swizzle 2
-	auto xx = a.xx();
-	assert(xx.x == a.x && xx.y == a.x);
-
-	auto xy = a.xy();
-	assert(xy.x == a.x && xy.y == a.y);
-
-	auto yx = a.yx();
-	assert(yx.x == a.y && yx.y == a.x);
-
-	auto yy = a.yy();
-	assert(yy.x == a.y && yy.y == a.y);
-
-	// swizzle 3
-	auto xxx = a.xxx();
-	assert(xxx.x == a.x && xxx.y == a.x  && xxx.z == a.x);
-
-	// swizzle 4
-	auto xxxx = a.xxxx();
-	assert(xxxx.x == a.x && xxxx.y == a.x && xxxx.z == a.x && xxxx.w == a.x);
-
 	r = a + d;
 	assert(r.x == a.x + d.x && r.y == a.y + d.y);
 
 	r = d + a;
 	assert(r.x == a.x + d.x && r.y == a.y + d.y);
 
+	Vector2F rf;
 	rf = a + b;
-	assert(rf.x == (float) (a.x + b.x) && rf.y == (float)(a.y + b.y));
+	assert(rf.x == (float)(a.x + b.x) && rf.y == (float)(a.y + b.y));
 
 	r = a;
 	assert(r.x == a.x && r.y == a.y);
 
-	r = +a;
-	assert(r.x == a.x && r.y == a.y);
+	r = a - b;
+	assert(r.x == a.x - b.x && r.y == a.y - b.y);
 
-	r = -a;
-	assert(r.x == - a.x && r.y == - a.y);
+	r = a + b - c;
+	assert(r.x == a.x + b.x - c.x && r.y == a.y + b.y - c.y);
 
-	r = - (a + b);
-	assert(r.x == -(a.x + b.x) && r.y == -(a.y + b.y));
+	r = a * b;
+	assert(r.x == a.x * b.x && r.y == a.y * b.y);
 
-	r = -(a + b / c);
-	assert(r.x == -(a.x + b.x / c.x) && r.y == -(a.y + b.y / c.y));
+	r = (a + b) * c;
+	assert(r.x == (a.x + b.x) * c.x && r.y == (a.y + b.y) * c.y);
+
+	r = a / b;
+	assert(r.x == a.x / b.x && r.y == a.y / b.y);
+
+	r = (a + b) / c;
+	assert(r.x == (a.x + b.x) / c.x && r.y == (a.y + b.y) / c.y);
+}
+
+//------------------------------------------------------------------------------
+static void TestVector2_Assignment()
+{
+	Vector2D a(1, 2);
+	assert(a.x == 1 && a.y == 2);
+	assert(a.m[0] == 1 && a.m[1] == 2);
+
+	Vector2D b(3, 4);
+	Vector2D c(5, 6);
+	Vector2D r;
 
 	r = 1.0;
 
 	r = a;
-	r += 1.0;
-	assert(r.x == a.x + 1.0 && r.y == a.y + 1.0);
+	r += 2.0;
+	assert(r.x == a.x + 2.0 && r.y == a.y + 2.0);
+
+	r = a;
+	r -= 2.0;
+	assert(r.x == a.x - 2.0 && r.y == a.y - 2.0);
+
+	r = a;
+	r *= 2.0;
+	assert(r.x == a.x * 2.0 && r.y == a.y * 2.0);
+
+	r = a;
+	r /= 2.0;
+	assert(r.x == a.x / 2.0 && r.y == a.y / 2.0);
 
 	r = a;
 	r += b;
@@ -118,6 +148,89 @@ static void TestVector2()
 	r = a;
 	r -= b + c;
 	assert(r.x == a.x - b.x - c.x && r.y == a.y - b.y - c.y);
+
+	r = a;
+	r *= b;
+	assert(r.x == a.x * b.x && r.y == a.y * b.y);
+
+	r = a;
+	r *= b + c;
+	assert(r.x == a.x * (b.x + c.x) && r.y == a.y * (b.y + c.y));
+
+	r = a;
+	r /= b;
+	assert(r.x == a.x / b.x && r.y == a.y / b.y);
+
+	r = a;
+	r /= b + c;
+	assert(r.x == a.x / (b.x + c.x) && r.y == a.y / (b.y + c.y));
+}
+
+//------------------------------------------------------------------------------
+#define TEST_SWIZZLE2(a, b)							\
+{													\
+	auto a##b = v.a##b();							\
+	assert(a##b.x == v.a && a##b.y == v.b);			\
+}													\
+
+#define TEST_SWIZZLE3(a, b, c)						\
+{													\
+	auto a##b##c = v.a##b##c();						\
+	assert(a##b##c.x == v.a && a##b##c.y == v.b && a##b##c.z == v.c); \
+}													\
+
+#define TEST_SWIZZLE4(a, b, c, d)						\
+{														\
+	auto a##b##c##d = v.a##b##c##d();					\
+	assert(												\
+		a##b##c##d.x == v.a && a##b##c##d.y == v.b &&	\
+		a##b##c##d.z == v.c && a##b##c##d.w == v.d);	\
+}														\
+
+static void TestVector2_Swizzle()
+{
+	Vector2D v(1, 2);
+
+	TEST_SWIZZLE2(x, x);
+	TEST_SWIZZLE2(x, y);
+	TEST_SWIZZLE2(y, x);
+	TEST_SWIZZLE2(y, y);
+
+	TEST_SWIZZLE3(x, x, x);
+	TEST_SWIZZLE3(x, x, y);
+	TEST_SWIZZLE3(x, y, x);
+	TEST_SWIZZLE3(x, y, y);
+	TEST_SWIZZLE3(y, x, x);
+	TEST_SWIZZLE3(y, x, y);
+	TEST_SWIZZLE3(y, y, x);
+	TEST_SWIZZLE3(y, y, y);
+
+	TEST_SWIZZLE4(x, x, x, x);
+	TEST_SWIZZLE4(x, x, x, y);
+	TEST_SWIZZLE4(x, x, y, x);
+	TEST_SWIZZLE4(x, x, y, y);
+	TEST_SWIZZLE4(x, y, x, x);
+	TEST_SWIZZLE4(x, y, x, y);
+	TEST_SWIZZLE4(x, y, y, x);
+	TEST_SWIZZLE4(x, y, y, y);
+	TEST_SWIZZLE4(y, x, x, x);
+	TEST_SWIZZLE4(y, x, x, y);
+	TEST_SWIZZLE4(y, x, y, x);
+	TEST_SWIZZLE4(y, x, y, y);
+	TEST_SWIZZLE4(y, y, x, x);
+	TEST_SWIZZLE4(y, y, x, y);
+	TEST_SWIZZLE4(y, y, y, x);
+	TEST_SWIZZLE4(y, y, y, y);
+}
+
+//------------------------------------------------------------------------------
+static void TestVector2_Function()
+{
+	Vector2D a(1, 2);
+	Vector2D b(3, 4);
+	Vector2D c(5, 6);
+
+	Vector2F d(7.0f, 8.0f);
 
 	double dot = Dot(a, b);
 	assert(dot == a.x * b.x + a.y * b.y);
@@ -156,6 +269,17 @@ static void TestVector2()
 	assert(nor3.y == (nor.y + b.y) / std::sqrt(Square(nor.x + b.x) + Square(nor.y + b.y)));
 }
 
+//------------------------------------------------------------------------------
+static void TestVector2()
+{
+	TestVector2_Assignment();
+	TestVector2_Arithmetic_Unary();
+	TestVector2_Arithmetic();
+	TestVector2_Swizzle();
+	TestVector2_Function();
+}
+
+//------------------------------------------------------------------------------
 void TestVector()
 {
 	TestVector2();
