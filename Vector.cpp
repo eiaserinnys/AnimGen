@@ -52,7 +52,26 @@ static void TestVector2()
 	Vector2F d(7.0f, 8.0f);
 	Vector2F rf;
 
-	//auto sw = a.xx();
+	// swizzle 2
+	auto xx = a.xx();
+	assert(xx.x == a.x && xx.y == a.x);
+
+	auto xy = a.xy();
+	assert(xy.x == a.x && xy.y == a.y);
+
+	auto yx = a.yx();
+	assert(yx.x == a.y && yx.y == a.x);
+
+	auto yy = a.yy();
+	assert(yy.x == a.y && yy.y == a.y);
+
+	// swizzle 3
+	auto xxx = a.xxx();
+	assert(xxx.x == a.x && xxx.y == a.x  && xxx.z == a.x);
+
+	// swizzle 4
+	auto xxxx = a.xxxx();
+	assert(xxxx.x == a.x && xxxx.y == a.x && xxxx.z == a.x && xxxx.w == a.x);
 
 	r = a + d;
 	assert(r.x == a.x + d.x && r.y == a.y + d.y);
@@ -140,6 +159,9 @@ static void TestVector2()
 void TestVector()
 {
 	TestVector2();
+
+	Vector4D a(1, 2, 3, 4);
+	auto xxxx = a.xxxx();
 
 #if 0
 	// Perform __4__ adds.

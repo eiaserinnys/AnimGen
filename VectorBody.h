@@ -100,33 +100,38 @@ public:
 
 #	define HAS_MEMBER(a) HAS_MEMBER_##a
 
-#	define SWIZZLE_2(a, b, c, d) \
+	// swizzler with the name like 'xx', 'xy'
+#	define SWIZZLE() \
+	SWIZZLE_1(x); SWIZZLE_1(y); SWIZZLE_1(z); SWIZZLE_1(w);
+
+#	define SWIZZLE_1(a) \
+	SWIZZLE_2(a, x); SWIZZLE_2(a, y); SWIZZLE_2(a, z); SWIZZLE_2(a, w);
+
+#	define SWIZZLE_2(a, b) \
 	template <HAS_MEMBER(a), HAS_MEMBER(b)> \
 		__forceinline const VectorT<V, 2> a##b() const { return VectorT<V, 2>(a, b); }
 
-#	define SWIZZLE_3(a, b, c, d) \
+	SWIZZLE();
+
+	// swizzler with the name like 'xxx', 'xyz'
+#	undef SWIZZLE_2
+#	define SWIZZLE_2(a, b) \
+	SWIZZLE_3(a, b, x); SWIZZLE_3(a, b, y); SWIZZLE_3(a, b, z); SWIZZLE_3(a, b, w);
+
+#	define SWIZZLE_3(a, b, c) \
 	template <HAS_MEMBER(a), HAS_MEMBER(b), HAS_MEMBER(c)> \
 		__forceinline const VectorT<V, 3> a##b##c() const { return VectorT<V, 3>(a, b, c); }
 
+	SWIZZLE();
+
+	// swizzler with the name like 'xxxx', 'xyzw'
+#	undef SWIZZLE_3
+#	define SWIZZLE_3(a, b, c) \
+	SWIZZLE_4(a, b, c, x); SWIZZLE_4(a, b, c, y); SWIZZLE_4(a, b, c, z); SWIZZLE_4(a, b, c, w);
+
 #	define SWIZZLE_4(a, b, c, d) \
 	template <HAS_MEMBER(a), HAS_MEMBER(b), HAS_MEMBER(c), HAS_MEMBER(c)> \
-		__forceinline const VectorT<V, 4> a##b##c##d() const { return VectorT<V, 3>(a, b, c, d); }
+		__forceinline const VectorT<V, 4> a##b##c##d() const { return VectorT<V, 4>(a, b, c, d); }
 
-#	define SWIZZLE5(n, a, b, c, d) SWIZZLE_##n(a, b, c, d)
-
-#	define SWIZZLE4(n, a, b, c) \
-	SWIZZLE5(n, a, b, c, x); SWIZZLE5(n, a, b, c, y); SWIZZLE5(n, a, b, c, z); SWIZZLE5(n, a, b, c, w);
-
-#	define SWIZZLE3(n, a, b) \
-	SWIZZLE4(n, a, b, x); SWIZZLE4(n, a, b, y); SWIZZLE4(n, a, b, z); SWIZZLE4(n, a, b, w);
-
-#	define SWIZZLE2(n, a) \
-	SWIZZLE3(n, a, x); SWIZZLE3(n, a, y); SWIZZLE3(n, a, z); SWIZZLE3(n, a, w);
-
-#	define SWIZZLE(n) \
-	SWIZZLE2(n, x); SWIZZLE2(n, y); SWIZZLE2(n, z); SWIZZLE2(n, w);
-
-	//SWIZZLE(2);
-	//SWIZZLE(3);
-	SWIZZLE(4);
+	SWIZZLE();
 };
