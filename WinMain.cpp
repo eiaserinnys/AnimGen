@@ -25,6 +25,7 @@ INT WINAPI wWinMain(
 	UNREFERENCED_PARAMETER(lpCmdLine);
 
 	TestVector();
+	return 0;
 
 	auto ret = WindowsUtility::RegisterAndCreateOverlappedWindow(
 		hInstance,

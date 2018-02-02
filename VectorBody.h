@@ -1,5 +1,8 @@
 #pragma once
 
+#include "VectorExpression.h"
+#include "VectorOperation.h"
+
 //------------------------------------------------------------------------------
 template <typename V, int D>
 class VectorT : public VectorDescriptor<V, D> {
@@ -16,122 +19,75 @@ public:
 
 	__forceinline VectorT(const VectorT& rhs) { operator = (rhs); }
 
-	template <typename = std::enable_if_t<Dimension == 2, ValueType>>
+	template <typename ValueType, ENABLE_IF(Dimension == 2)>
 	__forceinline VectorT(ValueType x, ValueType y)
 	{ m[0] = x; m[1] = y; }
 
-	template <typename = std::enable_if_t<Dimension == 3, ValueType>>
+	template <typename ValueType, ENABLE_IF(Dimension == 3)>
 	__forceinline VectorT(ValueType x, ValueType y, ValueType z)
 	{ m[0] = x; m[1] = y; m[2] = z; }
 
-	template <typename = std::enable_if_t<Dimension == 4, ValueType>>
+	template <typename ValueType, ENABLE_IF(Dimension == 4)>
 	__forceinline VectorT(ValueType x, ValueType y, ValueType z, ValueType w)
 	{ m[0] = x; m[1] = y; m[2] = z; m[3] = w; }
 
-	template <
-		typename Arg,
-		typename Op,
-		typename = std::enable_if_t<
-		std::is_same<
-			ValueType,
-			typename VectorArgument<Arg>::ValueType>::value &&
-			(
-				Dimension == VectorArgument<Arg>::Dimension ||
-				VectorArgument<Arg>::Dimension == 1
-			),
-		void>>
-	__forceinline VectorT(const VectorUnaryExpression<Arg, Op>& expr)
-	{
-		VectorAssignment<
-			VectorT,
-			VectorUnaryExpression<Arg, Op>,
-			VectorOperation::Assign>::Evaluate(*this, expr);
-	}
-
-	template <
-		typename Lhs,
-		typename Rhs,
-		typename Op,
-		typename = std::enable_if_t<
-		std::is_same<
-			ValueType,
-			typename VectorArgument<Lhs>::ValueType>::value &&
-			(
-				Dimension == VectorArgument<Lhs>::Dimension ||
-				VectorArgument<Lhs>::Dimension == 1
-			),
-		void>>
-	__forceinline VectorT(const VectorBinaryExpression<Lhs, Rhs, Op>& expr)
-	{
-		VectorAssignment<
-			VectorT,
-			VectorBinaryExpression<Lhs, Rhs, Op>,
-			VectorOperation::Assign>::Evaluate(*this, expr);
-	}
-
-	__forceinline VectorT& operator = (const VectorT& rhs)
-	{
-		ForEach([&](int i) { m[i] = rhs.m[i]; }); return *this;
+	template <typename Expr>
+	__forceinline VectorT(const Expr& expr)
+	{ 
+		using namespace VectorOperation;
+		VectorAssignment<VectorT, Expr, SelectRhs>().Evaluate(*this, expr);
 	}
 
 	//--------------------------------------------------------------------------
 	// assignment
-	template <
-		typename Arg,
-		typename Op,
-		typename = std::enable_if_t<
-		std::is_same<
-			ValueType,
-			typename VectorArgument<Arg>::ValueType>::value &&
-			(
-				Dimension == VectorArgument<Arg>::Dimension ||
-				VectorArgument<Arg>::Dimension == 1
-			),
-		void>>
-	__forceinline VectorT& operator = (const VectorUnaryExpression<Arg, Op>& expr)
+	template<typename Expr>
+	using AssignSrc = VectorUnaryExpression<Expr, VectorOperation::Plus>;
+
+	template<typename Expr, typename Op>
+	using AssignExpr = VectorAssignment<VectorT, AssignSrc<Expr>, Op>;
+
+	template <typename Expr>
+	__forceinline VectorT& operator = (const Expr& expr)
 	{
-		VectorAssignment<
-			VectorT,
-			VectorUnaryExpression<Arg, Op>,
-			VectorOperation::Assign>::Evaluate(*this, expr);
+		using namespace VectorOperation;
+		AssignExpr<Expr, SelectRhs>().Evaluate(*this, AssignSrc<Expr>(expr));
 		return *this;
 	}
 
-	template <
-		typename Lhs,
-		typename Rhs,
-		typename Op,
-		typename = std::enable_if_t<
-			std::is_same<
-			typename ValueType,
-			typename VectorArgument<Lhs>::ValueType>::value &&
-			(
-				Dimension == VectorArgument<Lhs>::Dimension ||
-				VectorArgument<Rhs>::Dimension == 1
-			),
-		void>>
-	__forceinline VectorT& operator = (const VectorBinaryExpression<Lhs, Rhs, Op>& expr)
+	template <typename Expr>
+	__forceinline VectorT& operator += (const Expr& expr)
 	{
-		VectorAssignment<
-			VectorT,
-			VectorBinaryExpression<Lhs, Rhs, Op>,
-			VectorOperation::Assign>::Evaluate(*this, expr);
+		using namespace VectorOperation;
+		AssignExpr<Expr, Add>().Evaluate(*this, AssignSrc<Expr>(expr));
+		return *this;
+	}
+
+	template <typename Expr>
+	__forceinline VectorT& operator -= (const Expr& expr)
+	{
+		using namespace VectorOperation;
+		AssignExpr<Expr, Subtract>().Evaluate(*this, AssignSrc<Expr>(expr));
+		return *this;
+	}
+
+	template <typename Expr>
+	__forceinline VectorT& operator *= (const Expr& expr)
+	{
+		using namespace VectorOperation;
+		AssignExpr<Expr, Multiply>().Evaluate(*this, AssignSrc<Expr>(expr));
+		return *this;
+	}
+
+	template <typename Expr>
+	__forceinline VectorT& operator /= (const Expr& expr)
+	{
+		using namespace VectorOperation;
+		AssignExpr<Expr, Divide>().Evaluate(*this, AssignSrc<Expr>(expr));
 		return *this;
 	}
 
 	//--------------------------------------------------------------------------
-	// etc
-	__forceinline VectorT& ForEach(const std::function<void(int)>& functor)
-	{
-		for (int i = 0; i < Dimension; ++i) { functor(i); }
-		return *this;
-	}
-
-	__forceinline VectorT& ForEach(const std::function<void(VectorT&, int)>& functor)
-	{
-		for (int i = 0; i < Dimension; ++i) { functor(*this, i); }
-		return *this;
-	}
-
+	// template meta expression evaluation
+	__forceinline void PreEvaluate() const {}
 	__forceinline const ValueType Evaluate(int index) const { return m[index]; }
 };

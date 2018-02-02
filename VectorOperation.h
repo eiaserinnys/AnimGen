@@ -1,113 +1,215 @@
 #pragma once
 
+#include "VectorMacro.h"
+
 //------------------------------------------------------------------------------
-// +
+// Unary
 namespace VectorOperation
 {
-	//--------------------------------------------------------------------------
-	// Assign
-	struct Assign
+	struct UnaryOperator
 	{
-		template <typename V, typename Arg>
-		__forceinline static void Evaluate(const int i, V& v, const Arg& arg)
+		template <typename Arg>
+		__forceinline void PreEvaluate(const Arg& arg) const
 		{
-			v.m[i] = arg.Evaluate(i);
+			arg.PreEvaluate();
 		}
 	};
 
-	//--------------------------------------------------------------------------
-	// Unary
-	struct Plus
+	struct Plus : public UnaryOperator
 	{
 		template <typename Arg>
-		__forceinline static const typename Arg::ValueType Evaluate(const int i, const Arg& arg)
+		__forceinline const typename Arg::ValueType Evaluate(const int i, const Arg& arg) const
 		{
 			return arg.Evaluate(i);
 		}
 	};
 
-	struct Minus
+	struct Minus : public UnaryOperator
 	{
 		template <typename Arg>
-		__forceinline static const typename Arg::ValueType Evaluate(const int i, const Arg& arg)
+		__forceinline const typename Arg::ValueType Evaluate(const int i, const Arg& arg) const
 		{
-			return - arg.Evaluate(i);
+			return -arg.Evaluate(i);
 		}
 	};
 
-	//--------------------------------------------------------------------------
-	struct Add
+	template <typename V, int D>
+	struct Length 
+	{
+		mutable V evaluated;
+
+		template <typename Arg>
+		__forceinline void PreEvaluate(const Arg& arg) const;
+
+		template <typename Arg>
+		__forceinline const typename Arg::ValueType Evaluate(const int i, const Arg& arg) const
+		{
+			return evaluated;
+		}
+	};
+
+	template <typename V, int D>
+	struct Normalize 
+	{
+		mutable VectorT<V, D> evaluated;
+
+		template <typename Arg>
+		__forceinline void PreEvaluate(const Arg& arg) const;
+
+		template <typename Arg>
+		__forceinline const typename Arg::ValueType Evaluate(const int i, const Arg& arg) const
+		{
+			return evaluated.Evaluate(i);
+		}
+	};
+}
+
+template <typename Arg>
+const auto operator + (const Arg& arg)
+{
+	return VectorUnaryExpression<Arg, VectorOperation::Plus>(arg);
+}
+
+template <typename Arg>
+const auto operator - (const Arg& arg)
+{
+	return VectorUnaryExpression<Arg, VectorOperation::Minus>(arg);
+}
+
+template <typename Arg>
+const auto Length(const Arg& arg)
+{
+	return VectorUnaryExpression<
+		Arg, 
+		VectorOperation::Length<typename Arg::ValueType, Arg::Dimension>, 1>(arg);
+}
+
+template <typename Arg>
+const auto Normalize(const Arg& arg)
+{
+	return VectorUnaryExpression<
+		Arg,
+		VectorOperation::Normalize<typename Arg::ValueType, Arg::Dimension>>(arg);
+}
+
+//------------------------------------------------------------------------------
+// Binary
+namespace VectorOperation
+{
+	template <typename Lhs, typename Rhs>
+	using ReturnType = typename MoreGenericType<
+		typename Lhs::ValueType, typename Rhs::ValueType>::Type;
+
+	struct BinaryOperator
 	{
 		template <typename Lhs, typename Rhs>
-		__forceinline static const typename Lhs::ValueType Evaluate(const int i, const Lhs& lhs, const Rhs& rhs)
+		__forceinline void PreEvaluate(const Lhs& lhs, const Rhs& rhs) const
+		{
+			lhs.PreEvaluate();
+			rhs.PreEvaluate();
+		}
+	};
+
+	struct SelectLhs : public BinaryOperator
+	{
+		template <typename Lhs, typename Rhs>
+		__forceinline const ReturnType<Lhs, Rhs> Evaluate(const int i, const Lhs& lhs, const Rhs& rhs) const
+		{
+			return lhs.Evaluate(i);
+		}
+	};
+
+	struct SelectRhs : public BinaryOperator
+	{
+		template <typename Lhs, typename Rhs>
+		__forceinline const ReturnType<Lhs, Rhs> Evaluate(const int i, const Lhs& lhs, const Rhs& rhs) const
+		{
+			return rhs.Evaluate(i);
+		}
+	};
+
+	struct Add : public BinaryOperator
+	{
+		template <typename Lhs, typename Rhs>
+		__forceinline const ReturnType<Lhs, Rhs> Evaluate(const int i, const Lhs& lhs, const Rhs& rhs) const
 		{
 			return lhs.Evaluate(i) + rhs.Evaluate(i);
 		}
 	};
 
-	struct Subtract
+	struct Subtract : public BinaryOperator
 	{
 		template <typename Lhs, typename Rhs>
-		__forceinline static const typename Lhs::ValueType Evaluate(const int i, const Lhs& lhs, const Rhs& rhs)
+		__forceinline const ReturnType<Lhs, Rhs> Evaluate(const int i, const Lhs& lhs, const Rhs& rhs) const
 		{
 			return lhs.Evaluate(i) - rhs.Evaluate(i);
 		}
 	};
 
-	struct Multiply
+	struct Multiply : public BinaryOperator
 	{
 		template <typename Lhs, typename Rhs>
-		__forceinline static const typename Lhs::ValueType Evaluate(const int i, const Lhs& lhs, const Rhs& rhs)
+		__forceinline const ReturnType<Lhs, Rhs> Evaluate(const int i, const Lhs& lhs, const Rhs& rhs) const
 		{
 			return lhs.Evaluate(i) * rhs.Evaluate(i);
 		}
 	};
 
-	struct Divide
+	struct Divide : public BinaryOperator
 	{
 		template <typename Lhs, typename Rhs>
-		__forceinline static const typename Lhs::ValueType Evaluate(const int i, const Lhs& lhs, const Rhs& rhs)
+		__forceinline const ReturnType<Lhs, Rhs> Evaluate(const int i, const Lhs& lhs, const Rhs& rhs) const
 		{
 			return lhs.Evaluate(i) / rhs.Evaluate(i);
 		}
 	};
 
-	struct Dot
+	template <typename V, int D>
+	struct Dot 
 	{
+		mutable V evaluated;
+
 		template <typename Lhs, typename Rhs>
-		__forceinline static const typename Lhs::ValueType Evaluate(const int i, const Lhs& lhs, const Rhs& rhs)
+		__forceinline void PreEvaluate(const Lhs& lhs, const Rhs& rhs) const
 		{
-			typename Lhs::ValueType result = 0;
+			VectorT<V, D> l, r;
+			VectorAssignment<VectorT<V, D>, Lhs, SelectRhs>().Evaluate(l, lhs);
+			VectorAssignment<VectorT<V, D>, Rhs, SelectRhs>().Evaluate(r, rhs);
+
+			evaluated = 0;
+
 			for (int j = 0; j < Lhs::Dimension; ++j)
 			{
-				result += lhs.Evaluate(j) * rhs.Evaluate(j);
+				evaluated += l.Evaluate(j) * r.Evaluate(j);
 			}
-			return result;
 		}
-	};
 
-	struct Length
-	{
 		template <typename Lhs, typename Rhs>
-		__forceinline static const typename Lhs::ValueType Evaluate(const int i, const Lhs& lhs, const Rhs& rhs)
+		__forceinline const ReturnType<Lhs, Rhs> Evaluate(const int i, const Lhs& lhs, const Rhs& rhs) const
 		{
-			return std::sqrt(Dot::Evaluate(i, lhs, rhs));
+			return evaluated;
 		}
 	};
 
-	struct Distance
+	template <typename V, int D>
+	struct Distance 
 	{
+		mutable V evaluated;
+
 		template <typename Lhs, typename Rhs>
-		__forceinline static const typename Lhs::ValueType Evaluate(const int i, const Lhs& lhs, const Rhs& rhs)
+		__forceinline void PreEvaluate(const Lhs& lhs, const Rhs& rhs) const;
+
+		template <typename Lhs, typename Rhs>
+		__forceinline const ReturnType<Lhs, Rhs> Evaluate(const int i, const Lhs& lhs, const Rhs& rhs) const
 		{
-			return std::sqrt(Dot::Evaluate(i, lhs - rhs, lhs - rhs));
+			return evaluated;
 		}
 	};
 
-	struct Cross2D
+	struct Cross2D : public BinaryOperator
 	{
 		template <typename Lhs, typename Rhs>
-		__forceinline static const typename Lhs::ValueType Evaluate(const int i, const Lhs& lhs, const Rhs& rhs)
+		__forceinline const ReturnType<Lhs, Rhs> Evaluate(const int i, const Lhs& lhs, const Rhs& rhs) const
 		{
 			return 
 				lhs.Evaluate(0) * rhs.Evaluate(1) - 
@@ -115,26 +217,29 @@ namespace VectorOperation
 		}
 	};
 
-	struct Cross3D
+	template <typename V, int D>
+	struct Cross3D : public BinaryOperator
 	{
+		mutable VectorT<V, D> l;
+		mutable VectorT<V, D> r;
+
 		template <typename Lhs, typename Rhs>
-		__forceinline static const typename Lhs::ValueType Evaluate(const int i, const Lhs& lhs, const Rhs& rhs)
+		__forceinline void PreEvaluate(const Lhs& lhs, const Rhs& rhs) const
+		{
+			VectorAssignment<VectorT<V, D>, Lhs, SelectRhs>().Evaluate(l, lhs);
+			VectorAssignment<VectorT<V, D>, Rhs, SelectRhs>().Evaluate(r, rhs);
+		}
+
+		template <typename Lhs, typename Rhs>
+		__forceinline const ReturnType<Lhs, Rhs> Evaluate(const int i, const Lhs& lhs, const Rhs& rhs) const
 		{
 			const int d = Lhs::Dimension;
 			return 
-				lhs.Evaluate((i + 1) % d) * rhs.Evaluate((i + 2) % d) - 
-				lhs.Evaluate((i + 2) % d) * rhs.Evaluate((i + 1) % d);
+				l.Evaluate((i + 1) % d) * r.Evaluate((i + 2) % d) - 
+				l.Evaluate((i + 2) % d) * r.Evaluate((i + 1) % d);
 		}
 	};
 }
-
-template <typename Arg>
-const auto operator + (const Arg& arg)
-{ return VectorUnaryExpression<Arg, VectorOperation::Plus>(arg); }
-
-template <typename Arg>
-const auto operator - (const Arg& arg)
-{ return VectorUnaryExpression<Arg, VectorOperation::Minus>(arg); }
 
 template <typename Lhs, typename Rhs>
 const auto operator + (const Lhs& lhs, const Rhs& rhs)
@@ -152,40 +257,66 @@ template <typename Lhs, typename Rhs>
 const auto operator / (const Lhs& lhs, const Rhs& rhs)
 { return VectorBinaryExpression<Lhs, Rhs, VectorOperation::Divide>(lhs, rhs); }
 
-template <
-	typename Lhs, 
-	typename Rhs,
-	typename = std::enable_if_t<
-		VectorArgument<Lhs>::Dimension == VectorArgument<Rhs>::Dimension, void>>
+template <typename Lhs, typename Rhs,
+	ENABLE_IF(HAS_SAME_DIMENSION(VectorArgument<Lhs>, VectorArgument<Rhs>))>
 const auto Dot(const Lhs& lhs, const Rhs& rhs)
-{ return VectorBinaryExpression<Lhs, Rhs, VectorOperation::Dot, 1>(lhs, rhs); }
-
-template <typename Arg>
-const auto Length(const Arg& arg)
-{ return VectorBinaryExpression<Arg, Arg, VectorOperation::Length, 1>(arg, arg); }
+{ 
+	return VectorBinaryExpression<
+		Lhs, Rhs, 
+		VectorOperation::Dot<typename Lhs::ValueType, Lhs::Dimension>, 1>(lhs, rhs); 
+}
 
 template <
-	typename Lhs, 
-	typename Rhs,
-	typename = std::enable_if_t<
-		VectorArgument<Lhs>::Dimension == VectorArgument<Rhs>::Dimension, void>>
+	typename Lhs, typename Rhs,
+	ENABLE_IF(HAS_SAME_DIMENSION(VectorArgument<Lhs>, VectorArgument<Rhs>))>
 const auto Distance(const Lhs& lhs, const Rhs& rhs)
-{ return VectorBinaryExpression<Lhs, Rhs, VectorOperation::Distance, 1>(lhs, rhs); }
+{ 
+	return VectorBinaryExpression<
+		Lhs, Rhs, 
+		VectorOperation::Distance<typename Lhs::ValueType, Lhs::Dimension>, 1>(lhs, rhs); 
+}
 
 template <
-	typename Lhs, 
-	typename Rhs,
-	typename = std::enable_if_t<
-		VectorArgument<Lhs>::Dimension == 2 && 
-		VectorArgument<Rhs>::Dimension == 2, void>>
+	typename Lhs, typename Rhs,
+	ENABLE_IF(DIM(VectorArgument<Lhs>) == 2 && DIM(VectorArgument<Rhs>) == 2)>
 const VectorBinaryExpression<Lhs, Rhs, VectorOperation::Cross2D, 1> Cross(const Lhs& lhs, const Rhs& rhs)
 { return VectorBinaryExpression<Lhs, Rhs, VectorOperation::Cross2D, 1>(lhs, rhs); }
 
 template <
-	typename Lhs, 
-	typename Rhs,
-	typename = std::enable_if_t<
-		VectorArgument<Lhs>::Dimension == 3 && 
-		VectorArgument<Rhs>::Dimension == 3, void>>
-const VectorBinaryExpression<Lhs, Rhs, VectorOperation::Cross3D> Cross(const Lhs& lhs, const Rhs& rhs)
-{ return VectorBinaryExpression<Lhs, Rhs, VectorOperation::Cross3D>(lhs, rhs); }
+	typename Lhs, typename Rhs,
+	ENABLE_IF(DIM(VectorArgument<Lhs>) == 3 && DIM(VectorArgument<Rhs>) == 3)>
+__forceinline auto Cross(const Lhs& lhs, const Rhs& rhs)
+{ 
+	return VectorBinaryExpression<
+		Lhs, Rhs, 
+		VectorOperation::Cross3D<typename Lhs::ValueType, Lhs::Dimension> >(lhs, rhs); 
+}
+
+//------------------------------------------------------------------------------
+template <typename V, int D>
+template <typename Arg>
+__forceinline void VectorOperation::Length<V, D>::PreEvaluate(const Arg& arg) const
+{
+	VectorT<V, D> v;
+	VectorAssignment<VectorT<V, D>, Arg, SelectRhs>().Evaluate(v, arg);
+	evaluated = std::sqrt(::Dot(arg, arg));
+}
+
+template <typename V, int D>
+template <typename Arg>
+__forceinline void VectorOperation::Normalize<V, D>::PreEvaluate(const Arg& arg) const
+{
+	VectorAssignment<VectorT<V, D>, Arg, SelectRhs>().Evaluate(evaluated, arg);
+	V length = ::Length(evaluated);
+	if (length > 0) { evaluated = evaluated / length; }
+}
+
+template <typename V, int D>
+template <typename Lhs, typename Rhs>
+__forceinline void VectorOperation::Distance<V, D>::PreEvaluate(const Lhs& lhs, const Rhs& rhs) const
+{
+	VectorT<V, D> l, r;
+	VectorAssignment<VectorT<V, D>, Lhs, SelectRhs>().Evaluate(l, lhs);
+	VectorAssignment<VectorT<V, D>, Rhs, SelectRhs>().Evaluate(r, rhs);
+	evaluated = ::Length(l - r);
+}

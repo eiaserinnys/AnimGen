@@ -3,6 +3,8 @@
 #include <intrin.h>
 #include <immintrin.h>
 
+#include "VectorMacro.h"
+
 //------------------------------------------------------------------------------
 template <int D>
 class PackedDouble {
@@ -15,9 +17,9 @@ public:
 
 	template <
 		typename V,
-		typename = std::enable_if_t<
-			std::is_same<typename V::ValueType, double>::value && V::Dimension == Dimension,
-			void>>
+		ENABLE_IF(
+			IS_SAME_TYPE(typename V::ValueType, double) && 
+			DIM(V) == Dimension)>
 	PackedDouble(const V& v)
 	{
 		for (int i = 0; i < V::Dimension; ++i)

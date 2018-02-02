@@ -180,6 +180,7 @@
     <ClInclude Include="VectorDescriptor.h" />
     <ClInclude Include="VectorExpression.h" />
     <ClInclude Include="VectorIntrinsic.h" />
+    <ClInclude Include="VectorMacro.h" />
     <ClInclude Include="VectorOperation.h" />
   </ItemGroup>
   <ItemGroup>

@@ -1,7 +1,9 @@
 #pragma once
 
-#include <type_traits>
-#include <functional>
+#include "VectorMacro.h"
+
+template <typename V, int D>
+class VectorT;
 
 //------------------------------------------------------------------------------
 template <typename V>
@@ -12,11 +14,40 @@ public:
 
 	VectorArgument(const V& arg) : arg(arg) {}
 
+	__forceinline void PreEvaluate() const
+	{
+		arg.PreEvaluate();
+	}
+
 	__forceinline typename const V::ValueType Evaluate(const int index) const
-	{ return arg.Evaluate(index); }
+	{ 
+		return arg.Evaluate(index); 
+	}
 
 private:
 	const V& arg;
+};
+
+//------------------------------------------------------------------------------
+template <>
+class VectorArgument<int> {
+public:
+	typedef int ValueType;
+	enum { Dimension = 1 };
+
+	VectorArgument(const int arg) : arg(arg) {}
+
+	__forceinline void PreEvaluate() const
+	{
+	}
+
+	__forceinline typename const int Evaluate(const int index) const
+	{
+		return arg;
+	}
+
+private:
+	int arg;
 };
 
 //------------------------------------------------------------------------------
@@ -28,7 +59,14 @@ public:
 
 	VectorArgument(const float arg) : arg(arg) {}
 
-	__forceinline typename const float Evaluate(const int index) const { return arg; }
+	__forceinline void PreEvaluate() const
+	{
+	}
+
+	__forceinline typename const float Evaluate(const int index) const 
+	{ 
+		return arg; 
+	}
 
 private:
 	float arg;
@@ -41,39 +79,61 @@ public:
 	typedef double ValueType;
 	enum { Dimension = 1 };
 
-	VectorArgument(const double arg) : arg(arg) {}
+	VectorArgument(const double arg) : arg(arg) 
+	{
+	}
 
-	__forceinline typename const double Evaluate(const int index) const { return arg; }
+	__forceinline void PreEvaluate() const
+	{
+	}
+
+	__forceinline typename const double Evaluate(const int index) const 
+	{ 
+		return arg; 
+	}
 
 private:
 	double arg;
 };
 
 //------------------------------------------------------------------------------
-template <typename Arg, typename Op>
+template <typename Arg, typename Op, int D = 0>
 class VectorUnaryExpression {
 public:
 	typedef VectorArgument<Arg> ArgType;
 
 	typedef typename ArgType::ValueType ValueType;
 
-	enum { Dimension = ArgType::Dimension };
+	enum { Dimension = D == 0 ? ArgType::Dimension : D };
 
 	VectorUnaryExpression(const Arg& arg) : arg(arg) {}
 
-	__forceinline typename const ArgType::ValueType Evaluate(const int index) const
-	{ 
-		return Op::Evaluate(index, arg); 
+	__forceinline void PreEvaluate() const
+	{
+		op.PreEvaluate(arg);
 	}
 
-	template <typename = std::enable_if_t<Dimension == 1, void>>
+	__forceinline typename const ArgType::ValueType Evaluate(const int index) const
+	{ 
+		return op.Evaluate(index, arg); 
+	}
+
+	template <ENABLE_IF(Dimension == 1)>
 	__forceinline operator ValueType() const
 	{ 
-		return Op::Evaluate(0, arg); 
+		op.PreEvaluate(arg);
+		return op.Evaluate(0, arg);
+	}
+	
+	template <ENABLE_IF(Dimension > 1)>
+	__forceinline operator VectorT<ValueType, Dimension>() const
+	{
+		return VectorT<ValueType, Dimension>(*this);
 	}
 
 private:
 	const ArgType arg;
+	Op op;
 };
 
 //------------------------------------------------------------------------------
@@ -83,7 +143,9 @@ public:
 	typedef VectorArgument<Lhs> LhsType;
 	typedef VectorArgument<Rhs> RhsType;
 
-	typedef typename LhsType::ValueType ValueType;
+	typedef typename MoreGenericType<
+		typename LhsType::ValueType, 
+		typename RhsType::ValueType>::Type ValueType;
 
 	enum 
 	{ 
@@ -91,51 +153,67 @@ public:
 			D == 0 ? 
 				(LhsType::Dimension > RhsType::Dimension ? 
 					LhsType::Dimension : RhsType::Dimension) :
-				D
+					D
 	};
 
-	template <typename = std::enable_if_t<
-		std::is_same<
-			typename LhsType::ValueType,
-			typename RhsType::ValueType>::value &&
-			(
-				LhsType::Dimension == RhsType::Dimension ||
-				LhsType::Dimension == 1 ||
-				RhsType::Dimension == 1
-			),
-		void>>
-	VectorBinaryExpression(const Lhs& lhs, const Rhs& rhs) : lhs(lhs), rhs(rhs) {}
+	template <
+		ENABLE_IF(
+			IS_CONVERTIBLE(typename LhsType::ValueType, typename RhsType::ValueType) &&
+			(HAS_SAME_DIMENSION(LhsType, RhsType) || 
+			IS_SCALAR(LhsType) || 
+			IS_SCALAR(RhsType))
+		)>
+	VectorBinaryExpression(const Lhs& lhs, const Rhs& rhs) : lhs(lhs), rhs(rhs) 
+	{
+	}
+
+	__forceinline void PreEvaluate() const
+	{
+		op.PreEvaluate(lhs, rhs);
+	}
 
 	__forceinline typename const LhsType::ValueType Evaluate(const int index) const
-	{ return Op::Evaluate(index, lhs, rhs); }
+	{ 
+		return op.Evaluate(index, lhs, rhs); 
+	}
 
-	template <typename = std::enable_if_t<Dimension == 1, void>>
+	template <ENABLE_IF(Dimension == 1)>
 	__forceinline operator ValueType() const
-	{ return Op::Evaluate(0, lhs, rhs); }
+	{ 
+		op.PreEvaluate(lhs, rhs);
+		return op.Evaluate(0, lhs, rhs); 
+	}
+
+	template <ENABLE_IF(Dimension > 1)>
+	__forceinline operator VectorT<ValueType, Dimension>() const
+	{
+		return VectorT<ValueType, Dimension>(*this);
+	}
 
 private:
 	const LhsType lhs;
 	const RhsType rhs;
+	Op op;
 };
 
 //------------------------------------------------------------------------------
 template <typename V, typename Expr, typename Op>
 struct VectorAssignment {
 public:
-	template <typename = std::enable_if_t<
-		std::is_same<
-			typename V::ValueType,
-			typename Expr::ValueType>::value &&
-		(
-			V::Dimension == Expr::Dimension ||
-			Expr::Dimension == 1
-		),
-		void>>
-	__forceinline static void Evaluate(V& target, const Expr& expr)
+	template <
+		ENABLE_IF(
+			IS_CONVERTIBLE(typename V::ValueType, typename Expr::ValueType) &&
+			(HAS_SAME_DIMENSION(V, Expr) || IS_SCALAR(Expr))
+		)>
+	__forceinline void Evaluate(V& target, const Expr& expr) const
 	{
+		expr.PreEvaluate();
+
 		for (int i = 0; i < V::Dimension; ++i)
 		{
-			Op::Evaluate(i, target, expr);
+			target.m[i] = op.Evaluate(i, target, expr);
 		}
 	}
+
+	Op op;
 };
