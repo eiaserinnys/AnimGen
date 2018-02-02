@@ -90,4 +90,43 @@ public:
 	// template meta expression evaluation
 	__forceinline void PreEvaluate() const {}
 	__forceinline const ValueType Evaluate(int index) const { return m[index]; }
+
+	//--------------------------------------------------------------------------
+	// swizzle
+#	define HAS_MEMBER_x ENABLE_IF(Dimension > 0)
+#	define HAS_MEMBER_y ENABLE_IF(Dimension > 1)
+#	define HAS_MEMBER_z ENABLE_IF(Dimension > 2)
+#	define HAS_MEMBER_w ENABLE_IF(Dimension > 3)
+
+#	define HAS_MEMBER(a) HAS_MEMBER_##a
+
+#	define SWIZZLE_2(a, b, c, d) \
+	template <HAS_MEMBER(a), HAS_MEMBER(b)> \
+		__forceinline const VectorT<V, 2> a##b() const { return VectorT<V, 2>(a, b); }
+
+#	define SWIZZLE_3(a, b, c, d) \
+	template <HAS_MEMBER(a), HAS_MEMBER(b), HAS_MEMBER(c)> \
+		__forceinline const VectorT<V, 3> a##b##c() const { return VectorT<V, 3>(a, b, c); }
+
+#	define SWIZZLE_4(a, b, c, d) \
+	template <HAS_MEMBER(a), HAS_MEMBER(b), HAS_MEMBER(c), HAS_MEMBER(c)> \
+		__forceinline const VectorT<V, 4> a##b##c##d() const { return VectorT<V, 3>(a, b, c, d); }
+
+#	define SWIZZLE5(n, a, b, c, d) SWIZZLE_##n(a, b, c, d)
+
+#	define SWIZZLE4(n, a, b, c) \
+	SWIZZLE5(n, a, b, c, x); SWIZZLE5(n, a, b, c, y); SWIZZLE5(n, a, b, c, z); SWIZZLE5(n, a, b, c, w);
+
+#	define SWIZZLE3(n, a, b) \
+	SWIZZLE4(n, a, b, x); SWIZZLE4(n, a, b, y); SWIZZLE4(n, a, b, z); SWIZZLE4(n, a, b, w);
+
+#	define SWIZZLE2(n, a) \
+	SWIZZLE3(n, a, x); SWIZZLE3(n, a, y); SWIZZLE3(n, a, z); SWIZZLE3(n, a, w);
+
+#	define SWIZZLE(n) \
+	SWIZZLE2(n, x); SWIZZLE2(n, y); SWIZZLE2(n, z); SWIZZLE2(n, w);
+
+	//SWIZZLE(2);
+	//SWIZZLE(3);
+	SWIZZLE(4);
 };

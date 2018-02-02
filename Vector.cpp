@@ -52,6 +52,8 @@ static void TestVector2()
 	Vector2F d(7.0f, 8.0f);
 	Vector2F rf;
 
+	//auto sw = a.xx();
+
 	r = a + d;
 	assert(r.x == a.x + d.x && r.y == a.y + d.y);
 
