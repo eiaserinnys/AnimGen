@@ -55,6 +55,8 @@ static void TestVector2_Arithmetic()
 	Vector2F d(7.0f, 8.0f);
 	Vector2D r;
 
+	//Dot(Vector2D(), Vector3D());
+
 	r = a + b;
 	assert((a + b).Dimension == 2);
 	assert(r.x == a.x + b.x && r.y == a.y + b.y);

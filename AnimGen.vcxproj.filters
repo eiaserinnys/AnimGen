@@ -45,6 +45,15 @@
     <Filter Include="Mathematics\Matrix">
       <UniqueIdentifier>{9cc07f1e-b7c1-4a3c-8102-c2deb370d294}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Mathematics\Vector\Operator">
+      <UniqueIdentifier>{9f6f0d6d-96b4-4258-94d3-b4236d6186b8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Mathematics\Vector\Expression">
+      <UniqueIdentifier>{48e00f30-fef9-4e3c-a0e7-ab6c599a27c2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Mathematics\Vector\Base">
+      <UniqueIdentifier>{74990e45-acb8-409b-a9b3-0a27132cddab}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="RenderContext.cpp">
@@ -157,35 +166,41 @@
     <ClInclude Include="Vector.h">
       <Filter>Mathematics\Vector</Filter>
     </ClInclude>
-    <ClInclude Include="VectorDescriptor.h">
-      <Filter>Mathematics\Vector</Filter>
-    </ClInclude>
-    <ClInclude Include="VectorExpression.h">
-      <Filter>Mathematics\Vector</Filter>
-    </ClInclude>
-    <ClInclude Include="VectorIntrinsic.h">
-      <Filter>Mathematics\Vector</Filter>
-    </ClInclude>
-    <ClInclude Include="VectorOperation.h">
-      <Filter>Mathematics\Vector</Filter>
-    </ClInclude>
-    <ClInclude Include="VectorBody.h">
-      <Filter>Mathematics\Vector</Filter>
-    </ClInclude>
-    <ClInclude Include="VectorMacro.h">
-      <Filter>Mathematics\Vector</Filter>
-    </ClInclude>
     <ClInclude Include="Matrix.h">
       <Filter>Mathematics\Matrix</Filter>
     </ClInclude>
     <ClInclude Include="VectorDXMathAdaptor.h">
       <Filter>Mathematics\Vector</Filter>
     </ClInclude>
+    <ClInclude Include="VectorBinaryOperator.h">
+      <Filter>Mathematics\Vector\Operator</Filter>
+    </ClInclude>
+    <ClInclude Include="VectorUnaryOperator.h">
+      <Filter>Mathematics\Vector\Operator</Filter>
+    </ClInclude>
+    <ClInclude Include="VectorExpression.h">
+      <Filter>Mathematics\Vector\Expression</Filter>
+    </ClInclude>
     <ClInclude Include="VectorExpressionArgument.h">
-      <Filter>Mathematics\Vector</Filter>
+      <Filter>Mathematics\Vector\Expression</Filter>
     </ClInclude>
     <ClInclude Include="VectorOperator.h">
-      <Filter>Mathematics\Vector</Filter>
+      <Filter>Mathematics\Vector\Operator</Filter>
+    </ClInclude>
+    <ClInclude Include="VectorOperation.h">
+      <Filter>Mathematics\Vector\Operator</Filter>
+    </ClInclude>
+    <ClInclude Include="VectorBody.h">
+      <Filter>Mathematics\Vector\Base</Filter>
+    </ClInclude>
+    <ClInclude Include="VectorDescriptor.h">
+      <Filter>Mathematics\Vector\Base</Filter>
+    </ClInclude>
+    <ClInclude Include="VectorIntrinsic.h">
+      <Filter>Mathematics\Vector\Base</Filter>
+    </ClInclude>
+    <ClInclude Include="VectorMacro.h">
+      <Filter>Mathematics\Vector\Base</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

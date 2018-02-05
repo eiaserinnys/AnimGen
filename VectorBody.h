@@ -44,7 +44,7 @@ namespace Core
 		__forceinline VectorT(const Expr& expr)
 		{
 			using namespace VectorOperator;
-			VectorAssignment<VectorT, Expr, SelectRhs>().Evaluate(*this, expr);
+			VectorAssignment<VectorT, Expr, SelectRhs<VectorT, Expr>>().Evaluate(*this, expr);
 		}
 
 		//--------------------------------------------------------------------------
@@ -59,7 +59,7 @@ namespace Core
 		__forceinline VectorT& operator = (const Expr& expr)
 		{
 			using namespace VectorOperator;
-			AssignExpr<Expr, SelectRhs>().Evaluate(*this, AssignSrc<Expr>(expr));
+			AssignExpr<Expr, SelectRhs<VectorT, AssignSrc<Expr>>>().Evaluate(*this, AssignSrc<Expr>(expr));
 			return *this;
 		}
 
@@ -67,7 +67,7 @@ namespace Core
 		__forceinline VectorT& operator += (const Expr& expr)
 		{
 			using namespace VectorOperator;
-			AssignExpr<Expr, Add>().Evaluate(*this, AssignSrc<Expr>(expr));
+			AssignExpr<Expr, Add<VectorT, AssignSrc<Expr>>>().Evaluate(*this, AssignSrc<Expr>(expr));
 			return *this;
 		}
 
@@ -75,7 +75,7 @@ namespace Core
 		__forceinline VectorT& operator -= (const Expr& expr)
 		{
 			using namespace VectorOperator;
-			AssignExpr<Expr, Subtract>().Evaluate(*this, AssignSrc<Expr>(expr));
+			AssignExpr<Expr, Subtract<VectorT, AssignSrc<Expr>>>().Evaluate(*this, AssignSrc<Expr>(expr));
 			return *this;
 		}
 
@@ -83,7 +83,7 @@ namespace Core
 		__forceinline VectorT& operator *= (const Expr& expr)
 		{
 			using namespace VectorOperator;
-			AssignExpr<Expr, Multiply>().Evaluate(*this, AssignSrc<Expr>(expr));
+			AssignExpr<Expr, Multiply<VectorT, AssignSrc<Expr>>>().Evaluate(*this, AssignSrc<Expr>(expr));
 			return *this;
 		}
 
@@ -91,7 +91,7 @@ namespace Core
 		__forceinline VectorT& operator /= (const Expr& expr)
 		{
 			using namespace VectorOperator;
-			AssignExpr<Expr, Divide>().Evaluate(*this, AssignSrc<Expr>(expr));
+			AssignExpr<Expr, Divide<VectorT, AssignSrc<Expr>>>().Evaluate(*this, AssignSrc<Expr>(expr));
 			return *this;
 		}
 

@@ -6,91 +6,86 @@ namespace Core
 {
 	//------------------------------------------------------------------------------
 	// Unary
-	template <typename Arg>
-	const auto operator + (const Arg& arg)
+	template <typename A>
+	decltype(auto) operator + (const A& arg)
 	{
-		return VectorUnaryExpression<VectorOperator::Plus<Arg>>(arg);
+		return VectorUnaryExpression<VectorOperator::Plus<A>>(arg);
 	}
 
-	template <typename Arg>
-	const auto operator - (const Arg& arg)
+	template <typename A>
+	decltype(auto) operator - (const A& arg)
 	{
-		return VectorUnaryExpression<VectorOperator::Minus<Arg>>(arg);
+		return VectorUnaryExpression<VectorOperator::Minus<A>>(arg);
 	}
 
-	template <typename Arg>
-	const auto Length(const Arg& arg)
+	template <typename A>
+	decltype(auto) Length(const A& arg)
 	{
-		return VectorUnaryExpression<VectorOperator::Length<Arg>>(arg);
+		return VectorUnaryExpression<VectorOperator::Length<A>>(arg);
 	}
 
-	template <typename Arg>
-	const auto Normalize(const Arg& arg)
+	template <typename A>
+	decltype(auto) Normalize(const A& arg)
 	{
-		return VectorUnaryExpression<VectorOperator::Normalize<Arg>>(arg);
+		return VectorUnaryExpression<VectorOperator::Normalize<A>>(arg);
 	}
 
 	//------------------------------------------------------------------------------
 	// Binary
-	template <typename Lhs, typename Rhs>
-	const auto operator + (const Lhs& lhs, const Rhs& rhs)
+	template <typename L, typename R>
+	decltype(auto) operator + (const L& lhs, const R& rhs)
 	{
-		return VectorBinaryExpression<Lhs, Rhs, VectorOperator::Add>(lhs, rhs);
+		return VectorBinaryExpression<VectorOperator::Add<L, R>>(lhs, rhs);
 	}
 
-	template <typename Lhs, typename Rhs>
-	const auto operator - (const Lhs& lhs, const Rhs& rhs)
+	template <typename L, typename R>
+	decltype(auto) operator - (const L& lhs, const R& rhs)
 	{
-		return VectorBinaryExpression<Lhs, Rhs, VectorOperator::Subtract>(lhs, rhs);
+		return VectorBinaryExpression<VectorOperator::Subtract<L, R>>(lhs, rhs);
 	}
 
-	template <typename Lhs, typename Rhs>
-	const auto operator * (const Lhs& lhs, const Rhs& rhs)
+	template <typename L, typename R>
+	decltype(auto) operator * (const L& lhs, const R& rhs)
 	{
-		return VectorBinaryExpression<Lhs, Rhs, VectorOperator::Multiply>(lhs, rhs);
+		return VectorBinaryExpression<VectorOperator::Multiply<L, R>>(lhs, rhs);
 	}
 
-	template <typename Lhs, typename Rhs>
-	const auto operator / (const Lhs& lhs, const Rhs& rhs)
+	template <typename L, typename R>
+	decltype(auto) operator / (const L& lhs, const R& rhs)
 	{
-		return VectorBinaryExpression<Lhs, Rhs, VectorOperator::Divide>(lhs, rhs);
+		return VectorBinaryExpression<VectorOperator::Divide<L, R>>(lhs, rhs);
 	}
 
-	template <typename Lhs, typename Rhs,
-		ENABLE_IF(HAS_SAME_DIMENSION(VectorExpressionArgument<Lhs>, VectorExpressionArgument<Rhs>))>
-		const auto Dot(const Lhs& lhs, const Rhs& rhs)
+	template <typename L, typename R>
+	decltype(auto) Dot(const L& lhs, const R& rhs)
 	{
-		return VectorBinaryExpression<
-			Lhs, Rhs,
-			VectorOperator::Dot<typename Lhs::ValueType, Lhs::Dimension>, 1>(lhs, rhs);
+		return VectorBinaryExpression<VectorOperator::Dot<L, R>>(lhs, rhs);
 	}
 
-	template <
-		typename Lhs, typename Rhs,
-		ENABLE_IF(HAS_SAME_DIMENSION(VectorExpressionArgument<Lhs>, VectorExpressionArgument<Rhs>))>
-		const auto Distance(const Lhs& lhs, const Rhs& rhs)
+	template <typename L, typename R>
+	decltype(auto) Distance(const L& lhs, const R& rhs)
 	{
-		return VectorBinaryExpression<
-			Lhs, Rhs,
-			VectorOperator::Distance<typename Lhs::ValueType, Lhs::Dimension>, 1>(lhs, rhs);
+		return VectorBinaryExpression<VectorOperator::Distance<L, R>>(lhs, rhs);
 	}
 
 	template <
-		typename Lhs, typename Rhs,
-		ENABLE_IF(DIM(VectorExpressionArgument<Lhs>) == 2 && DIM(VectorExpressionArgument<Rhs>) == 2)>
-		const VectorBinaryExpression<Lhs, Rhs, VectorOperator::Cross2D, 1> Cross(const Lhs& lhs, const Rhs& rhs)
+		typename L, typename R,
+		ENABLE_IF(
+			DIM(VectorExpressionArgument<L>) == 2 && 
+			DIM(VectorExpressionArgument<R>) == 2)>
+	__forceinline auto Cross(const L& lhs, const R& rhs) -> VectorBinaryExpression<VectorOperator::Cross2D<L, R>>
 	{
-		return VectorBinaryExpression<Lhs, Rhs, VectorOperator::Cross2D, 1>(lhs, rhs);
+		return VectorBinaryExpression<VectorOperator::Cross2D<L, R>>(lhs, rhs);
 	}
 
 	template <
-		typename Lhs, typename Rhs,
-		ENABLE_IF(DIM(VectorExpressionArgument<Lhs>) == 3 && DIM(VectorExpressionArgument<Rhs>) == 3)>
-		__forceinline auto Cross(const Lhs& lhs, const Rhs& rhs)
+		typename L, typename R,
+		ENABLE_IF(
+			DIM(VectorExpressionArgument<L>) == 3 && 
+			DIM(VectorExpressionArgument<R>) == 3)>
+	__forceinline auto Cross(const L& lhs, const R& rhs) -> VectorBinaryExpression<VectorOperator::Cross3D<L, R>>
 	{
-		return VectorBinaryExpression<
-			Lhs, Rhs,
-			VectorOperator::Cross3D<typename Lhs::ValueType, Lhs::Dimension> >(lhs, rhs);
+		return VectorBinaryExpression<VectorOperator::Cross3D<L, R>>(lhs, rhs);
 	}
 
 	//------------------------------------------------------------------------------
@@ -98,25 +93,24 @@ namespace Core
 	__forceinline void VectorOperator::Length<A>::PreEvaluate(const ArgType& arg) const
 	{
 		VectorType v;
-		VectorAssignment<VectorType, A, SelectRhs>().Evaluate(v, arg.arg);
+		VectorAssignment<VectorType, A, SelectRhs<VectorType, A>>().Evaluate(v, arg);
 		evaluated = std::sqrt(::Dot(arg, arg));
 	}
 
 	template <typename A>
 	__forceinline void VectorOperator::Normalize<A>::PreEvaluate(const ArgType& arg) const
 	{
-		VectorAssignment<VectorType, A, SelectRhs>().Evaluate(evaluated, arg.arg);
+		VectorAssignment<VectorType, A, SelectRhs<VectorType, A>>().Evaluate(evaluated, arg);
 		ValueType length = ::Length(evaluated);
 		if (length > 0) { evaluated = evaluated / length; }
 	}
 
-	template <typename V, int D>
-	template <typename Lhs, typename Rhs>
-	__forceinline void VectorOperator::Distance<V, D>::PreEvaluate(const Lhs& lhs, const Rhs& rhs) const
+	template <typename L, typename R>
+	__forceinline void VectorOperator::Distance<L, R>::PreEvaluate(const LhsType& lhs, const RhsType& rhs) const
 	{
-		VectorT<V, D> l, r;
-		VectorAssignment<VectorT<V, D>, Lhs, SelectRhs>().Evaluate(l, lhs);
-		VectorAssignment<VectorT<V, D>, Rhs, SelectRhs>().Evaluate(r, rhs);
+		VectorType l, r;
+		VectorAssignment<VectorType, L, SelectRhs<VectorType, L>>().Evaluate(l, lhs);
+		VectorAssignment<VectorType, R, SelectRhs<VectorType, R>>().Evaluate(r, rhs);
 		evaluated = ::Length(l - r);
 	}
 

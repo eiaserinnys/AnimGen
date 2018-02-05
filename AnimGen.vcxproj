@@ -177,6 +177,7 @@
     <ClInclude Include="ThisApp.h" />
     <ClInclude Include="UIRenderer.h" />
     <ClInclude Include="Vector.h" />
+    <ClInclude Include="VectorBinaryOperator.h" />
     <ClInclude Include="VectorBody.h" />
     <ClInclude Include="VectorDescriptor.h" />
     <ClInclude Include="VectorDXMathAdaptor.h" />
@@ -186,6 +187,7 @@
     <ClInclude Include="VectorMacro.h" />
     <ClInclude Include="VectorOperation.h" />
     <ClInclude Include="VectorOperator.h" />
+    <ClInclude Include="VectorUnaryOperator.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\DirectXTex\DirectXTex\DirectXTex_Desktop_2015.vcxproj">
