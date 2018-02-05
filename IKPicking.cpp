@@ -1,10 +1,12 @@
 #include "pch.h"
 #include "IKPicking.h"
 
+#include "VectorDXMathAdaptor.h"
 #include "RenderContext.h"
 #include "Robot.h"
 
 using namespace std;
+using namespace Core;
 using namespace DirectX;
 
 class IKPicking : public IIKPicking {
@@ -14,8 +16,8 @@ public:
 		const SceneDescriptor& sceneDesc, 
 		RenderContext* context)
 	{
-		posW[0] = robot->GetWorldPosition("LFoot");
-		posW[1] = robot->GetWorldPosition("RFoot");
+		posW[0] = ToXMFLOAT3(robot->GetWorldPosition("LFoot"));
+		posW[1] = ToXMFLOAT3(robot->GetWorldPosition("RFoot"));
 
 		posN[0] = sceneDesc.GetNdc(posW[0]);
 		posN[1] = sceneDesc.GetNdc(posW[1]);
@@ -43,7 +45,7 @@ public:
 			{
 				auto posW = sceneDesc.GetWorldPositionByScreenCoordinate(dragPos, posN[i].w);
 
-				robot->SetFootPosition(i == 0, posW);
+				robot->SetFootPosition(i == 0, FromXMFLOAT3(posW));
 			}
 		}
 

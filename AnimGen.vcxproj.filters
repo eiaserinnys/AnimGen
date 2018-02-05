@@ -42,6 +42,9 @@
     <Filter Include="Mathematics\Vector">
       <UniqueIdentifier>{372cd03f-f00f-4388-a033-dd2eb22aa822}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Mathematics\Matrix">
+      <UniqueIdentifier>{9cc07f1e-b7c1-4a3c-8102-c2deb370d294}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="RenderContext.cpp">
@@ -170,6 +173,12 @@
       <Filter>Mathematics\Vector</Filter>
     </ClInclude>
     <ClInclude Include="VectorMacro.h">
+      <Filter>Mathematics\Vector</Filter>
+    </ClInclude>
+    <ClInclude Include="Matrix.h">
+      <Filter>Mathematics\Matrix</Filter>
+    </ClInclude>
+    <ClInclude Include="VectorDXMathAdaptor.h">
       <Filter>Mathematics\Vector</Filter>
     </ClInclude>
   </ItemGroup>

@@ -17,6 +17,8 @@ public:
 		const DirectX::XMFLOAT3& n,
 		DWORD clr)
 	{
+		using namespace DirectX;
+		
 		UINT16 indPtr = (UINT16)pos.size();
 
 		pos.push_back(c - rHalf - dHalf);

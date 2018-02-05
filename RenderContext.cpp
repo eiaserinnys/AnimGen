@@ -4,11 +4,14 @@
 #include <WindowsUtility.h>
 #include <Utility.h>
 
+#include "VectorDXMathAdaptor.h"
+
 #include "AngleHelper.h"
 #include "FrameHelper.h"
 #include "Robot.h"
 
 using namespace std;
+using namespace Core;
 using namespace DirectX;
 
 #define SHOW_IK_SPHERE 0
@@ -174,7 +177,8 @@ void RenderContext::BuildIKRefSphere()
 					-sinf(angleZ) * sinf(angleY)
 				);
 
-				auto footDirH = IRobot::GetFootDirection(legDir);
+				XMFLOAT3 footDirH = ToXMFLOAT3(
+					IRobot::GetFootDirection(FromXMFLOAT3(legDir)));
 
 				etc.push_back(IArrowMesh::Create(
 					center + legDir * radius,

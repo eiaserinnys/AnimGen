@@ -18,6 +18,7 @@
 #include "IKPicking.h"
 
 using namespace std;
+using namespace Core;
 using namespace DirectX;
 
 class ThisApp : public IThisApp {

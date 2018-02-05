@@ -4,26 +4,31 @@
 #include "FrameHelper.h"
 #include "AngleHelper.h"
 
+#include "Mesh.h"
 #include "MeshT.h"
 #include "ObjectBuffer.h"
 
+#include "Vector.h"
+#include "VectorDXMathAdaptor.h"
+#include "Matrix.h"
 #include "exp-map.h"
 
 using namespace std;
+using namespace Core;
 using namespace DirectX;
 
 struct RobotBody
 {
 	string name;
 	int parentIndex;
-	XMMATRIX linkTx = XMMatrixIdentity();
+	Matrix4D linkTx = Matrix4D::Identity();
 
-	XMMATRIX localTx = XMMatrixIdentity();
-	XMFLOAT4 quat = XMFLOAT4(0, 0, 0, 0);
+	Matrix4D localTx = Matrix4D::Identity();
+	Vector4D quat = Vector4D(0, 0, 0, 0);
 	double expMap[3] = { 0, 0, 0 };
-	XMFLOAT4 quatVerify = XMFLOAT4(0, 0, 0, 0);
+	Vector4D quatVerify = Vector4D(0, 0, 0, 0);
 
-	XMMATRIX worldTx = XMMatrixIdentity();
+	Matrix4D worldTx = Matrix4D::Identity();
 	unique_ptr<IMesh> mesh;
 };
 
@@ -31,52 +36,52 @@ struct BodyDesc
 {
 	string name;
 	string parentName;
-	XMFLOAT3 position;
-	XMFLOAT3 extent;
-	XMMATRIX worldTx;
+	Vector3D position;
+	Vector3D extent;
+	Matrix4D worldTx;
 };
 
-static const float g_margin = 0.05f;
-static const XMMATRIX g_legRot = XMMatrixRotationZ(-90.0f / 180 * (float)M_PI);
+static const double g_margin = 0.05;
+static const Matrix4D g_legRot = DXMathTransform<double>::RotationZ(-90.0f / 180 * (float)M_PI);
 
 static BodyDesc desc[] =
 {
 
 	// 몸통
-	{ "Body", string(), XMFLOAT3(0, 0, 0), XMFLOAT3(0.25f, 0.61f, 0.4f), XMMatrixTranslation(0, 1.22f, 0) },
+	{ "Body", string(), Vector3D(0, 0, 0), Vector3D(0.25f, 0.61f, 0.4f), DXMathTransform<double>::Translation(0, 1.22f, 0) },
 
 	// 머리
-	{ "Head", "Body", XMFLOAT3(0, 0.125f, 0), XMFLOAT3(0.22f, 0.25f, 0.22f), XMMatrixTranslation(0, 1.54f, 0) },
+	{ "Head", "Body", Vector3D(0.0, 0.125, 0.0), Vector3D(0.22, 0.25, 0.22), DXMathTransform<double>::Translation(0, 1.54f, 0) },
 
 	// 오른윗팔
-	{ "RArm1", "Body", XMFLOAT3(0.175f - g_margin, 0, 0), XMFLOAT3(0.35f, 0.11f, 0.11f), g_legRot * XMMatrixTranslation(0, 1.53f - g_margin, 0.265f) },
+	{ "RArm1", "Body", Vector3D(0.175 - g_margin, 0.0, 0.0), Vector3D(0.35, 0.11, 0.11), g_legRot * DXMathTransform<double>::Translation(0.0, 1.53f - g_margin, 0.265f) },
 
 	// 오른 아랫팔
-	{ "RArm2", "RArm1", XMFLOAT3(0.175f - g_margin, 0, 0), XMFLOAT3(0.35f, 0.11f, 0.11f), g_legRot * XMMatrixTranslation(0, 1.17f - g_margin, 0.265f) },
+	{ "RArm2", "RArm1", Vector3D(0.175 - g_margin, 0.0, 0.0), Vector3D(0.35f, 0.11f, 0.11f), g_legRot * DXMathTransform<double>::Translation(0.0, 1.17f - g_margin, 0.265f) },
 
 	// 왼윗팔
-	{ "LArm1", "Body", XMFLOAT3(0.175f - g_margin, 0, 0), XMFLOAT3(0.35f, 0.11f, 0.11f), g_legRot * XMMatrixTranslation(0, 1.53f - g_margin, -0.265f) },
+	{ "LArm1", "Body", Vector3D(0.175 - g_margin, 0.0, 0.0), Vector3D(0.35f, 0.11f, 0.11f), g_legRot * DXMathTransform<double>::Translation(0.0, 1.53f - g_margin, -0.265f) },
 
 	// 왼아랫팔
-	{ "LArm2", "LArm1", XMFLOAT3(0.175f - g_margin, 0, 0), XMFLOAT3(0.35f, 0.11f, 0.11f), g_legRot * XMMatrixTranslation(0, 1.17f - g_margin, -0.265f) },
+	{ "LArm2", "LArm1", Vector3D(0.175 - g_margin, 0.0, 0.0), Vector3D(0.35f, 0.11f, 0.11f), g_legRot * DXMathTransform<double>::Translation(0.0, 1.17f - g_margin, -0.265f) },
 
 	// 오른 허벅지
-	{ "RLeg1", "Body", XMFLOAT3(0.21f - g_margin, 0, 0), XMFLOAT3(0.4f, 0.17f, 0.17f), g_legRot * XMMatrixTranslation(0, 0.91f - g_margin, 0.115f) },
+	{ "RLeg1", "Body", Vector3D(0.21 - g_margin, 0.0, 0.0), Vector3D(0.4, 0.17, 0.17), g_legRot * DXMathTransform<double>::Translation(0.0, 0.91f - g_margin, 0.115f) },
 
 	// 오른 종아리
-	{ "RLeg2", "RLeg1", XMFLOAT3(0.21f - g_margin, 0, 0), XMFLOAT3(0.4f, 0.16f, 0.16f), g_legRot * XMMatrixTranslation(0, 0.5f - g_margin, 0.1f) },
+	{ "RLeg2", "RLeg1", Vector3D(0.21f - g_margin, 0.0, 0.0), Vector3D(0.4f, 0.16f, 0.16f), g_legRot * DXMathTransform<double>::Translation(0.0, 0.5f - g_margin, 0.1f) },
 
 	// 오른 발
-	{ "RFoot", "RLeg2", XMFLOAT3(0.05f, 0, 0), XMFLOAT3(0.25f, 0.09f, 0.16f), XMMatrixTranslation(0.00f, 0.045f, 0.1f) },
+	{ "RFoot", "RLeg2", Vector3D(0.05, 0.0, 0.0), Vector3D(0.25, 0.09, 0.16), DXMathTransform<double>::Translation(0.00f, 0.045f, 0.1f) },
 
 	// 왼 허벅지
-	{ "LLeg1", "Body", XMFLOAT3(0.21f - g_margin, 0, 0), XMFLOAT3(0.4f, 0.17f, 0.17f), g_legRot * XMMatrixTranslation(0, 0.91f - g_margin, -0.115f) },
+	{ "LLeg1", "Body", Vector3D(0.21f - g_margin, 0.0, 0.0), Vector3D(0.4f, 0.17f, 0.17f), g_legRot * DXMathTransform<double>::Translation(0.0, 0.91f - g_margin, -0.115f) },
 
 	// 왼 종아리
-	{ "LLeg2", "LLeg1", XMFLOAT3(0.21f - g_margin, 0, 0), XMFLOAT3(0.4f, 0.16f, 0.16f), g_legRot * XMMatrixTranslation(0, 0.5f - g_margin, -0.1f) },
+	{ "LLeg2", "LLeg1", Vector3D(0.21f - g_margin, 0.0, 0.0), Vector3D(0.4f, 0.16f, 0.16f), g_legRot * DXMathTransform<double>::Translation(0.0, 0.5f - g_margin, -0.1f) },
 
 	// 왼발
-	{ "LFoot", "LLeg2", XMFLOAT3(0.05f, 0, 0), XMFLOAT3(0.25f, 0.09f, 0.16f), XMMatrixTranslation(0.00f, 0.045f, -0.1f) },
+	{ "LFoot", "LLeg2", Vector3D(0.05, 0.0, 0.0), Vector3D(0.25, 0.09, 0.16), DXMathTransform<double>::Translation(0.00f, 0.045f, -0.1f) },
 };
 
 class Robot : public MeshT<IRobot> {
@@ -126,9 +131,9 @@ public:
 	void CreateBody(
 		const string& name, 
 		const string& parentName,
-		const XMFLOAT3& pos, 
-		const XMFLOAT3& size, 
-		const XMMATRIX& worldTx)
+		const Vector3D& pos, 
+		const Vector3D& size,
+		const Matrix4D& worldTx)
 	{
 		if (nameToIndex.find(name) != nameToIndex.end())
 		{
@@ -153,7 +158,7 @@ public:
 		auto body = new RobotBody;
 		body->name = name;
 		body->parentIndex = parIndex;
-		body->mesh.reset(IBoxMesh::Create(pos, size, color));
+		body->mesh.reset(IBoxMesh::Create(ToXMFLOAT3(pos), ToXMFLOAT3(size), color));
 		body->worldTx = worldTx;
 
 		bodies.push_back(body);
@@ -175,7 +180,7 @@ public:
 			{
 				body->linkTx =
 					body->worldTx *
-					XMMatrixInverse(nullptr, bodies[body->parentIndex]->worldTx);
+					bodies[body->parentIndex]->worldTx.Inverse();
 			}
 			else
 			{
@@ -226,15 +231,13 @@ public:
 			{
 				for (size_t i = 0; i < mesh->Vertices().second; ++i)
 				{
-					XMStoreFloat3(
-						&pos[offset],
-						XMVector3Transform(
-							XMLoadFloat3(&mesh->Vertices().first[i]),
+					pos[offset] =
+						ToXMFLOAT3(DXMathTransform<double>::Transform(
+							FromXMFLOAT3(mesh->Vertices().first[i]),
 							body->worldTx));
-					XMStoreFloat3(
-						&nor[offset],
-						XMVector3TransformNormal(
-							XMLoadFloat3(&mesh->Normals().first[i]),
+					nor[offset] = 
+						ToXMFLOAT3(DXMathTransform<double>::TransformNormal(
+							FromXMFLOAT3(mesh->Normals().first[i]),
 							body->worldTx));
 
 					offset++;
@@ -258,25 +261,25 @@ public:
 	{
 		total += elapsed;
 
-		float angle = total / 5000.0f * 2 * (float)M_PI;
+		double angle = total / 5000.0f * 2 * M_PI;
 
-		float headSwing = sin(angle) * (float)M_PI * 0.3f;
-		float leg1Swing = sin(angle) * (float)M_PI * 0.3f;
-		float leg2Swing = (1 - cos(angle)) / 2 * (float)M_PI / 2;
-		float armSwing = (1 - cos(angle)) / 2 * (float)M_PI;
-		float armSwing2 = (1 - cos(angle)) / 2 * (float)M_PI / 2;
+		double headSwing = sin(angle) * M_PI * 0.3;
+		double leg1Swing = sin(angle) * M_PI * 0.3;
+		double leg2Swing = (1 - cos(angle)) / 2 * M_PI / 2;
+		double armSwing = (1 - cos(angle)) / 2 * M_PI;
+		double armSwing2 = (1 - cos(angle)) / 2 * M_PI / 2;
 
-		bodies[GetBoneIndex("Body")]->localTx = XMMatrixRotationZ(angle);
-		bodies[GetBoneIndex("Head")]->localTx = XMMatrixRotationY(headSwing);
-		bodies[GetBoneIndex("RArm1")]->localTx = XMMatrixRotationY(-armSwing2) * XMMatrixRotationZ(armSwing);
-		bodies[GetBoneIndex("RArm2")]->localTx = XMMatrixRotationZ(leg2Swing);
-		bodies[GetBoneIndex("LArm1")]->localTx = XMMatrixRotationY(armSwing2) * XMMatrixRotationZ(armSwing);
-		bodies[GetBoneIndex("LArm2")]->localTx = XMMatrixRotationZ(leg2Swing);
+		bodies[GetBoneIndex("Body")]->localTx = DXMathTransform<double>::RotationZ(angle);
+		bodies[GetBoneIndex("Head")]->localTx = DXMathTransform<double>::RotationY(headSwing);
+		bodies[GetBoneIndex("RArm1")]->localTx = DXMathTransform<double>::RotationY(-armSwing2) * DXMathTransform<double>::RotationZ(armSwing);
+		bodies[GetBoneIndex("RArm2")]->localTx = DXMathTransform<double>::RotationZ(leg2Swing);
+		bodies[GetBoneIndex("LArm1")]->localTx = DXMathTransform<double>::RotationY(armSwing2) * DXMathTransform<double>::RotationZ(armSwing);
+		bodies[GetBoneIndex("LArm2")]->localTx = DXMathTransform<double>::RotationZ(leg2Swing);
 
-		bodies[GetBoneIndex("RLeg1")]->localTx = XMMatrixRotationZ(leg1Swing);
-		bodies[GetBoneIndex("RLeg2")]->localTx = XMMatrixRotationZ(-leg2Swing);
-		bodies[GetBoneIndex("LLeg1")]->localTx = XMMatrixRotationZ(-leg1Swing);
-		bodies[GetBoneIndex("LLeg2")]->localTx = XMMatrixRotationZ(-leg2Swing);
+		bodies[GetBoneIndex("RLeg1")]->localTx = DXMathTransform<double>::RotationZ(leg1Swing);
+		bodies[GetBoneIndex("RLeg2")]->localTx = DXMathTransform<double>::RotationZ(-leg2Swing);
+		bodies[GetBoneIndex("LLeg1")]->localTx = DXMathTransform<double>::RotationZ(-leg1Swing);
+		bodies[GetBoneIndex("LLeg2")]->localTx = DXMathTransform<double>::RotationZ(-leg2Swing);
 	}
 
 	//--------------------------------------------------------------------------
@@ -302,22 +305,19 @@ public:
 	}
 
 	//--------------------------------------------------------------------------
-	XMFLOAT3 GetWorldPosition(const string& name)
+	Vector3D GetWorldPosition(const string& name)
 	{
 		auto index = GetBoneIndex(name);
 		if (index > 0)
 		{
 			auto& worldTx = bodies[index]->worldTx;
-			return XMFLOAT3(
-				worldTx.r[3].m128_f32[0],
-				worldTx.r[3].m128_f32[1],
-				worldTx.r[3].m128_f32[2]);
+			return FrameHelper::GetTranslation(worldTx);
 		}
-		return XMFLOAT3(0, 0, 0);
+		return Vector3D(0, 0, 0);
 	}
 
 	//--------------------------------------------------------------------------
-	void SetFootPosition(bool left, const XMFLOAT3& pos_)
+	void SetFootPosition(bool left, const Vector3D& pos_)
 	{
 		const auto& comTx = bodies[0]->worldTx;
 
@@ -328,39 +328,39 @@ public:
 			GetBoneIndex(left ? "LFoot" : "RFoot")
 		};
 
-		XMFLOAT3 orgPos[] =
+		Vector3D orgPos[] =
 		{
 			FrameHelper::GetTranslation(bodies[index[0]]->worldTx),
 			FrameHelper::GetTranslation(bodies[index[1]]->worldTx),
 			FrameHelper::GetTranslation(bodies[index[2]]->worldTx),
 		};
 
-		XMFLOAT3 pos = pos_;// orgPos[2];
+		Vector3D pos = pos_;// orgPos[2];
 
-		XMFLOAT3 comAxis[] = 
+		Vector3D comAxis[] =
 		{
 			FrameHelper::GetX(comTx),
 			FrameHelper::GetY(comTx),
 			FrameHelper::GetZ(comTx),
 		};
 
-		XMFLOAT3 x = pos - orgPos[0];
-		float newLegLen = Length(x);
+		Vector3D x = pos - orgPos[0];
+		double newLegLen = Length(x);
 		x = Normalize(x);
 
 		// X축 방향을 부모 트랜스폼으로 보낸다
-		XMFLOAT3 xInCom(Dot(comAxis[0], x), Dot(comAxis[1], x), Dot(comAxis[2], x));
+		Vector3D xInCom(Dot(comAxis[0], x), Dot(comAxis[1], x), Dot(comAxis[2], x));
 
 		// IK로 발 방향을 구한다 (Y축 방향)
 		auto footInCom = GetFootDirection(xInCom);
 
-		XMFLOAT3 y = comAxis[0] * footInCom.x + comAxis[1] * footInCom.y + comAxis[2] * footInCom.z;
+		Vector3D y = comAxis[0] * footInCom.x + comAxis[1] * footInCom.y + comAxis[2] * footInCom.z;
 
-		XMFLOAT3 z = Cross(x, y);
+		Vector3D z = Cross(x, y);
 
 		if (newLegLen > legLen.x + legLen.y)
 		{
-			auto kneePos = (orgPos[0] + pos) * (legLen.x / (legLen.x + legLen.y));
+			Vector3D kneePos = (orgPos[0] + pos) * (legLen.x / (legLen.x + legLen.y));
 
 			{
 				auto& worldTx = bodies[index[0]]->worldTx;
@@ -378,19 +378,19 @@ public:
 		{
 			// 굽힌 케이스
 			// http://mathworld.wolfram.com/Sphere-SphereIntersection.html
-			float d = newLegLen;
-			float R = legLen.x;
-			float r = legLen.y;
-			float d1 = (d * d - r * r + R * R) / (2 * d);
-			float a = 1 / d * sqrtf((-d + r - R) * (-d - r + R) * (-d + r + R) *(d + r + R));
+			double d = newLegLen;
+			double R = legLen.x;
+			double r = legLen.y;
+			double d1 = (d * d - r * r + R * R) / (2 * d);
+			double a = 1 / d * sqrtf((-d + r - R) * (-d - r + R) * (-d + r + R) *(d + r + R));
 
 			// 새 무릎 위치
-			XMFLOAT3 kneePos = x * d1 + y * (a / 2) + orgPos[0];
+			Vector3D kneePos = x * d1 + y * (a / 2) + orgPos[0];
 
 			{
-				XMFLOAT3 x1 = Normalize(kneePos - orgPos[0]);
-				XMFLOAT3 z1 = Normalize(Cross(x1, y));
-				XMFLOAT3 y1 = Normalize(Cross(z1, x1));
+				Vector3D x1 = Normalize(kneePos - orgPos[0]);
+				Vector3D z1 = Normalize(Cross(x1, y));
+				Vector3D y1 = Normalize(Cross(z1, x1));
 
 				auto& worldTx = bodies[index[0]]->worldTx;
 				FrameHelper::Set(worldTx, x1, y1, z1);
@@ -398,9 +398,9 @@ public:
 			}
 
 			{
-				XMFLOAT3 x1 = Normalize(orgPos[2] - kneePos);
-				XMFLOAT3 z1 = Normalize(Cross(x1, y));
-				XMFLOAT3 y1 = Normalize(Cross(z1, x1));
+				Vector3D x1 = Normalize(orgPos[2] - kneePos);
+				Vector3D z1 = Normalize(Cross(x1, y));
+				Vector3D y1 = Normalize(Cross(z1, x1));
 
 				auto& worldTx = bodies[index[1]]->worldTx;
 				FrameHelper::Set(worldTx, x1, y1, z1);
@@ -410,7 +410,7 @@ public:
 
 		{
 			auto& worldTx = bodies[index[2]]->worldTx;
-			FrameHelper::Set(worldTx, y, -x, z);
+			FrameHelper::Set(worldTx, y, (Vector3D)-x, z);
 			FrameHelper::SetTranslation(worldTx, pos);
 		}
 
@@ -438,13 +438,13 @@ public:
 		{
 			auto parent = bodies[bodies[index]->parentIndex];
 			localTx = bodies[index]->worldTx *
-				XMMatrixInverse(nullptr, parent->worldTx) *
-				XMMatrixInverse(nullptr, bodies[index]->linkTx);
+				parent->worldTx.Inverse() *
+				bodies[index]->linkTx.Inverse();
 		}
 		else
 		{
 			localTx = bodies[index]->worldTx *
-				XMMatrixInverse(nullptr, bodies[index]->linkTx);
+				bodies[index]->linkTx.Inverse();
 		}
 	}
 
@@ -468,21 +468,21 @@ public:
 	}
 
 	//--------------------------------------------------------------------------
-	const XMFLOAT4 GetLocalQuaternion(const string& name)
+	const Vector4D GetLocalQuaternion(const string& name)
 	{
 		// 먼저 쿼터니언으로 바꾼 뒤
 		auto found = Find(name);
 		if (found != nullptr) { return found->quat; }
-		return XMFLOAT4(0, 0, 0, 1);
+		return Vector4D(0, 0, 0, 1);
 	}
 
 	//--------------------------------------------------------------------------
-	const XMFLOAT4 GetLocalQuaternionVerify(const string& name)
+	const Vector4D GetLocalQuaternionVerify(const string& name)
 	{
 		// 먼저 쿼터니언으로 바꾼 뒤
 		auto found = Find(name);
 		if (found != nullptr) { return found->quatVerify; }
-		return XMFLOAT4(0, 0, 0, 1);
+		return Vector4D(0, 0, 0, 1);
 	}
 
 	//--------------------------------------------------------------------------
@@ -492,7 +492,7 @@ public:
 
 		auto& quat = found->quat;
 
-		XMStoreFloat4(&quat, XMQuaternionRotationMatrix(found->localTx));
+		quat = DXMathTransform<double>::QuaternionRotationMatrix(found->localTx);
 
 		double theta = acos(quat.w) * 2;
 
@@ -533,7 +533,7 @@ protected:
 
 	GeneralCoordinate coord;
 
-	XMFLOAT2 legLen;
+	Vector2D legLen;
 
 	DWORD total = 0;
 };
@@ -543,22 +543,22 @@ IRobot* IRobot::Create()
 { return new Robot; }
 
 //------------------------------------------------------------------------------
-XMFLOAT3 IRobot::GetFootDirection(const XMFLOAT3& legDir_)
+Vector3D IRobot::GetFootDirection(const Vector3D& legDir_)
 {
-	XMFLOAT3 legDir = Normalize(legDir_);
+	Vector3D legDir = Normalize(legDir_);
 
 	// 좌표에서 다시 각도를 구해서 각도를 기준으로 처리하자
 	// (실제로 IK 처리 시에는 좌표만 주어질 것이므로)
-	float angleZ_R = acosf(-legDir.y);
+	double angleZ_R = acos(-legDir.y);
 
-	float angleY_R = abs(angleZ_R) > 0.0001f ? atan2f(
-		legDir.z / -sinf(angleZ_R),
-		legDir.x / sinf(angleZ_R)) : 0;
+	double angleY_R = abs(angleZ_R) > 0.0001f ? atan2(
+		legDir.z / -sin(angleZ_R),
+		legDir.x / sin(angleZ_R)) : 0;
 
-	XMFLOAT3 footDir(
-		cosf(angleZ_R) * cosf(angleY_R),
-		sinf(angleZ_R),
-		-cosf(angleZ_R) * sinf(angleY_R));
+	Vector3D footDir(
+		cos(angleZ_R) * cos(angleY_R),
+		sin(angleZ_R),
+		-cos(angleZ_R) * sin(angleY_R));
 
 	// 다리 방향이 뒤로 향하는 경우는 바깥이 아니라 몸 안 쪽을 보게 한다
 	if (legDir.x < 0)
@@ -567,55 +567,53 @@ XMFLOAT3 IRobot::GetFootDirection(const XMFLOAT3& legDir_)
 	}
 
 	// Y축 회전이 +/-45~135도 범위일 때는 발 방향이 앞을 보게 한다
-	float h1Factor = 0;
-	if (angleY_R > AngleHelperF::DegreeToRadian(-135) &&
-		angleY_R < AngleHelperF::DegreeToRadian(-45))
+	double h1Factor = 0;
+	if (angleY_R > AngleHelperD::DegreeToRadian(-135) &&
+		angleY_R < AngleHelperD::DegreeToRadian(-45))
 	{
-		if (angleY_R > AngleHelperF::DegreeToRadian(-90) &&
-			angleY_R < AngleHelperF::DegreeToRadian(-45))
+		if (angleY_R > AngleHelperD::DegreeToRadian(-90) &&
+			angleY_R < AngleHelperD::DegreeToRadian(-45))
 		{
 			// -45 ~ -90
-			h1Factor = 1 - (90 + AngleHelperF::RadianToDegree(angleY_R)) / 45.0f;
+			h1Factor = 1 - (90 + AngleHelperD::RadianToDegree(angleY_R)) / 45.0;
 		}
 		else
 		{
 			// -90 ~ -135
-			h1Factor = (135 + AngleHelperF::RadianToDegree(angleY_R)) / 45.0f;
+			h1Factor = (135 + AngleHelperD::RadianToDegree(angleY_R)) / 45.0;
 		}
 	}
 	else if (
-		angleY_R > AngleHelperF::DegreeToRadian(45) &&
-		angleY_R < AngleHelperF::DegreeToRadian(135))
+		angleY_R > AngleHelperD::DegreeToRadian(45) &&
+		angleY_R < AngleHelperD::DegreeToRadian(135))
 	{
-		if (angleY_R > AngleHelperF::DegreeToRadian(45) &&
-			angleY_R < AngleHelperF::DegreeToRadian(90))
+		if (angleY_R > AngleHelperD::DegreeToRadian(45) &&
+			angleY_R < AngleHelperD::DegreeToRadian(90))
 		{
 			// 45 ~ 90
-			h1Factor = (AngleHelperF::RadianToDegree(angleY_R) - 45) / 45.0f;
+			h1Factor = (AngleHelperD::RadianToDegree(angleY_R) - 45) / 45.0;
 		}
 		else
 		{
 			// 90 ~ 135
-			h1Factor = 1 - (AngleHelperF::RadianToDegree(angleY_R) - 90) / 45.0f;
+			h1Factor = 1 - (AngleHelperD::RadianToDegree(angleY_R) - 90) / 45.0;
 		}
 	}
 
 	// Z축 회전이 90도를 넘어가면 그냥 원래 앞 방향을 보게 한다
-	float h2Factor =
-		angleZ_R > AngleHelperF::DegreeToRadian(90) ?
-		(AngleHelperF::RadianToDegree(angleZ_R) - 90) / 90.0f :
+	double h2Factor =
+		angleZ_R > AngleHelperD::DegreeToRadian(90) ?
+		(AngleHelperD::RadianToDegree(angleZ_R) - 90) / 90.0 :
 		0;
 
-	XMFLOAT3 footDirH;
-	XMStoreFloat3(
-		&footDirH,
-		XMVectorLerp(
-			XMVectorLerp(
-				XMLoadFloat3(&footDir),
-				XMLoadFloat3(&XMFLOAT3(1, 0, 0)),
-				h1Factor),
-			XMLoadFloat3(&footDir),
-			h2Factor));
+	Vector3D footDirH;// =
+		//XMVectorLerp(
+		//	XMVectorLerp(
+		//		XMLoadFloat3(&footDir),
+		//		XMLoadFloat3(&XMFLOAT3(1, 0, 0)),
+		//		h1Factor),
+		//	XMLoadFloat3(&footDir),
+		//	h2Factor));
 	footDirH = Normalize(footDirH);
 
 	return footDirH;

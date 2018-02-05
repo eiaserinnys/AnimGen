@@ -4,6 +4,7 @@
 #include <assert.h>
 
 using namespace std;
+using namespace Core;
 using namespace DirectX;
 
 template <typename Scalar>

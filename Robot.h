@@ -1,21 +1,22 @@
 #pragma once
 
 #include "Mesh.h"
+#include "Vector.h"
 
 class IRobot : public IMesh {
 public:
 	struct GeneralCoordinate
 	{
-		DirectX::XMFLOAT3 bodyPos;
-		DirectX::XMFLOAT3 bodyRot;
+		Core::Vector3D bodyPos;
+		Core::Vector3D bodyRot;
 
-		DirectX::XMFLOAT3 leg1Rot[2];
-		float leg1Len[2];
+		Core::Vector3D leg1Rot[2];
+		double leg1Len[2];
 
-		DirectX::XMFLOAT3 leg2Rot[2];
-		float leg2Len[2];
+		Core::Vector3D leg2Rot[2];
+		double leg2Len[2];
 
-		DirectX::XMFLOAT3 footRot[2];
+		Core::Vector3D footRot[2];
 	};
 
 	virtual void Animate_Test(DWORD elapsed) = 0;
@@ -23,15 +24,15 @@ public:
 
 	virtual const GeneralCoordinate& Current() const = 0;
 
-	virtual DirectX::XMFLOAT3 GetWorldPosition(const std::string& name) = 0;
+	virtual Core::Vector3D GetWorldPosition(const std::string& name) = 0;
 	
-	virtual void SetFootPosition(bool left, const DirectX::XMFLOAT3& pos) = 0;
+	virtual void SetFootPosition(bool left, const Core::Vector3D& pos) = 0;
 
-	static DirectX::XMFLOAT3 GetFootDirection(const DirectX::XMFLOAT3& legDir);
+	static Core::Vector3D GetFootDirection(const Core::Vector3D& legDir);
 
 	virtual const double* GetLocalRotation(const std::string& name) = 0;
-	virtual const DirectX::XMFLOAT4 GetLocalQuaternion(const std::string& name) = 0;
-	virtual const DirectX::XMFLOAT4 GetLocalQuaternionVerify(const std::string& name) = 0;
+	virtual const Core::Vector4D GetLocalQuaternion(const std::string& name) = 0;
+	virtual const Core::Vector4D GetLocalQuaternionVerify(const std::string& name) = 0;
 
 	static IRobot* Create();
 };

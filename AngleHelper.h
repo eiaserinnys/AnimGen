@@ -14,3 +14,4 @@ struct AngleHelper
 };
 
 typedef AngleHelper<float> AngleHelperF;
+typedef AngleHelper<double> AngleHelperD;
