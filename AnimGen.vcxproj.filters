@@ -181,6 +181,12 @@
     <ClInclude Include="VectorDXMathAdaptor.h">
       <Filter>Mathematics\Vector</Filter>
     </ClInclude>
+    <ClInclude Include="VectorExpressionArgument.h">
+      <Filter>Mathematics\Vector</Filter>
+    </ClInclude>
+    <ClInclude Include="VectorOperator.h">
+      <Filter>Mathematics\Vector</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Shader\Object.fx">

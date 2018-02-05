@@ -43,14 +43,14 @@ namespace Core
 		template <typename Expr>
 		__forceinline VectorT(const Expr& expr)
 		{
-			using namespace VectorOperation;
+			using namespace VectorOperator;
 			VectorAssignment<VectorT, Expr, SelectRhs>().Evaluate(*this, expr);
 		}
 
 		//--------------------------------------------------------------------------
 		// assignment
 		template<typename Expr>
-		using AssignSrc = VectorUnaryExpression<Expr, VectorOperation::Plus>;
+		using AssignSrc = VectorUnaryExpression<VectorOperator::Plus<Expr>>;
 
 		template<typename Expr, typename Op>
 		using AssignExpr = VectorAssignment<VectorT, AssignSrc<Expr>, Op>;
@@ -58,7 +58,7 @@ namespace Core
 		template <typename Expr>
 		__forceinline VectorT& operator = (const Expr& expr)
 		{
-			using namespace VectorOperation;
+			using namespace VectorOperator;
 			AssignExpr<Expr, SelectRhs>().Evaluate(*this, AssignSrc<Expr>(expr));
 			return *this;
 		}
@@ -66,7 +66,7 @@ namespace Core
 		template <typename Expr>
 		__forceinline VectorT& operator += (const Expr& expr)
 		{
-			using namespace VectorOperation;
+			using namespace VectorOperator;
 			AssignExpr<Expr, Add>().Evaluate(*this, AssignSrc<Expr>(expr));
 			return *this;
 		}
@@ -74,7 +74,7 @@ namespace Core
 		template <typename Expr>
 		__forceinline VectorT& operator -= (const Expr& expr)
 		{
-			using namespace VectorOperation;
+			using namespace VectorOperator;
 			AssignExpr<Expr, Subtract>().Evaluate(*this, AssignSrc<Expr>(expr));
 			return *this;
 		}
@@ -82,7 +82,7 @@ namespace Core
 		template <typename Expr>
 		__forceinline VectorT& operator *= (const Expr& expr)
 		{
-			using namespace VectorOperation;
+			using namespace VectorOperator;
 			AssignExpr<Expr, Multiply>().Evaluate(*this, AssignSrc<Expr>(expr));
 			return *this;
 		}
@@ -90,7 +90,7 @@ namespace Core
 		template <typename Expr>
 		__forceinline VectorT& operator /= (const Expr& expr)
 		{
-			using namespace VectorOperation;
+			using namespace VectorOperator;
 			AssignExpr<Expr, Divide>().Evaluate(*this, AssignSrc<Expr>(expr));
 			return *this;
 		}

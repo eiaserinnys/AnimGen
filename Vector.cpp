@@ -1,4 +1,7 @@
 #include "pch.h"
+
+#pragma warning(disable:4244)
+
 #include "Vector.h"
 
 #include <assert.h>
@@ -53,6 +56,7 @@ static void TestVector2_Arithmetic()
 	Vector2D r;
 
 	r = a + b;
+	assert((a + b).Dimension == 2);
 	assert(r.x == a.x + b.x && r.y == a.y + b.y);
 
 	r = a + 1.0;
@@ -234,6 +238,7 @@ static void TestVector2_Function()
 	Vector2F d(7.0f, 8.0f);
 
 	double dot = Dot(a, b);
+	assert(Dot(a, b).Dimension == 1);
 	assert(dot == a.x * b.x + a.y * b.y);
 
 	double dot2 = Dot(-a, b);
@@ -249,6 +254,7 @@ static void TestVector2_Function()
 	assert(cross2 == (a.x + b.x) * c.y - (a.y + b.y) * c.x);
 
 	double len = Length(a);
+	assert(Length(a).Dimension == 1);
 	assert(len == std::sqrt(a.x * a.x + a.y * a.y));
 
 	double dist = Distance(a, c);
@@ -258,6 +264,7 @@ static void TestVector2_Function()
 	assert(dist2 == std::sqrt(Square(a.x + b.x - c.x) + Square(a.y + b.y - c.y)));
 
 	Vector2D nor = Normalize(a);
+	assert(Normalize(a).Dimension == 2);
 	assert(nor.x == a.x / std::sqrt(Square(a.x) + Square(a.y)));
 	assert(nor.y == a.y / std::sqrt(Square(a.x) + Square(a.y)));
 

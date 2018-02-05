@@ -6,6 +6,7 @@
 #include "VectorDescriptor.h"
 #include "VectorExpression.h"
 #include "VectorBody.h"
+#include "VectorOperator.h"
 #include "VectorOperation.h"
 #include "VectorIntrinsic.h"
 

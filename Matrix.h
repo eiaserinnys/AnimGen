@@ -219,9 +219,9 @@ namespace Core
 			const MatrixT<V, 4, 4>& m)
 		{
 			return VectorT<V, 3>(
-				v.x * m.m[0][0] + v.y * m.m[1][0] + v.z * m.m[1][0] + m.m[2][0],
-				v.x * m.m[0][1] + v.y * m.m[1][1] + v.z * m.m[1][1] + m.m[2][1],
-				v.x * m.m[0][2] + v.y * m.m[1][2] + v.z * m.m[1][2] + m.m[2][2]);
+				v.x * m.m[0][0] + v.y * m.m[1][0] + v.z * m.m[2][0] + m.m[3][0],
+				v.x * m.m[0][1] + v.y * m.m[1][1] + v.z * m.m[2][1] + m.m[3][1],
+				v.x * m.m[0][2] + v.y * m.m[1][2] + v.z * m.m[2][2] + m.m[3][2]);
 		}
 
 		static inline VectorT<V, 3> TransformNormal(
@@ -229,9 +229,9 @@ namespace Core
 			const MatrixT<V, 4, 4>& m)
 		{
 			return VectorT<V, 3>(
-				v.x * m.m[0][0] + v.y * m.m[1][0] + v.z * m.m[1][0],
-				v.x * m.m[0][1] + v.y * m.m[1][1] + v.z * m.m[1][1],
-				v.x * m.m[0][2] + v.y * m.m[1][2] + v.z * m.m[1][2]);
+				v.x * m.m[0][0] + v.y * m.m[1][0] + v.z * m.m[2][0],
+				v.x * m.m[0][1] + v.y * m.m[1][1] + v.z * m.m[2][1],
+				v.x * m.m[0][2] + v.y * m.m[1][2] + v.z * m.m[2][2]);
 		}
 
 		static inline Matrix Translation(ValueType x, ValueType y, ValueType z)

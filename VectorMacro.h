@@ -27,4 +27,7 @@ namespace Core
 	template <> struct MoreGenericType<double, float> { typedef double Type; };
 	template <> struct MoreGenericType<double, double> { typedef double Type; };
 
+	template <int A, int B>
+	struct Max { enum { Value = A > B ? A : B }; };
+
 };

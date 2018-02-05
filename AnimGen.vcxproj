@@ -181,9 +181,11 @@
     <ClInclude Include="VectorDescriptor.h" />
     <ClInclude Include="VectorDXMathAdaptor.h" />
     <ClInclude Include="VectorExpression.h" />
+    <ClInclude Include="VectorExpressionArgument.h" />
     <ClInclude Include="VectorIntrinsic.h" />
     <ClInclude Include="VectorMacro.h" />
     <ClInclude Include="VectorOperation.h" />
+    <ClInclude Include="VectorOperator.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\DirectXTex\DirectXTex\DirectXTex_Desktop_2015.vcxproj">

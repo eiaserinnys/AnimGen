@@ -1,6 +1,8 @@
 #pragma once
 
 #include "VectorMacro.h"
+#include "VectorExpressionArgument.h"
+#include "VectorOperator.h"
 
 namespace Core
 {
@@ -9,114 +11,21 @@ namespace Core
 	class VectorT;
 
 	//------------------------------------------------------------------------------
-	template <typename V>
-	class VectorExpressionArgument {
-	public:
-		typedef typename V::ValueType ValueType;
-		enum { Dimension = V::Dimension };
-
-		VectorExpressionArgument(const V& arg) : arg(arg) {}
-
-		__forceinline void PreEvaluate() const
-		{
-			arg.PreEvaluate();
-		}
-
-		__forceinline typename const V::ValueType Evaluate(const int index) const
-		{
-			return arg.Evaluate(index);
-		}
-
-	private:
-		const V& arg;
-	};
-
-	//------------------------------------------------------------------------------
-	template <>
-	class VectorExpressionArgument<int> {
-	public:
-		typedef int ValueType;
-		enum { Dimension = 1 };
-
-		VectorExpressionArgument(const int arg) : arg(arg) {}
-
-		__forceinline void PreEvaluate() const
-		{
-		}
-
-		__forceinline typename const int Evaluate(const int index) const
-		{
-			return arg;
-		}
-
-	private:
-		int arg;
-	};
-
-	//------------------------------------------------------------------------------
-	template <>
-	class VectorExpressionArgument<float> {
-	public:
-		typedef float ValueType;
-		enum { Dimension = 1 };
-
-		VectorExpressionArgument(const float arg) : arg(arg) {}
-
-		__forceinline void PreEvaluate() const
-		{
-		}
-
-		__forceinline typename const float Evaluate(const int index) const
-		{
-			return arg;
-		}
-
-	private:
-		float arg;
-	};
-
-	//------------------------------------------------------------------------------
-	template <>
-	class VectorExpressionArgument<double> {
-	public:
-		typedef double ValueType;
-		enum { Dimension = 1 };
-
-		VectorExpressionArgument(const double arg) : arg(arg)
-		{
-		}
-
-		__forceinline void PreEvaluate() const
-		{
-		}
-
-		__forceinline typename const double Evaluate(const int index) const
-		{
-			return arg;
-		}
-
-	private:
-		double arg;
-	};
-
-	//------------------------------------------------------------------------------
-	template <typename Arg, typename Op, int D = 0>
+	template <typename Op>
 	class VectorUnaryExpression {
 	public:
-		typedef VectorExpressionArgument<Arg> ArgType;
+		typedef typename Op::ArgType ArgType;
+		typedef typename Op::ValueType ValueType;
+		enum { Dimension = Op::Dimension };
 
-		typedef typename ArgType::ValueType ValueType;
-
-		enum { Dimension = D == 0 ? ArgType::Dimension : D };
-
-		VectorUnaryExpression(const Arg& arg) : arg(arg) {}
+		VectorUnaryExpression(const ArgType& arg) : arg(arg) {}
 
 		__forceinline void PreEvaluate() const
 		{
 			op.PreEvaluate(arg);
 		}
 
-		__forceinline typename const ArgType::ValueType Evaluate(const int index) const
+		__forceinline typename const ValueType Evaluate(const int index) const
 		{
 			return op.Evaluate(index, arg);
 		}
@@ -151,22 +60,13 @@ namespace Core
 			typename RhsType::ValueType>::Type ValueType;
 
 		enum
-		{
-			Dimension =
-			D == 0 ?
-			(LhsType::Dimension > RhsType::Dimension ?
-				LhsType::Dimension : RhsType::Dimension) :
-			D
+		{ 
+			Dimension = D == 0 ? 
+				Max<LhsType::Dimension, RhsType::Dimension>::Value : 
+				D 
 		};
 
-		template <
-			ENABLE_IF(
-				IS_CONVERTIBLE(typename LhsType::ValueType, typename RhsType::ValueType) &&
-				(HAS_SAME_DIMENSION(LhsType, RhsType) ||
-					IS_SCALAR(LhsType) ||
-					IS_SCALAR(RhsType))
-			)>
-			VectorBinaryExpression(const Lhs& lhs, const Rhs& rhs) : lhs(lhs), rhs(rhs)
+		VectorBinaryExpression(const Lhs& lhs, const Rhs& rhs) : lhs(lhs), rhs(rhs)
 		{
 		}
 
@@ -232,7 +132,7 @@ namespace Core
 					IS_SCALAR(LhsType) ||
 					IS_SCALAR(RhsType))
 			)>
-			VectorTernaryExpression(const Lhs& lhs, const Rhs& rhs) : lhs(lhs), rhs(rhs)
+		VectorTernaryExpression(const Lhs& lhs, const Rhs& rhs) : lhs(lhs), rhs(rhs)
 		{
 		}
 
