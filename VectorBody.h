@@ -44,22 +44,16 @@ namespace Core
 		__forceinline VectorT(const Expr& expr)
 		{
 			using namespace VectorOperator;
-			VectorAssignment<VectorT, Expr, SelectRhs<VectorT, Expr>>().Evaluate(*this, expr);
+			VectorAssignment<SelectRhs<VectorT, Expr>>().Evaluate(*this, expr);
 		}
 
 		//--------------------------------------------------------------------------
 		// assignment
-		template<typename Expr>
-		using AssignSrc = VectorUnaryExpression<VectorOperator::Plus<Expr>>;
-
-		template<typename Expr, typename Op>
-		using AssignExpr = VectorAssignment<VectorT, AssignSrc<Expr>, Op>;
-
 		template <typename Expr>
 		__forceinline VectorT& operator = (const Expr& expr)
 		{
 			using namespace VectorOperator;
-			AssignExpr<Expr, SelectRhs<VectorT, AssignSrc<Expr>>>().Evaluate(*this, AssignSrc<Expr>(expr));
+			VectorAssignment<SelectRhs<VectorT, Expr>>().Evaluate(*this, expr);
 			return *this;
 		}
 
@@ -67,7 +61,7 @@ namespace Core
 		__forceinline VectorT& operator += (const Expr& expr)
 		{
 			using namespace VectorOperator;
-			AssignExpr<Expr, Add<VectorT, AssignSrc<Expr>>>().Evaluate(*this, AssignSrc<Expr>(expr));
+			VectorAssignment<Add<VectorT, Expr>>().Evaluate(*this, expr);
 			return *this;
 		}
 
@@ -75,7 +69,7 @@ namespace Core
 		__forceinline VectorT& operator -= (const Expr& expr)
 		{
 			using namespace VectorOperator;
-			AssignExpr<Expr, Subtract<VectorT, AssignSrc<Expr>>>().Evaluate(*this, AssignSrc<Expr>(expr));
+			VectorAssignment<Subtract<VectorT, Expr>>().Evaluate(*this, expr);
 			return *this;
 		}
 
@@ -83,7 +77,7 @@ namespace Core
 		__forceinline VectorT& operator *= (const Expr& expr)
 		{
 			using namespace VectorOperator;
-			AssignExpr<Expr, Multiply<VectorT, AssignSrc<Expr>>>().Evaluate(*this, AssignSrc<Expr>(expr));
+			VectorAssignment<Multiply<VectorT, Expr>>().Evaluate(*this, expr);
 			return *this;
 		}
 
@@ -91,7 +85,7 @@ namespace Core
 		__forceinline VectorT& operator /= (const Expr& expr)
 		{
 			using namespace VectorOperator;
-			AssignExpr<Expr, Divide<VectorT, AssignSrc<Expr>>>().Evaluate(*this, AssignSrc<Expr>(expr));
+			VectorAssignment<Divide<VectorT, Expr>>().Evaluate(*this, expr);
 			return *this;
 		}
 

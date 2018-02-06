@@ -10,6 +10,9 @@ namespace Core
 		template <typename L, typename R>
 		struct BinaryOperator
 		{
+			typedef L LhsBaseType;
+			typedef R RhsBaseType;
+
 			typedef VectorExpressionArgument<L> LhsType;
 			typedef VectorExpressionArgument<R> RhsType;
 
@@ -106,8 +109,8 @@ namespace Core
 			__forceinline void PreEvaluate(const LhsType& lhs, const RhsType& rhs) const
 			{
 				VectorType l, r;
-				VectorAssignment<VectorType, LhsType, SelectRhs<VectorType, LhsType>>().Evaluate(l, lhs);
-				VectorAssignment<VectorType, RhsType, SelectRhs<VectorType, RhsType>>().Evaluate(r, rhs);
+				VectorAssignment<SelectRhs<VectorType, LhsType>>().Evaluate(l, lhs);
+				VectorAssignment<SelectRhs<VectorType, RhsType>>().Evaluate(r, rhs);
 
 				for (int j = 0; j < LhsType::Dimension; ++j)
 				{
@@ -160,8 +163,7 @@ namespace Core
 		template <typename L, typename R>
 		struct Cross3D : public BinaryOperator<L, R>
 		{
-			mutable VectorType l;
-			mutable VectorType r;
+			mutable VectorType l, r;
 
 			template <ENABLE_IF(DIM(LhsType) == 3 && DIM(RhsType) == 3)>
 			Cross3D()
@@ -169,8 +171,8 @@ namespace Core
 
 			__forceinline void PreEvaluate(const LhsType& lhs, const RhsType& rhs) const
 			{
-				VectorAssignment<VectorType, L, SelectRhs<VectorType, L>>().Evaluate(l, lhs);
-				VectorAssignment<VectorType, R, SelectRhs<VectorType, R>>().Evaluate(r, rhs);
+				VectorAssignment<SelectRhs<VectorType, L>>().Evaluate(l, lhs);
+				VectorAssignment<SelectRhs<VectorType, R>>().Evaluate(r, rhs);
 			}
 
 			__forceinline const ValueType Evaluate(const int i, const LhsType& lhs, const RhsType& rhs) const

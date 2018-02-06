@@ -7,6 +7,7 @@
 #define DIM(x) x::Dimension
 #define HAS_SAME_DIMENSION(x, y) (DIM(x) == DIM(y))
 #define IS_SCALAR(x) (x::Dimension == 1)
+#define IS_SAME_TYPE(x, y) std::is_same<x, y>::value
 #define IS_CONVERTIBLE(x, y) std::is_convertible<x, y>::value
 
 namespace Core

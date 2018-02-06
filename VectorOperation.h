@@ -93,14 +93,14 @@ namespace Core
 	__forceinline void VectorOperator::Length<A>::PreEvaluate(const ArgType& arg) const
 	{
 		VectorType v;
-		VectorAssignment<VectorType, A, SelectRhs<VectorType, A>>().Evaluate(v, arg);
+		VectorAssignment<SelectRhs<VectorType, A>>().Evaluate(v, arg);
 		evaluated = std::sqrt(::Dot(arg, arg));
 	}
 
 	template <typename A>
 	__forceinline void VectorOperator::Normalize<A>::PreEvaluate(const ArgType& arg) const
 	{
-		VectorAssignment<VectorType, A, SelectRhs<VectorType, A>>().Evaluate(evaluated, arg);
+		VectorAssignment<SelectRhs<VectorType, A>>().Evaluate(evaluated, arg);
 		ValueType length = ::Length(evaluated);
 		if (length > 0) { evaluated = evaluated / length; }
 	}
@@ -109,8 +109,8 @@ namespace Core
 	__forceinline void VectorOperator::Distance<L, R>::PreEvaluate(const LhsType& lhs, const RhsType& rhs) const
 	{
 		VectorType l, r;
-		VectorAssignment<VectorType, L, SelectRhs<VectorType, L>>().Evaluate(l, lhs);
-		VectorAssignment<VectorType, R, SelectRhs<VectorType, R>>().Evaluate(r, rhs);
+		VectorAssignment<SelectRhs<VectorType, L>>().Evaluate(l, lhs);
+		VectorAssignment<SelectRhs<VectorType, R>>().Evaluate(r, rhs);
 		evaluated = ::Length(l - r);
 	}
 

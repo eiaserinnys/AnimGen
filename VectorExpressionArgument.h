@@ -43,7 +43,7 @@ namespace Core
 		{
 		}
 
-		__forceinline typename const int Evaluate(const int index) const
+		__forceinline const int Evaluate(const int index) const
 		{
 			return arg;
 		}
@@ -65,7 +65,7 @@ namespace Core
 		{
 		}
 
-		__forceinline typename const float Evaluate(const int index) const
+		__forceinline const float Evaluate(const int index) const
 		{
 			return arg;
 		}
@@ -89,7 +89,7 @@ namespace Core
 		{
 		}
 
-		__forceinline typename const double Evaluate(const int index) const
+		__forceinline const double Evaluate(const int index) const
 		{
 			return arg;
 		}

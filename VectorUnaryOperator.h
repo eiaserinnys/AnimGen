@@ -10,6 +10,7 @@ namespace Core
 		template <typename A>
 		struct UnaryOperator
 		{
+			typedef A ArgBaseType;
 			typedef VectorExpressionArgument<A> ArgType;
 			typedef typename ArgType::ValueType ValueType;
 			enum { Dimension = ArgType::Dimension };

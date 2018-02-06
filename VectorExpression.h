@@ -91,21 +91,27 @@ namespace Core
 	};
 
 	//------------------------------------------------------------------------------
-	template <typename V, typename Expr, typename Op>
+	template <typename Op>
 	struct VectorAssignment {
 	public:
-		typedef VectorExpressionArgument<V> VType;
-		typedef VectorExpressionArgument<Expr> ExprType;
+		typedef typename Op::LhsType VType;
+		typedef typename Op::LhsType::ValueType VType_V;
+
+		typedef typename Op::RhsType ExprType;
+		typedef typename ExprType::ValueType ExprType_V;
+
+		typedef VectorT<typename VType::ValueType, VType::Dimension> Vector;
 
 		template <
 			ENABLE_IF(
-				IS_CONVERTIBLE(typename V::ValueType, typename Expr::ValueType) &&
-				(HAS_SAME_DIMENSION(V, Expr) || IS_SCALAR(Expr)))>
-		__forceinline void Evaluate(V& target, const ExprType& expr) const
+				IS_SAME_TYPE(typename Op::LhsBaseType, Vector) &&
+				IS_CONVERTIBLE(VType_V, ExprType_V) &&
+				(HAS_SAME_DIMENSION(VType, ExprType) || IS_SCALAR(ExprType)))>
+		__forceinline void Evaluate(Vector& target, const ExprType& expr) const
 		{
 			expr.PreEvaluate();
 
-			for (int i = 0; i < V::Dimension; ++i)
+			for (int i = 0; i < VType::Dimension; ++i)
 			{
 				target.m[i] = op.Evaluate(i, VType(target), expr);
 			}
