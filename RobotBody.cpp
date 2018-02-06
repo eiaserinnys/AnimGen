@@ -11,13 +11,11 @@ void RobotBody::CalculateLocalTransform()
 {
 	if (parent != nullptr)
 	{
-		Matrix4D parInv = parent->WorldTx().Inverse();
-		Matrix4D linkInv = linkTx.Inverse();
-		localTx = worldTx * parInv * linkInv;
+		localTx = worldTx * parent->InvWorldTx() * invLinkTx;
 	}
 	else
 	{
-		localTx = worldTx * linkTx.Inverse();
+		localTx = worldTx * invLinkTx;
 	}
 
 	CalculateLocalRotation();
@@ -33,6 +31,8 @@ void RobotBody::CalculateWorldTransform()
 	{
 		worldTx = localTx * linkTx;
 	}
+
+	invWorldTx = worldTx.Inverse();
 }
 
 void RobotBody::CalculateLocalRotation()
@@ -48,10 +48,12 @@ void RobotBody::CalculateLinkTransform()
 {
 	if (parent != nullptr)
 	{
-		linkTx = worldTx * parent->worldTx.Inverse();
+		linkTx = worldTx * parent->InvWorldTx();
 	}
 	else
 	{
 		linkTx = worldTx;
 	}
+
+	invLinkTx = linkTx.Inverse();
 }

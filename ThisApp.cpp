@@ -105,6 +105,8 @@ public:
 			"RLeg2",
 			"RFoot",
 		};
+
+		int y = 0;
 		
 		for (int i = 0; i < COUNT_OF(name); ++i)
 		{
@@ -120,7 +122,7 @@ public:
 
 			global->textRenderer->Enqueue(
 				TextToRender(
-					XMFLOAT2(50, i * 15 + 50),
+					XMFLOAT2(50, y = i * 15 + 50),
 					Utility::FormatW(
 						L"Q(%+.4f,%+.4f,%+.4f,%+.4f) -> E(%+.4f,%+.4f,%+.4f) -> Q(%+.4f,%+.4f,%+.4f,%+.4f)",
 						quat.x, quat.y, quat.z, quat.w,
@@ -128,6 +130,53 @@ public:
 						quatV.x, quatV.y, quatV.z, quatV.w),
 					color));
 		}
+
+		auto gc = global->robot->Current();
+
+		y += 15;
+
+		global->textRenderer->Enqueue(
+			TextToRender(
+				XMFLOAT2(50, y += 15),
+				Utility::FormatW(
+					L"bp(%.4f,%.4f,%.4f) br(%.4f,%.4f,%.4f)",
+					gc.bodyPos.x, gc.bodyPos.y, gc.bodyPos.y,
+					gc.bodyRot.x, gc.bodyRot.y, gc.bodyRot.z),
+				XMFLOAT4(1, 1, 1, 1)));
+
+		global->textRenderer->Enqueue(
+			TextToRender(
+				XMFLOAT2(50, y += 15),
+				Utility::FormatW(
+					L"LLR1(%.4f,%.4f,%.4f) LLL1(%.4f) "
+					L"LLR2(%.4f,%.4f,%.4f) LLL2(%.4f) ",
+					gc.leg1Rot[0].x, gc.leg1Rot[0].y, gc.leg1Rot[0].z,
+					gc.leg1Len[0],
+					gc.leg2Rot[0].x, gc.leg2Rot[0].y, gc.leg2Rot[0].z,
+					gc.leg2Len[0]),
+				XMFLOAT4(1, 1, 1, 1)));
+
+		global->textRenderer->Enqueue(
+			TextToRender(
+				XMFLOAT2(50, y += 15),
+				Utility::FormatW(
+					L"RLR1(%.4f,%.4f,%.4f) RLL1(%.4f) "
+					L"RLR2(%.4f,%.4f,%.4f) RLL2(%.4f) ",
+					gc.leg1Rot[1].x, gc.leg1Rot[1].y, gc.leg1Rot[1].z,
+					gc.leg1Len[1],
+					gc.leg2Rot[1].x, gc.leg2Rot[1].y, gc.leg2Rot[1].z,
+					gc.leg2Len[1]),
+				XMFLOAT4(1, 1, 1, 1)));
+
+		global->textRenderer->Enqueue(
+			TextToRender(
+				XMFLOAT2(50, y += 15),
+				Utility::FormatW(
+					L"LFR(%.4f,%.4f,%.4f) "
+					L"RFR(%.4f,%.4f,%.4f)",
+					gc.footRot[0].x, gc.footRot[0].y, gc.footRot[0].z,
+					gc.footRot[1].x, gc.footRot[1].y, gc.footRot[1].z),
+				XMFLOAT4(1, 1, 1, 1)));
 
 		global->FillBuffer();
 

@@ -96,9 +96,11 @@ RobotBuilder::RobotBuilder(Robot* robot)
 		robot->legLen.y = Distance(l2, l3);
 	}
 
-	robot->BuildLinkMatrix();
-
-	robot->UpdateWorldTransform();
+	for (size_t i = 0; i < robot->bodies.size(); ++i)
+	{
+		auto body = robot->bodies[i];
+		body->CalculateLinkTransform();
+	}
 
 	robot->TransformMesh();
 }

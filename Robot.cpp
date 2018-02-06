@@ -24,20 +24,6 @@ Robot::Robot()
 }
 
 //--------------------------------------------------------------------------
-void Robot::BuildLinkMatrix()
-{
-	// 로컬 트랜스폼이 없다고 가정하면
-	// (내 링크) x (부모의 월드) = (내 월드)
-	// (내 링크) = (내 월드) x (부모의 월드)^(-1)
-
-	for (size_t i = 0; i < bodies.size(); ++i)
-	{
-		auto body = bodies[i];
-		body->CalculateLinkTransform();
-	}
-}
-
-//--------------------------------------------------------------------------
 void Robot::UpdateWorldTransform()
 {
 	for (auto it = bodies.begin(); it != bodies.end(); ++it)
@@ -114,6 +100,7 @@ void Robot::Animate_Test(DWORD elapsed)
 void Robot::Update()
 {
 	UpdateWorldTransform();
+	CalculateGeneralCoordinate();
 	TransformMesh();
 }
 
@@ -121,7 +108,7 @@ void Robot::Update()
 RobotBody* Robot::Find(const string& name)
 {
 	auto index = GetBoneIndex(name);
-	if (index > 0) { return bodies[index]; }
+	if (index >= 0) { return bodies[index]; }
 	return nullptr;
 }
 
@@ -135,7 +122,7 @@ const RobotBody* Robot::Find(const string& name) const
 Vector3D Robot::GetWorldPosition(const string& name)
 {
 	auto index = GetBoneIndex(name);
-	if (index > 0)
+	if (index >= 0)
 	{
 		return FrameHelper::GetTranslation(bodies[index]->WorldTx());
 	}
@@ -163,7 +150,40 @@ Robot::~Robot()
 void Robot::CalculateGeneralCoordinate()
 {
 	coord.bodyPos = GetWorldPosition("Body");
-	//coord.bodyROt = GetLocalRotation("Body");
+	coord.bodyRot = GetLocalRotation("Body");
+
+	coord.leg1Rot[0] = GetLocalRotation("LLeg1");
+	coord.leg1Rot[1] = GetLocalRotation("RLeg1");
+	
+	{
+		auto p0 = GetWorldPosition("LLeg1");
+		auto p1 = GetWorldPosition("LLeg2");
+		coord.leg1Len[0] = Distance(p0, p1) - legLen.x;
+	}
+
+	{
+		auto p0 = GetWorldPosition("RLeg1");
+		auto p1 = GetWorldPosition("RLeg2");
+		coord.leg1Len[1] = Distance(p0, p1) - legLen.x;
+	}
+
+	coord.leg2Rot[0] = GetLocalRotation("LLeg2");
+	coord.leg2Rot[1] = GetLocalRotation("RLeg2");
+
+	{
+		auto p0 = GetWorldPosition("LLeg2");
+		auto p1 = GetWorldPosition("LFoot");
+		coord.leg2Len[0] = Distance(p0, p1) - legLen.y;
+	}
+
+	{
+		auto p0 = GetWorldPosition("RLeg2");
+		auto p1 = GetWorldPosition("RFoot");
+		coord.leg2Len[1] = Distance(p0, p1) - legLen.y;
+	}
+
+	coord.footRot[0] = GetLocalRotation("LFoot");
+	coord.footRot[1] = GetLocalRotation("RFoot");
 }
 
 //--------------------------------------------------------------------------
@@ -172,7 +192,6 @@ const Vector3D Robot::GetLocalRotation(const string& name)
 	// 먼저 쿼터니언으로 바꾼 뒤
 	auto found = Find(name);
 	if (found != nullptr) { return found->expMap; }
-
 	return Vector3D(0, 0, 0);
 }
 
@@ -198,6 +217,7 @@ const Vector4D Robot::GetLocalQuaternionVerify(const string& name)
 IRobot* IRobot::Create()
 { return new Robot; }
 
+//------------------------------------------------------------------------------
 Vector3D IRobot::GetFootDirection(const Vector3D& legDir)
 {
 	return RobotIK::GetFootDirection(legDir);

@@ -19,8 +19,6 @@ public:
 
 	~Robot();
 
-	void BuildLinkMatrix();
-
 	void UpdateWorldTransform();
 
 	void TransformMesh();
