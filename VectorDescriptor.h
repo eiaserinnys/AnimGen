@@ -2,7 +2,6 @@
 
 namespace Core
 {
-
 	template <typename V, int>
 	struct VectorDescriptor;
 

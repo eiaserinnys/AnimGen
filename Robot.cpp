@@ -7,7 +7,7 @@
 #include "Vector.h"
 #include "VectorDXMathAdaptor.h"
 #include "Matrix.h"
-#include "exp-map.h"
+#include "ExponentialMap.h"
 
 #include "RobotImplementation.h"
 #include "RobotBuilder.h"
@@ -33,27 +33,7 @@ void Robot::BuildLinkMatrix()
 	for (size_t i = 0; i < bodies.size(); ++i)
 	{
 		auto body = bodies[i];
-		if (body->parentIndex >= 0)
-		{
-			body->linkTx =
-				body->worldTx *
-				bodies[body->parentIndex]->worldTx.Inverse();
-		}
-		else
-		{
-			body->linkTx = body->worldTx;
-		}
-	}
-}
-
-//--------------------------------------------------------------------------
-void Robot::CalculateLocalRotation()
-{
-	for (auto it = bodies.begin(); it != bodies.end(); ++it)
-	{
-		auto body = *it;
-
-		CalculateLocalRotation(body);
+		body->CalculateLinkTransform();
 	}
 }
 
@@ -63,16 +43,7 @@ void Robot::UpdateWorldTransform()
 	for (auto it = bodies.begin(); it != bodies.end(); ++it)
 	{
 		auto body = *it;
-
-		// (내 월드) = (내 로컬) x (내 링크) x (부모의 월드)
-		if (body->parentIndex >= 0)
-		{
-			body->worldTx = body->localTx * body->linkTx * bodies[body->parentIndex]->worldTx;
-		}
-		else
-		{
-			body->worldTx = body->localTx * body->linkTx;
-		}
+		body->Update();
 	}
 }
 
@@ -91,11 +62,11 @@ void Robot::TransformMesh()
 				pos[offset] =
 					ToXMFLOAT3(DXMathTransform<double>::Transform(
 						FromXMFLOAT3(mesh->Vertices().first[i]),
-						body->worldTx));
+						body->WorldTx()));
 				nor[offset] = 
 					ToXMFLOAT3(DXMathTransform<double>::TransformNormal(
 						FromXMFLOAT3(mesh->Normals().first[i]),
-						body->worldTx));
+						body->WorldTx()));
 
 				offset++;
 			}
@@ -126,23 +97,22 @@ void Robot::Animate_Test(DWORD elapsed)
 	double armSwing = (1 - cos(angle)) / 2 * M_PI;
 	double armSwing2 = (1 - cos(angle)) / 2 * M_PI / 2;
 
-	bodies[GetBoneIndex("Body")]->localTx = DXMathTransform<double>::RotationZ(angle);
-	bodies[GetBoneIndex("Head")]->localTx = DXMathTransform<double>::RotationY(headSwing);
-	bodies[GetBoneIndex("RArm1")]->localTx = DXMathTransform<double>::RotationY(-armSwing2) * DXMathTransform<double>::RotationZ(armSwing);
-	bodies[GetBoneIndex("RArm2")]->localTx = DXMathTransform<double>::RotationZ(leg2Swing);
-	bodies[GetBoneIndex("LArm1")]->localTx = DXMathTransform<double>::RotationY(armSwing2) * DXMathTransform<double>::RotationZ(armSwing);
-	bodies[GetBoneIndex("LArm2")]->localTx = DXMathTransform<double>::RotationZ(leg2Swing);
+	bodies[GetBoneIndex("Body")]->SetLocalTx(DXMathTransform<double>::RotationZ(angle));
+	bodies[GetBoneIndex("Head")]->SetLocalTx(DXMathTransform<double>::RotationY(headSwing));
+	bodies[GetBoneIndex("RArm1")]->SetLocalTx(DXMathTransform<double>::RotationY(-armSwing2) * DXMathTransform<double>::RotationZ(armSwing));
+	bodies[GetBoneIndex("RArm2")]->SetLocalTx(DXMathTransform<double>::RotationZ(leg2Swing));
+	bodies[GetBoneIndex("LArm1")]->SetLocalTx(DXMathTransform<double>::RotationY(armSwing2) * DXMathTransform<double>::RotationZ(armSwing));
+	bodies[GetBoneIndex("LArm2")]->SetLocalTx(DXMathTransform<double>::RotationZ(leg2Swing));
 
-	bodies[GetBoneIndex("RLeg1")]->localTx = DXMathTransform<double>::RotationZ(leg1Swing);
-	bodies[GetBoneIndex("RLeg2")]->localTx = DXMathTransform<double>::RotationZ(-leg2Swing);
-	bodies[GetBoneIndex("LLeg1")]->localTx = DXMathTransform<double>::RotationZ(-leg1Swing);
-	bodies[GetBoneIndex("LLeg2")]->localTx = DXMathTransform<double>::RotationZ(-leg2Swing);
+	bodies[GetBoneIndex("RLeg1")]->SetLocalTx(DXMathTransform<double>::RotationZ(leg1Swing));
+	bodies[GetBoneIndex("RLeg2")]->SetLocalTx(DXMathTransform<double>::RotationZ(-leg2Swing));
+	bodies[GetBoneIndex("LLeg1")]->SetLocalTx(DXMathTransform<double>::RotationZ(-leg1Swing));
+	bodies[GetBoneIndex("LLeg2")]->SetLocalTx(DXMathTransform<double>::RotationZ(-leg2Swing));
 }
 
 //--------------------------------------------------------------------------
 void Robot::Update()
 {
-	CalculateLocalRotation();
 	UpdateWorldTransform();
 	TransformMesh();
 }
@@ -167,8 +137,7 @@ Vector3D Robot::GetWorldPosition(const string& name)
 	auto index = GetBoneIndex(name);
 	if (index > 0)
 	{
-		auto& worldTx = bodies[index]->worldTx;
-		return FrameHelper::GetTranslation(worldTx);
+		return FrameHelper::GetTranslation(bodies[index]->WorldTx());
 	}
 	return Vector3D(0, 0, 0);
 }
@@ -190,25 +159,6 @@ Robot::~Robot()
 }
 
 //--------------------------------------------------------------------------
-void Robot::CalculateLocalTransform(int index)
-{
-	auto& localTx = bodies[index]->localTx;
-
-	if (bodies[index]->parentIndex >= 0)
-	{
-		auto parent = bodies[bodies[index]->parentIndex];
-		localTx = bodies[index]->worldTx *
-			parent->worldTx.Inverse() *
-			bodies[index]->linkTx.Inverse();
-	}
-	else
-	{
-		localTx = bodies[index]->worldTx *
-			bodies[index]->linkTx.Inverse();
-	}
-}
-
-//--------------------------------------------------------------------------
 // 일단 몸, 다리, 발만 계산한다
 void Robot::CalculateGeneralCoordinate()
 {
@@ -217,14 +167,13 @@ void Robot::CalculateGeneralCoordinate()
 }
 
 //--------------------------------------------------------------------------
-const double* Robot::GetLocalRotation(const string& name)
+const Vector3D Robot::GetLocalRotation(const string& name)
 {
 	// 먼저 쿼터니언으로 바꾼 뒤
 	auto found = Find(name);
 	if (found != nullptr) { return found->expMap; }
 
-	static double identity[] = { 0, 0, 0 };
-	return identity;
+	return Vector3D(0, 0, 0);
 }
 
 //--------------------------------------------------------------------------
@@ -243,45 +192,6 @@ const Vector4D Robot::GetLocalQuaternionVerify(const string& name)
 	auto found = Find(name);
 	if (found != nullptr) { return found->quatVerify; }
 	return Vector4D(0, 0, 0, 1);
-}
-
-//------------------------------------------------------------------------------
-void Robot::CalculateLocalRotation(RobotBody* found)
-{
-	static const double epsilon = sqrt(sqrt(0.000001f));
-
-	auto& quat = found->quat;
-
-	quat = Normalize(DXMathTransform<double>::QuaternionRotationMatrix(found->localTx));
-
-	double theta = acos(quat.w) * 2;
-
-	double sinHalfTheta = sin(theta / 2);
-
-	double m = 0;
-
-	if (abs(theta) < epsilon)
-	{
-		// 테일러 전개에 의해서
-		m = 1 / (1.0 / 2 + theta * theta / 48);
-	}
-	else
-	{
-		m = theta / sinHalfTheta;
-	}
-
-	found->expMap[0] = m * quat.x;
-	found->expMap[1] = m * quat.y;
-	found->expMap[2] = m * quat.z;
-
-	double quatV[4] = { 0, 0, 0, 0 };
-
-	EM_To_Q(found->expMap, quatV, 0);
-
-	found->quatVerify.x = quatV[0];
-	found->quatVerify.y = quatV[1];
-	found->quatVerify.z = quatV[2];
-	found->quatVerify.w = quatV[3];
 }
 
 //------------------------------------------------------------------------------

@@ -136,6 +136,7 @@
     <ClCompile Include="AngleHelper.cpp" />
     <ClCompile Include="DeferredRendrerer.cpp" />
     <ClCompile Include="exp-map.cpp" />
+    <ClCompile Include="ExponentialMap.cpp" />
     <ClCompile Include="FrameHelper.cpp" />
     <ClCompile Include="IKPicking.cpp" />
     <ClCompile Include="Logger.cpp" />
@@ -150,6 +151,7 @@
     <ClCompile Include="RenderProcedure.cpp" />
     <ClCompile Include="RenderContext.cpp" />
     <ClCompile Include="Robot.cpp" />
+    <ClCompile Include="RobotBody.cpp" />
     <ClCompile Include="RobotBuilder.cpp" />
     <ClCompile Include="RobotIK.cpp" />
     <ClCompile Include="SceneDescriptor.cpp" />
@@ -163,6 +165,7 @@
     <ClInclude Include="BasicMeshT.h" />
     <ClInclude Include="DeferredRenderer.h" />
     <ClInclude Include="exp-map.h" />
+    <ClInclude Include="ExponentialMap.h" />
     <ClInclude Include="FrameHelper.h" />
     <ClInclude Include="IKPicking.h" />
     <ClInclude Include="Logger.h" />
@@ -175,6 +178,7 @@
     <ClInclude Include="RenderProcedure.h" />
     <ClInclude Include="RenderContext.h" />
     <ClInclude Include="Robot.h" />
+    <ClInclude Include="RobotBody.h" />
     <ClInclude Include="RobotBuilder.h" />
     <ClInclude Include="RobotIK.h" />
     <ClInclude Include="RobotImplementation.h" />

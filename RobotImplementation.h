@@ -11,21 +11,7 @@
 
 #include "Robot.h"
 #include "RobotIK.h"
-
-struct RobotBody
-{
-	std::string name;
-	int parentIndex;
-	Core::Matrix4D linkTx = Core::Matrix4D::Identity();
-
-	Core::Matrix4D localTx = Core::Matrix4D::Identity();
-	Core::Vector4D quat = Core::Vector4D(0, 0, 0, 0);
-	double expMap[3] = { 0, 0, 0 };
-	Core::Vector4D quatVerify = Core::Vector4D(0, 0, 0, 0);
-
-	Core::Matrix4D worldTx = Core::Matrix4D::Identity();
-	std::unique_ptr<IMesh> mesh;
-};
+#include "RobotBody.h"
 
 class Robot : public MeshT<IRobot> {
 public:
@@ -34,8 +20,6 @@ public:
 	~Robot();
 
 	void BuildLinkMatrix();
-
-	void CalculateLocalRotation();
 
 	void UpdateWorldTransform();
 
@@ -55,17 +39,13 @@ public:
 
 	void SetFootPosition(bool left, const Core::Vector3D& pos_);
 
-	void CalculateLocalTransform(int index);
-
 	void CalculateGeneralCoordinate();
 
-	const double* GetLocalRotation(const std::string& name);
+	const Core::Vector3D GetLocalRotation(const std::string& name);
 
 	const Core::Vector4D GetLocalQuaternion(const std::string& name);
 
 	const Core::Vector4D GetLocalQuaternionVerify(const std::string& name);
-
-	void CalculateLocalRotation(RobotBody* found);
 
 	virtual const GeneralCoordinate& Current() const { return coord; }
 

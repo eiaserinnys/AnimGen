@@ -124,7 +124,7 @@ public:
 					Utility::FormatW(
 						L"Q(%+.4f,%+.4f,%+.4f,%+.4f) -> E(%+.4f,%+.4f,%+.4f) -> Q(%+.4f,%+.4f,%+.4f,%+.4f)",
 						quat.x, quat.y, quat.z, quat.w,
-						expMap[0], expMap[1], expMap[2],
+						expMap.x, expMap.y, expMap.z,
 						quatV.x, quatV.y, quatV.z, quatV.w),
 					color));
 		}

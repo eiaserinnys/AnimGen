@@ -93,7 +93,7 @@ Vector3D RobotIK::GetFootDirection(const Vector3D& legDir_)
 //--------------------------------------------------------------------------
 void RobotIK::SetFootPosition(bool left, const Vector3D& pos_)
 {
-	const auto& comTx = robot->bodies[0]->worldTx;
+	const auto& comTx = robot->bodies[0]->WorldTx();
 
 	int index[] =
 	{
@@ -104,9 +104,9 @@ void RobotIK::SetFootPosition(bool left, const Vector3D& pos_)
 
 	Vector3D orgPos[] =
 	{
-		FrameHelper::GetTranslation(robot->bodies[index[0]]->worldTx),
-		FrameHelper::GetTranslation(robot->bodies[index[1]]->worldTx),
-		FrameHelper::GetTranslation(robot->bodies[index[2]]->worldTx),
+		FrameHelper::GetTranslation(robot->bodies[index[0]]->WorldTx()),
+		FrameHelper::GetTranslation(robot->bodies[index[1]]->WorldTx()),
+		FrameHelper::GetTranslation(robot->bodies[index[2]]->WorldTx()),
 	};
 
 	Vector3D pos = pos_;// orgPos[2];
@@ -138,15 +138,17 @@ void RobotIK::SetFootPosition(bool left, const Vector3D& pos_)
 		Vector3D kneePos = (orgPos[0] + pos) * (robot->legLen.x / (robot->legLen.x + robot->legLen.y));
 
 		{
-			auto& worldTx = robot->bodies[index[0]]->worldTx;
+			Matrix4D worldTx = Matrix4D::Identity();
 			FrameHelper::Set(worldTx, x, y, z);
 			FrameHelper::SetTranslation(worldTx, orgPos[0]);
+			robot->bodies[index[0]]->SetWorldTx(worldTx);
 		}
 
 		{
-			auto& worldTx = robot->bodies[index[1]]->worldTx;
+			Matrix4D worldTx = Matrix4D::Identity();
 			FrameHelper::Set(worldTx, x, y, z);
 			FrameHelper::SetTranslation(worldTx, kneePos);
+			robot->bodies[index[1]]->SetWorldTx(worldTx);
 		}
 	}
 	else
@@ -167,9 +169,10 @@ void RobotIK::SetFootPosition(bool left, const Vector3D& pos_)
 			Vector3D z1 = Normalize(Cross(x1, y));
 			Vector3D y1 = Normalize(Cross(z1, x1));
 
-			auto& worldTx = robot->bodies[index[0]]->worldTx;
+			Matrix4D worldTx = Matrix4D::Identity();
 			FrameHelper::Set(worldTx, x1, y1, z1);
 			FrameHelper::SetTranslation(worldTx, orgPos[0]);
+			robot->bodies[index[0]]->SetWorldTx(worldTx);
 		}
 
 		{
@@ -177,19 +180,17 @@ void RobotIK::SetFootPosition(bool left, const Vector3D& pos_)
 			Vector3D z1 = Normalize(Cross(x1, y));
 			Vector3D y1 = Normalize(Cross(z1, x1));
 
-			auto& worldTx = robot->bodies[index[1]]->worldTx;
+			Matrix4D worldTx = Matrix4D::Identity();
 			FrameHelper::Set(worldTx, x1, y1, z1);
 			FrameHelper::SetTranslation(worldTx, kneePos);
+			robot->bodies[index[1]]->SetWorldTx(worldTx);
 		}
 	}
 
 	{
-		auto& worldTx = robot->bodies[index[2]]->worldTx;
+		Matrix4D worldTx = Matrix4D::Identity();
 		FrameHelper::Set(worldTx, y, (Vector3D)-x, z);
 		FrameHelper::SetTranslation(worldTx, pos);
+		robot->bodies[index[2]]->SetWorldTx(worldTx);
 	}
-
-	robot->CalculateLocalTransform(index[0]);
-	robot->CalculateLocalTransform(index[1]);
-	robot->CalculateLocalTransform(index[2]);
 }

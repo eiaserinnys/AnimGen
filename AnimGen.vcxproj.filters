@@ -113,6 +113,12 @@
     <ClCompile Include="RobotIK.cpp">
       <Filter>Robot</Filter>
     </ClCompile>
+    <ClCompile Include="ExponentialMap.cpp">
+      <Filter>Mathematics</Filter>
+    </ClCompile>
+    <ClCompile Include="RobotBody.cpp">
+      <Filter>Robot</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="RenderContext.h">
@@ -218,6 +224,12 @@
       <Filter>Robot</Filter>
     </ClInclude>
     <ClInclude Include="RobotIK.h">
+      <Filter>Robot</Filter>
+    </ClInclude>
+    <ClInclude Include="ExponentialMap.h">
+      <Filter>Mathematics</Filter>
+    </ClInclude>
+    <ClInclude Include="RobotBody.h">
       <Filter>Robot</Filter>
     </ClInclude>
   </ItemGroup>

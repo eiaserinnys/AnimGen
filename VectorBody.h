@@ -5,8 +5,6 @@
 
 namespace Core
 {
-
-	//------------------------------------------------------------------------------
 	template <typename V, int D>
 	class VectorT : public VectorDescriptor<V, D> {
 	public:

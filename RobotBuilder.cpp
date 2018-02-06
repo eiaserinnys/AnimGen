@@ -131,13 +131,21 @@ void RobotBuilder::CreateBody(
 
 	robot->nameToIndex.insert(make_pair(name, (int)robot->bodies.size()));
 
+	auto parent = parIndex >= 0 ? robot->bodies[parIndex] : nullptr;
+
 	auto body = new RobotBody;
 	body->name = name;
 	body->parentIndex = parIndex;
+	body->parent = parent;
 	body->mesh.reset(IBoxMesh::Create(ToXMFLOAT3(pos), ToXMFLOAT3(size), color));
-	body->worldTx = worldTx;
+	body->SetWorldTx(worldTx);
 
 	robot->bodies.push_back(body);
 	robot->Append(body->mesh.get());
 	robot->Append(robot->frame.get());
+
+	if (parent != nullptr)
+	{
+		parent->children.push_back(body);
+	}
 }

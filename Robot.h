@@ -30,7 +30,7 @@ public:
 
 	static Core::Vector3D GetFootDirection(const Core::Vector3D& legDir);
 
-	virtual const double* GetLocalRotation(const std::string& name) = 0;
+	virtual const Core::Vector3D GetLocalRotation(const std::string& name) = 0;
 	virtual const Core::Vector4D GetLocalQuaternion(const std::string& name) = 0;
 	virtual const Core::Vector4D GetLocalQuaternionVerify(const std::string& name) = 0;
 

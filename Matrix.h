@@ -23,7 +23,7 @@ namespace Core
 		}
 
 		template <ENABLE_IF(M == 4 && N == 4)>
-		MatrixT Inverse(ValueType* detOut = nullptr)
+		MatrixT Inverse(ValueType* detOut = nullptr) const
 		{
 			ValueType inv[16], det;
 
