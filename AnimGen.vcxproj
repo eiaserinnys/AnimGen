@@ -187,6 +187,7 @@
     <ClInclude Include="VectorMacro.h" />
     <ClInclude Include="VectorOperation.h" />
     <ClInclude Include="VectorOperator.h" />
+    <ClInclude Include="VectorTerneryOperator.h" />
     <ClInclude Include="VectorUnaryOperator.h" />
   </ItemGroup>
   <ItemGroup>

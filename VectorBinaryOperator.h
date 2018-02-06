@@ -16,13 +16,12 @@ namespace Core
 			typedef VectorExpressionArgument<L> LhsType;
 			typedef VectorExpressionArgument<R> RhsType;
 
-			typedef typename MoreGenericType<
-				typename LhsType::ValueType,
-				typename RhsType::ValueType>::Type ValueType;
-
-			enum { Dimension = Max<LhsType::Dimension, RhsType::Dimension>::Value };
-
-			typedef VectorT<ValueType, Dimension> VectorType;
+			enum 
+			{ 
+				Dimension = Max<
+					LhsType::Dimension, 
+					RhsType::Dimension>::Value 
+			};
 
 			template<ENABLE_IF(
 				IS_CONVERTIBLE(
@@ -45,6 +44,9 @@ namespace Core
 		template <typename L, typename R>
 		struct SelectLhs : public BinaryOperator<L, R>
 		{
+			typedef typename LhsType::ValueType ValueType;
+			typedef VectorT<ValueType, Dimension> VectorType;
+
 			__forceinline const ValueType Evaluate(const int i, const LhsType& lhs, const RhsType& rhs) const
 			{
 				return lhs.Evaluate(i);
@@ -54,6 +56,9 @@ namespace Core
 		template <typename L, typename R>
 		struct SelectRhs : public BinaryOperator<L, R>
 		{
+			typedef typename RhsType::ValueType ValueType;
+			typedef VectorT<ValueType, Dimension> VectorType;
+
 			__forceinline const ValueType Evaluate(const int i, const LhsType& lhs, const RhsType& rhs) const
 			{
 				return rhs.Evaluate(i);
@@ -63,6 +68,9 @@ namespace Core
 		template <typename L, typename R>
 		struct Add : public BinaryOperator<L, R>
 		{
+			typedef decltype(DECLVAL(LhsType) + DECLVAL(RhsType)) ValueType;
+			typedef VectorT<ValueType, Dimension> VectorType;
+
 			__forceinline const ValueType Evaluate(const int i, const LhsType& lhs, const RhsType& rhs) const
 			{
 				return lhs.Evaluate(i) + rhs.Evaluate(i);
@@ -72,6 +80,9 @@ namespace Core
 		template <typename L, typename R>
 		struct Subtract : public BinaryOperator<L, R>
 		{
+			typedef decltype(DECLVAL(LhsType) - DECLVAL(RhsType)) ValueType;
+			typedef VectorT<ValueType, Dimension> VectorType;
+
 			__forceinline const ValueType Evaluate(const int i, const LhsType& lhs, const RhsType& rhs) const
 			{
 				return lhs.Evaluate(i) - rhs.Evaluate(i);
@@ -81,6 +92,9 @@ namespace Core
 		template <typename L, typename R>
 		struct Multiply : public BinaryOperator<L, R>
 		{
+			typedef decltype(DECLVAL(LhsType) * DECLVAL(RhsType)) ValueType;
+			typedef VectorT<ValueType, Dimension> VectorType;
+
 			__forceinline const ValueType Evaluate(const int i, const LhsType& lhs, const RhsType& rhs) const
 			{
 				return lhs.Evaluate(i) * rhs.Evaluate(i);
@@ -90,6 +104,9 @@ namespace Core
 		template <typename L, typename R>
 		struct Divide : public BinaryOperator<L, R>
 		{
+			typedef decltype(DECLVAL(LhsType) / DECLVAL(RhsType)) ValueType;
+			typedef VectorT<ValueType, Dimension> VectorType;
+
 			__forceinline const ValueType Evaluate(const int i, const LhsType& lhs, const RhsType& rhs) const
 			{
 				return lhs.Evaluate(i) / rhs.Evaluate(i);
@@ -99,6 +116,9 @@ namespace Core
 		template <typename L, typename R>
 		struct Dot : public BinaryOperator<L, R>
 		{
+			typedef decltype(DECLVAL(LhsType) * DECLVAL(RhsType)) ValueType;
+			typedef VectorT<ValueType, Dimension> VectorType;
+
 			enum { Dimension = 1 };
 
 			mutable ValueType evaluated = 0;
@@ -127,6 +147,9 @@ namespace Core
 		template <typename L, typename R>
 		struct Distance : public BinaryOperator<L, R>
 		{
+			typedef decltype(std::sqrt(DECLVAL(LhsType) - DECLVAL(RhsType))) ValueType;
+			typedef VectorT<ValueType, Dimension> VectorType;
+
 			enum { Dimension = 1 };
 
 			mutable ValueType evaluated;
@@ -145,6 +168,9 @@ namespace Core
 		template <typename L, typename R>
 		struct Cross2D : public BinaryOperator<L, R>
 		{
+			typedef decltype(DECLVAL(LhsType) * DECLVAL(RhsType)) ValueType;
+			typedef VectorT<ValueType, Dimension> VectorType;
+
 			enum { Dimension = 1 };
 
 			template <ENABLE_IF(DIM(LhsType) == 2 && DIM(RhsType) == 2)>
@@ -163,6 +189,9 @@ namespace Core
 		template <typename L, typename R>
 		struct Cross3D : public BinaryOperator<L, R>
 		{
+			typedef decltype(DECLVAL(LhsType) * DECLVAL(RhsType)) ValueType;
+			typedef VectorT<ValueType, Dimension> VectorType;
+
 			mutable VectorType l, r;
 
 			template <ENABLE_IF(DIM(LhsType) == 3 && DIM(RhsType) == 3)>

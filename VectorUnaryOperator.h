@@ -13,7 +13,9 @@ namespace Core
 			typedef A ArgBaseType;
 			typedef VectorExpressionArgument<A> ArgType;
 			typedef typename ArgType::ValueType ValueType;
+
 			enum { Dimension = ArgType::Dimension };
+
 			typedef VectorT<ValueType, Dimension> VectorType;
 
 			__forceinline void PreEvaluate(const ArgType& arg) const

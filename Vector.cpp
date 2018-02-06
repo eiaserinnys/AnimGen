@@ -277,6 +277,11 @@ static void TestVector2_Function()
 	Vector2D nor3 = Normalize(Normalize(a) + b);
 	assert(nor3.x == (nor.x + b.x) / std::sqrt(Square(nor.x + b.x) + Square(nor.y + b.y)));
 	assert(nor3.y == (nor.y + b.y) / std::sqrt(Square(nor.x + b.x) + Square(nor.y + b.y)));
+
+	double lf = 0.3;
+	Vector2D lerp = Lerp(a, b, lf);
+	assert(lerp.x == a.x * lf + b.x * (1 - lf));
+	assert(lerp.y == a.y * lf + b.y * (1 - lf));
 }
 
 //------------------------------------------------------------------------------

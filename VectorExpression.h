@@ -57,7 +57,9 @@ namespace Core
 		typedef typename Op::ValueType ValueType;
 		enum { Dimension = Op::Dimension };
 
-		VectorBinaryExpression(const LhsType& lhs, const RhsType& rhs) : lhs(lhs), rhs(rhs)
+		VectorBinaryExpression(
+			const LhsType& lhs, const RhsType& rhs) 
+			: lhs(lhs), rhs(rhs)
 		{
 		}
 
@@ -86,6 +88,52 @@ namespace Core
 
 	private:
 		const LhsType lhs;
+		const RhsType rhs;
+		Op op;
+	};
+
+	//------------------------------------------------------------------------------
+	template <typename Op>
+	class VectorTerneryExpression {
+	public:
+		typedef typename Op::LhsType LhsType;
+		typedef typename Op::MhsType MhsType;
+		typedef typename Op::RhsType RhsType;
+		typedef typename Op::ValueType ValueType;
+		enum { Dimension = Op::Dimension };
+
+		VectorTerneryExpression(
+			const LhsType& lhs, const MhsType& mhs, const RhsType& rhs) 
+			: lhs(lhs), mhs(mhs), rhs(rhs)
+		{
+		}
+
+		__forceinline void PreEvaluate() const
+		{
+			op.PreEvaluate(lhs, mhs, rhs);
+		}
+
+		__forceinline ValueType Evaluate(const int index) const
+		{
+			return op.Evaluate(index, lhs, mhs, rhs);
+		}
+
+		template <ENABLE_IF(Dimension == 1)>
+		__forceinline operator ValueType() const
+		{
+			op.PreEvaluate(lhs, mhs, rhs);
+			return op.Evaluate(0, lhs, mhs, rhs);
+		}
+
+		template <ENABLE_IF(Dimension > 1)>
+		__forceinline operator VectorT<ValueType, Dimension>() const
+		{
+			return VectorT<ValueType, Dimension>(*this);
+		}
+
+	private:
+		const LhsType lhs;
+		const MhsType mhs;
 		const RhsType rhs;
 		Op op;
 	};

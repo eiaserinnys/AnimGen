@@ -1,6 +1,7 @@
 #pragma once
 
 #include "VectorMacro.h"
+#include "VectorOperator.h"
 
 namespace Core
 {
@@ -86,6 +87,14 @@ namespace Core
 	__forceinline auto Cross(const L& lhs, const R& rhs) -> VectorBinaryExpression<VectorOperator::Cross3D<L, R>>
 	{
 		return VectorBinaryExpression<VectorOperator::Cross3D<L, R>>(lhs, rhs);
+	}
+
+	//------------------------------------------------------------------------------
+	// Ternery
+	template <typename L, typename M, typename R>
+	__forceinline auto Lerp(const L& lhs, const M& mhs, const R& rhs)
+	{
+		return VectorTerneryExpression<VectorOperator::Lerp<L, M, R>>(lhs, mhs, rhs);
 	}
 
 	//------------------------------------------------------------------------------
