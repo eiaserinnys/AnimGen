@@ -107,6 +107,12 @@
     <ClCompile Include="Vector.cpp">
       <Filter>Mathematics\Vector</Filter>
     </ClCompile>
+    <ClCompile Include="RobotBuilder.cpp">
+      <Filter>Robot</Filter>
+    </ClCompile>
+    <ClCompile Include="RobotIK.cpp">
+      <Filter>Robot</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="RenderContext.h">
@@ -204,6 +210,15 @@
     </ClInclude>
     <ClInclude Include="VectorTerneryOperator.h">
       <Filter>Mathematics\Vector\Operator</Filter>
+    </ClInclude>
+    <ClInclude Include="RobotImplementation.h">
+      <Filter>Robot</Filter>
+    </ClInclude>
+    <ClInclude Include="RobotBuilder.h">
+      <Filter>Robot</Filter>
+    </ClInclude>
+    <ClInclude Include="RobotIK.h">
+      <Filter>Robot</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

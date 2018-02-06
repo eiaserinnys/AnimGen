@@ -150,6 +150,8 @@
     <ClCompile Include="RenderProcedure.cpp" />
     <ClCompile Include="RenderContext.cpp" />
     <ClCompile Include="Robot.cpp" />
+    <ClCompile Include="RobotBuilder.cpp" />
+    <ClCompile Include="RobotIK.cpp" />
     <ClCompile Include="SceneDescriptor.cpp" />
     <ClCompile Include="ThisApp.cpp" />
     <ClCompile Include="UIRenderer.cpp" />
@@ -173,6 +175,9 @@
     <ClInclude Include="RenderProcedure.h" />
     <ClInclude Include="RenderContext.h" />
     <ClInclude Include="Robot.h" />
+    <ClInclude Include="RobotBuilder.h" />
+    <ClInclude Include="RobotIK.h" />
+    <ClInclude Include="RobotImplementation.h" />
     <ClInclude Include="SceneDescriptor.h" />
     <ClInclude Include="ThisApp.h" />
     <ClInclude Include="UIRenderer.h" />
