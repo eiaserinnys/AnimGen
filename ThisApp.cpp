@@ -139,7 +139,7 @@ public:
 			TextToRender(
 				XMFLOAT2(50, y += 15),
 				Utility::FormatW(
-					L"bp(%.4f,%.4f,%.4f) br(%.4f,%.4f,%.4f)",
+					L"BP(%.4f,%.4f,%.4f) BP(%.4f,%.4f,%.4f)",
 					gc.bodyPos.x, gc.bodyPos.y, gc.bodyPos.y,
 					gc.bodyRot.x, gc.bodyRot.y, gc.bodyRot.z),
 				XMFLOAT4(1, 1, 1, 1)));
@@ -149,11 +149,13 @@ public:
 				XMFLOAT2(50, y += 15),
 				Utility::FormatW(
 					L"LLR1(%.4f,%.4f,%.4f) LLL1(%.4f) "
-					L"LLR2(%.4f,%.4f,%.4f) LLL2(%.4f) ",
-					gc.leg1Rot[0].x, gc.leg1Rot[0].y, gc.leg1Rot[0].z,
-					gc.leg1Len[0],
-					gc.leg2Rot[0].x, gc.leg2Rot[0].y, gc.leg2Rot[0].z,
-					gc.leg2Len[0]),
+					L"LLR2(%.4f,%.4f,%.4f) LLL2(%.4f) "
+					L"LFR(%.4f,%.4f,%.4f) ",
+					gc.leg[0].rot1.x, gc.leg[0].rot1.y, gc.leg[0].rot1.z,
+					gc.leg[0].len1,
+					gc.leg[0].rot2.x, gc.leg[0].rot2.y, gc.leg[0].rot2.z,
+					gc.leg[0].len2,
+					gc.leg[0].footRot.x, gc.leg[0].footRot.y, gc.leg[0].footRot.z),
 				XMFLOAT4(1, 1, 1, 1)));
 
 		global->textRenderer->Enqueue(
@@ -161,21 +163,13 @@ public:
 				XMFLOAT2(50, y += 15),
 				Utility::FormatW(
 					L"RLR1(%.4f,%.4f,%.4f) RLL1(%.4f) "
-					L"RLR2(%.4f,%.4f,%.4f) RLL2(%.4f) ",
-					gc.leg1Rot[1].x, gc.leg1Rot[1].y, gc.leg1Rot[1].z,
-					gc.leg1Len[1],
-					gc.leg2Rot[1].x, gc.leg2Rot[1].y, gc.leg2Rot[1].z,
-					gc.leg2Len[1]),
-				XMFLOAT4(1, 1, 1, 1)));
-
-		global->textRenderer->Enqueue(
-			TextToRender(
-				XMFLOAT2(50, y += 15),
-				Utility::FormatW(
-					L"LFR(%.4f,%.4f,%.4f) "
-					L"RFR(%.4f,%.4f,%.4f)",
-					gc.footRot[0].x, gc.footRot[0].y, gc.footRot[0].z,
-					gc.footRot[1].x, gc.footRot[1].y, gc.footRot[1].z),
+					L"RLR2(%.4f,%.4f,%.4f) RLL2(%.4f) "
+					L"RFR(%.4f,%.4f,%.4f) ",
+					gc.leg[1].rot1.x, gc.leg[1].rot1.y, gc.leg[1].rot1.z,
+					gc.leg[1].len1,
+					gc.leg[1].rot2.x, gc.leg[1].rot2.y, gc.leg[1].rot2.z,
+					gc.leg[1].len2,
+					gc.leg[1].footRot.x, gc.leg[1].footRot.y, gc.leg[1].footRot.z),
 				XMFLOAT4(1, 1, 1, 1)));
 
 		global->FillBuffer();

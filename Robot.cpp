@@ -100,7 +100,7 @@ void Robot::Animate_Test(DWORD elapsed)
 void Robot::Update()
 {
 	UpdateWorldTransform();
-	CalculateGeneralCoordinate();
+	gc = coord.CalculateGeneralCoordinate(this);
 	TransformMesh();
 }
 
@@ -143,47 +143,6 @@ Robot::~Robot()
 		delete *it;
 	}
 	bodies.clear();
-}
-
-//--------------------------------------------------------------------------
-// 일단 몸, 다리, 발만 계산한다
-void Robot::CalculateGeneralCoordinate()
-{
-	coord.bodyPos = GetWorldPosition("Body");
-	coord.bodyRot = GetLocalRotation("Body");
-
-	coord.leg1Rot[0] = GetLocalRotation("LLeg1");
-	coord.leg1Rot[1] = GetLocalRotation("RLeg1");
-	
-	{
-		auto p0 = GetWorldPosition("LLeg1");
-		auto p1 = GetWorldPosition("LLeg2");
-		coord.leg1Len[0] = Distance(p0, p1) - legLen.x;
-	}
-
-	{
-		auto p0 = GetWorldPosition("RLeg1");
-		auto p1 = GetWorldPosition("RLeg2");
-		coord.leg1Len[1] = Distance(p0, p1) - legLen.x;
-	}
-
-	coord.leg2Rot[0] = GetLocalRotation("LLeg2");
-	coord.leg2Rot[1] = GetLocalRotation("RLeg2");
-
-	{
-		auto p0 = GetWorldPosition("LLeg2");
-		auto p1 = GetWorldPosition("LFoot");
-		coord.leg2Len[0] = Distance(p0, p1) - legLen.y;
-	}
-
-	{
-		auto p0 = GetWorldPosition("RLeg2");
-		auto p1 = GetWorldPosition("RFoot");
-		coord.leg2Len[1] = Distance(p0, p1) - legLen.y;
-	}
-
-	coord.footRot[0] = GetLocalRotation("LFoot");
-	coord.footRot[1] = GetLocalRotation("RFoot");
 }
 
 //--------------------------------------------------------------------------

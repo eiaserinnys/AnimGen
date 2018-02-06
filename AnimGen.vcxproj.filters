@@ -119,6 +119,9 @@
     <ClCompile Include="RobotBody.cpp">
       <Filter>Robot</Filter>
     </ClCompile>
+    <ClCompile Include="RobotCoordinate.cpp">
+      <Filter>Robot</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="RenderContext.h">
@@ -230,6 +233,9 @@
       <Filter>Mathematics</Filter>
     </ClInclude>
     <ClInclude Include="RobotBody.h">
+      <Filter>Robot</Filter>
+    </ClInclude>
+    <ClInclude Include="RobotCoordinate.h">
       <Filter>Robot</Filter>
     </ClInclude>
   </ItemGroup>

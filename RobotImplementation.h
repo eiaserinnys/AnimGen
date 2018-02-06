@@ -12,6 +12,7 @@
 #include "Robot.h"
 #include "RobotIK.h"
 #include "RobotBody.h"
+#include "RobotCoordinate.h"
 
 class Robot : public MeshT<IRobot> {
 public:
@@ -37,22 +38,22 @@ public:
 
 	void SetFootPosition(bool left, const Core::Vector3D& pos_);
 
-	void CalculateGeneralCoordinate();
-
 	const Core::Vector3D GetLocalRotation(const std::string& name);
 
 	const Core::Vector4D GetLocalQuaternion(const std::string& name);
 
 	const Core::Vector4D GetLocalQuaternionVerify(const std::string& name);
 
-	virtual const GeneralCoordinate& Current() const { return coord; }
+	virtual const GeneralCoordinate& Current() const { return gc; }
 
 public:
 	std::unique_ptr<IMesh> frame;
 	std::vector<RobotBody*> bodies;
 	std::map<std::string, int> nameToIndex;
 
-	GeneralCoordinate coord;
+	RobotCoordinate coord;
+	GeneralCoordinate gc;
+
 	RobotIK ik;
 
 	Core::Vector2D legLen;

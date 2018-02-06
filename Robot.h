@@ -7,16 +7,21 @@ class IRobot : public IMesh {
 public:
 	struct GeneralCoordinate
 	{
+		struct Leg
+		{
+			Core::Vector3D rot1;
+			double len1;
+
+			Core::Vector3D rot2;
+			double len2;
+
+			Core::Vector3D footRot;
+		};
+
 		Core::Vector3D bodyPos;
 		Core::Vector3D bodyRot;
 
-		Core::Vector3D leg1Rot[2];
-		double leg1Len[2];
-
-		Core::Vector3D leg2Rot[2];
-		double leg2Len[2];
-
-		Core::Vector3D footRot[2];
+		Leg leg[2];
 	};
 
 	virtual void Animate_Test(DWORD elapsed) = 0;

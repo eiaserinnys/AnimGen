@@ -153,6 +153,7 @@
     <ClCompile Include="Robot.cpp" />
     <ClCompile Include="RobotBody.cpp" />
     <ClCompile Include="RobotBuilder.cpp" />
+    <ClCompile Include="RobotCoordinate.cpp" />
     <ClCompile Include="RobotIK.cpp" />
     <ClCompile Include="SceneDescriptor.cpp" />
     <ClCompile Include="ThisApp.cpp" />
@@ -180,6 +181,7 @@
     <ClInclude Include="Robot.h" />
     <ClInclude Include="RobotBody.h" />
     <ClInclude Include="RobotBuilder.h" />
+    <ClInclude Include="RobotCoordinate.h" />
     <ClInclude Include="RobotIK.h" />
     <ClInclude Include="RobotImplementation.h" />
     <ClInclude Include="SceneDescriptor.h" />
