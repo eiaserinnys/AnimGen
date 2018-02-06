@@ -356,7 +356,8 @@ public:
 
 		Vector3D y = comAxis[0] * footInCom.x + comAxis[1] * footInCom.y + comAxis[2] * footInCom.z;
 
-		Vector3D z = Cross(x, y);
+		Vector3D z = Normalize(Cross(x, y));
+		y = Normalize(Cross(z, x));
 
 		if (newLegLen > legLen.x + legLen.y)
 		{
@@ -492,7 +493,7 @@ public:
 
 		auto& quat = found->quat;
 
-		quat = DXMathTransform<double>::QuaternionRotationMatrix(found->localTx);
+		quat = Normalize(DXMathTransform<double>::QuaternionRotationMatrix(found->localTx));
 
 		double theta = acos(quat.w) * 2;
 
@@ -606,14 +607,11 @@ Vector3D IRobot::GetFootDirection(const Vector3D& legDir_)
 		(AngleHelperD::RadianToDegree(angleZ_R) - 90) / 90.0 :
 		0;
 
-	Vector3D footDirH;// =
-		//XMVectorLerp(
-		//	XMVectorLerp(
-		//		XMLoadFloat3(&footDir),
-		//		XMLoadFloat3(&XMFLOAT3(1, 0, 0)),
-		//		h1Factor),
-		//	XMLoadFloat3(&footDir),
-		//	h2Factor));
+	Vector3D footDirH =
+		Lerp(
+			Lerp(footDir, Vector3D(1, 0 ,0), h1Factor),
+			footDir,
+			h2Factor);
 	footDirH = Normalize(footDirH);
 
 	return footDirH;
