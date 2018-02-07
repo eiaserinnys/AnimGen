@@ -159,7 +159,7 @@ void RobotIK::SetFootPosition(bool left, const Vector3D& pos_)
 		double R = robot->legLen.x;
 		double r = robot->legLen.y;
 		double d1 = (d * d - r * r + R * R) / (2 * d);
-		double a = 1 / d * sqrtf((-d + r - R) * (-d - r + R) * (-d + r + R) *(d + r + R));
+		double a = 1 / d * sqrt((-d + r - R) * (-d - r + R) * (-d + r + R) *(d + r + R));
 
 		// »õ ¹«¸­ À§Ä¡
 		Vector3D kneePos = x * d1 + y * (a / 2) + orgPos[0];
@@ -176,7 +176,7 @@ void RobotIK::SetFootPosition(bool left, const Vector3D& pos_)
 		}
 
 		{
-			Vector3D x1 = Normalize(orgPos[2] - kneePos);
+			Vector3D x1 = Normalize(pos - kneePos);
 			Vector3D z1 = Normalize(Cross(x1, y));
 			Vector3D y1 = Normalize(Cross(z1, x1));
 
@@ -184,6 +184,8 @@ void RobotIK::SetFootPosition(bool left, const Vector3D& pos_)
 			FrameHelper::Set(worldTx, x1, y1, z1);
 			FrameHelper::SetTranslation(worldTx, kneePos);
 			robot->bodies[index[1]]->SetWorldTx(worldTx);
+
+			robot->bodies[index[1]]->LocalTx();
 		}
 	}
 

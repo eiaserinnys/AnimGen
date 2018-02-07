@@ -67,7 +67,7 @@ void RobotCoordinate::FromGeneralCoordinate(
 	Robot* robot,
 	const IRobot::GeneralCoordinate& coord)
 {
-	auto Set = [&](const string& name, const Matrix4D& m)
+	auto SetWorld = [&](const string& name, const Matrix4D& m)
 	{
 		auto body = robot->Find(name);
 
@@ -82,11 +82,52 @@ void RobotCoordinate::FromGeneralCoordinate(
 		}
 	};
 
-	auto bodyQuat = ExponentialMap::ToQuaternion(coord.bodyRot);
+	auto SetLocal = [&](const string& name, const Matrix4D& m)
+	{
+		auto body = robot->Find(name);
 
-	auto bodyM = DXMathTransform<double>::MatrixRotationQuaternion(bodyQuat);
-	FrameHelper::SetTranslation(bodyM, coord.bodyPos);
+		if (body != nullptr)
+		{
+			assert(m.AssertEqual(body->LocalTx()));
+			body->SetLocalTx(m);
+		}
+		else
+		{
+			assert(!"body not found");
+		}
+	};
 
-	Set("Body", bodyM);
+	{
+		auto bodyM = ExponentialMap::ToMatrix(coord.bodyRot);
+		FrameHelper::SetTranslation(bodyM, coord.bodyPos);
+		SetWorld("Body", bodyM);
+	}
+
+	SetLocal("LLeg1", ExponentialMap::ToMatrix(coord.leg[0].rot1));
+	SetLocal("RLeg1", ExponentialMap::ToMatrix(coord.leg[1].rot1));
+
+	{
+		auto m = ExponentialMap::ToMatrix(coord.leg[0].rot2);
+		FrameHelper::SetTranslation(m, Vector3D(coord.leg[0].len1, 0, 0));
+		SetLocal("LLeg2", m);
+	}
+
+	{
+		auto m = ExponentialMap::ToMatrix(coord.leg[0].footRot);
+		FrameHelper::SetTranslation(m, Vector3D(0, - coord.leg[0].len2, 0));
+		SetLocal("LFoot", m);
+	}
+
+	{
+		auto m = ExponentialMap::ToMatrix(coord.leg[1].rot2);
+		FrameHelper::SetTranslation(m, Vector3D(coord.leg[1].len1, 0, 0));
+		SetLocal("RLeg2", m);
+	}
+
+	{
+		auto m = ExponentialMap::ToMatrix(coord.leg[1].footRot);
+		FrameHelper::SetTranslation(m, Vector3D(0, -coord.leg[1].len2, 0));
+		SetLocal("RFoot", m);
+	}
 }
 

@@ -2,6 +2,7 @@
 #include "ExponentialMap.h"
 
 #include "exp-map.h"
+#include "DXMathTransform.h"
 
 using namespace Core;
 
@@ -37,4 +38,11 @@ Vector4D ExponentialMap::ToQuaternion(const Vector3D& expMap)
 	EM_To_Q((double*) expMap.m, quatV, 0);
 
 	return Vector4D(quatV[0], quatV[1], quatV[2], quatV[3]);
+}
+
+//------------------------------------------------------------------------------
+Matrix4D ExponentialMap::ToMatrix(const Vector3D& expMap)
+{
+	return DXMathTransform<double>::MatrixRotationQuaternion(
+		ExponentialMap::ToQuaternion(expMap));
 }

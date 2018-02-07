@@ -163,7 +163,7 @@ namespace Core
 			ValueType m[M][N];
 		};
 
-		bool AssertEqual(const MatrixT<V, M, N>& rhs, V epsilon = 0.001) const
+		bool AssertEqual(const MatrixT<V, M, N>& rhs, V epsilon = 0.01) const
 		{
 			for (int i = 0; i < M * N; ++i)
 			{

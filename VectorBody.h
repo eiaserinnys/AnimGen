@@ -20,20 +20,38 @@ namespace Core
 
 		__forceinline VectorT(const VectorT& rhs) { operator = (rhs); }
 
-		template <typename ValueType, ENABLE_IF(Dimension == 2)>
-		__forceinline VectorT(ValueType x, ValueType y)
+		template <
+			typename X, typename Y, 
+			ENABLE_IF(
+				Dimension == 2 && 
+				IS_CONVERTIBLE(X, ValueType) &&
+				IS_CONVERTIBLE(Y, ValueType))>
+		__forceinline VectorT(X x, Y y)
 		{
 			m[0] = x; m[1] = y;
 		}
 
-		template <typename ValueType, ENABLE_IF(Dimension == 3)>
-		__forceinline VectorT(ValueType x, ValueType y, ValueType z)
+		template <
+			typename X, typename Y, typename Z,
+			ENABLE_IF(
+				Dimension == 3 && 
+				IS_CONVERTIBLE(X, ValueType) &&
+				IS_CONVERTIBLE(Y, ValueType) &&
+				IS_CONVERTIBLE(Z, ValueType))>
+		__forceinline VectorT(X x, Y y, Z z)
 		{
 			m[0] = x; m[1] = y; m[2] = z;
 		}
 
-		template <typename ValueType, ENABLE_IF(Dimension == 4)>
-		__forceinline VectorT(ValueType x, ValueType y, ValueType z, ValueType w)
+		template <
+			typename X, typename Y, typename Z, typename W, 
+			ENABLE_IF(
+				Dimension == 4 && 
+				IS_CONVERTIBLE(X, ValueType) &&
+				IS_CONVERTIBLE(Y, ValueType) &&
+				IS_CONVERTIBLE(Z, ValueType) && 
+				IS_CONVERTIBLE(W, ValueType))>
+		__forceinline VectorT(X x, Y y, Z z, W w)
 		{
 			m[0] = x; m[1] = y; m[2] = z; m[3] = w;
 		}
