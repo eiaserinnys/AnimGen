@@ -6,5 +6,9 @@ class Robot;
 
 struct RobotCoordinate
 {
-	IRobot::GeneralCoordinate CalculateGeneralCoordinate(Robot* robot);
+	IRobot::GeneralCoordinate ToGeneralCoordinate(Robot* robot);
+
+	void FromGeneralCoordinate(
+		Robot* robot,
+		const IRobot::GeneralCoordinate& coord);
 };

@@ -1,59 +1,58 @@
 #include "pch.h"
 #include "RobotBody.h"
 
+#include "FrameHelper.h"
+#include "DXMathTransform.h"
 #include "ExponentialMap.h"
 
 using namespace std;
 using namespace DirectX;
 using namespace Core;
 
+//------------------------------------------------------------------------------
 void RobotBody::CalculateLocalTransform()
 {
-	if (parent != nullptr)
-	{
-		localTx = worldTx * parent->InvWorldTx() * invLinkTx;
-	}
-	else
-	{
-		localTx = worldTx * invLinkTx;
-	}
+	localTx = parent != nullptr ?
+		worldTx * parent->InvWorldTx() * invLinkTx :
+		worldTx * invLinkTx;
 
 	CalculateLocalRotation();
 }
 
+//------------------------------------------------------------------------------
 void RobotBody::CalculateWorldTransform()
 {
-	if (parent != nullptr)
-	{
-		worldTx = localTx * linkTx * parent->WorldTx();
-	}
-	else
-	{
-		worldTx = localTx * linkTx;
-	}
+	worldTx = parent != nullptr ?
+		localTx * linkTx * parent->WorldTx() :
+		localTx * linkTx;
 
 	invWorldTx = worldTx.Inverse();
 }
 
+//------------------------------------------------------------------------------
 void RobotBody::CalculateLocalRotation()
 {
 	quat = Normalize(DXMathTransform<double>::QuaternionRotationMatrix(localTx));
+
+	auto revQuat = DXMathTransform<double>::MatrixRotationQuaternion(quat);
+	FrameHelper::SetTranslation(revQuat, FrameHelper::GetTranslation(localTx));
+	if (!revQuat.AssertEqual(localTx))
+	{
+		// 다시 한 번 더 간다
+		revQuat = DXMathTransform<double>::MatrixRotationQuaternion(quat);
+	}
 
 	expMap = ExponentialMap::FromQuaternion(quat);
 
 	quatVerify = ExponentialMap::ToQuaternion(expMap);
 }
 
+//------------------------------------------------------------------------------
 void RobotBody::CalculateLinkTransform()
 {
-	if (parent != nullptr)
-	{
-		linkTx = worldTx * parent->InvWorldTx();
-	}
-	else
-	{
-		linkTx = worldTx;
-	}
+	linkTx = parent != nullptr ? 
+		worldTx * parent->InvWorldTx() :
+		worldTx;
 
 	invLinkTx = linkTx.Inverse();
 }

@@ -2,6 +2,7 @@
 
 #include "Mesh.h"
 #include "Vector.h"
+#include "Matrix.h"
 
 class IRobot : public IMesh {
 public:
@@ -29,8 +30,11 @@ public:
 
 	virtual const GeneralCoordinate& Current() const = 0;
 
+	virtual Core::Matrix4D GetLinkTransform(const std::string& name) = 0;
+
 	virtual Core::Vector3D GetWorldPosition(const std::string& name) = 0;
-	
+	virtual Core::Matrix4D GetWorldTransform(const std::string& name) = 0;
+
 	virtual void SetFootPosition(bool left, const Core::Vector3D& pos) = 0;
 
 	static Core::Vector3D GetFootDirection(const Core::Vector3D& legDir);

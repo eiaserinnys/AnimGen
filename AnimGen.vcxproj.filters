@@ -54,6 +54,12 @@
     <Filter Include="Mathematics\Vector\Base">
       <UniqueIdentifier>{74990e45-acb8-409b-a9b3-0a27132cddab}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Robot\Build">
+      <UniqueIdentifier>{632d86c0-5678-46e7-a6ad-6c18f35ecfcd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Robot\Component">
+      <UniqueIdentifier>{62f22a43-b6b0-4746-bf73-9525af2718f2}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="RenderContext.cpp">
@@ -107,20 +113,20 @@
     <ClCompile Include="Vector.cpp">
       <Filter>Mathematics\Vector</Filter>
     </ClCompile>
-    <ClCompile Include="RobotBuilder.cpp">
-      <Filter>Robot</Filter>
-    </ClCompile>
-    <ClCompile Include="RobotIK.cpp">
-      <Filter>Robot</Filter>
-    </ClCompile>
     <ClCompile Include="ExponentialMap.cpp">
       <Filter>Mathematics</Filter>
     </ClCompile>
-    <ClCompile Include="RobotBody.cpp">
-      <Filter>Robot</Filter>
+    <ClCompile Include="RobotBuilder.cpp">
+      <Filter>Robot\Build</Filter>
     </ClCompile>
     <ClCompile Include="RobotCoordinate.cpp">
-      <Filter>Robot</Filter>
+      <Filter>Robot\Component</Filter>
+    </ClCompile>
+    <ClCompile Include="RobotBody.cpp">
+      <Filter>Robot\Component</Filter>
+    </ClCompile>
+    <ClCompile Include="RobotIK.cpp">
+      <Filter>Robot\Component</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -223,20 +229,23 @@
     <ClInclude Include="RobotImplementation.h">
       <Filter>Robot</Filter>
     </ClInclude>
-    <ClInclude Include="RobotBuilder.h">
-      <Filter>Robot</Filter>
-    </ClInclude>
-    <ClInclude Include="RobotIK.h">
-      <Filter>Robot</Filter>
-    </ClInclude>
     <ClInclude Include="ExponentialMap.h">
       <Filter>Mathematics</Filter>
     </ClInclude>
-    <ClInclude Include="RobotBody.h">
-      <Filter>Robot</Filter>
+    <ClInclude Include="RobotBuilder.h">
+      <Filter>Robot\Build</Filter>
     </ClInclude>
     <ClInclude Include="RobotCoordinate.h">
-      <Filter>Robot</Filter>
+      <Filter>Robot\Component</Filter>
+    </ClInclude>
+    <ClInclude Include="RobotBody.h">
+      <Filter>Robot\Component</Filter>
+    </ClInclude>
+    <ClInclude Include="RobotIK.h">
+      <Filter>Robot\Component</Filter>
+    </ClInclude>
+    <ClInclude Include="DXMathTransform.h">
+      <Filter>Mathematics\Matrix</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

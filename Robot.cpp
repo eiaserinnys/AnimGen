@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "Robot.h"
 
+#include "DXMathTransform.h"
 #include "FrameHelper.h"
 #include "AngleHelper.h"
 
@@ -21,6 +22,16 @@ Robot::Robot()
 	: ik(this)
 {
 	RobotBuilder build(this);
+}
+
+//--------------------------------------------------------------------------
+void Robot::Update()
+{
+	UpdateWorldTransform();
+	gc = coord.ToGeneralCoordinate(this);
+	// 즉시 검증한다
+	coord.FromGeneralCoordinate(this, gc);
+	TransformMesh();
 }
 
 //--------------------------------------------------------------------------
@@ -83,7 +94,9 @@ void Robot::Animate_Test(DWORD elapsed)
 	double armSwing = (1 - cos(angle)) / 2 * M_PI;
 	double armSwing2 = (1 - cos(angle)) / 2 * M_PI / 2;
 
-	bodies[GetBoneIndex("Body")]->SetLocalTx(DXMathTransform<double>::RotationZ(angle));
+	bodies[GetBoneIndex("Body")]->SetLocalTx(
+		DXMathTransform<double>::RotationY(angle / 2) * 
+		DXMathTransform<double>::RotationZ(angle));
 	bodies[GetBoneIndex("Head")]->SetLocalTx(DXMathTransform<double>::RotationY(headSwing));
 	bodies[GetBoneIndex("RArm1")]->SetLocalTx(DXMathTransform<double>::RotationY(-armSwing2) * DXMathTransform<double>::RotationZ(armSwing));
 	bodies[GetBoneIndex("RArm2")]->SetLocalTx(DXMathTransform<double>::RotationZ(leg2Swing));
@@ -94,14 +107,6 @@ void Robot::Animate_Test(DWORD elapsed)
 	bodies[GetBoneIndex("RLeg2")]->SetLocalTx(DXMathTransform<double>::RotationZ(-leg2Swing));
 	bodies[GetBoneIndex("LLeg1")]->SetLocalTx(DXMathTransform<double>::RotationZ(-leg1Swing));
 	bodies[GetBoneIndex("LLeg2")]->SetLocalTx(DXMathTransform<double>::RotationZ(-leg2Swing));
-}
-
-//--------------------------------------------------------------------------
-void Robot::Update()
-{
-	UpdateWorldTransform();
-	gc = coord.CalculateGeneralCoordinate(this);
-	TransformMesh();
 }
 
 //--------------------------------------------------------------------------
@@ -122,11 +127,24 @@ const RobotBody* Robot::Find(const string& name) const
 Vector3D Robot::GetWorldPosition(const string& name)
 {
 	auto index = GetBoneIndex(name);
-	if (index >= 0)
-	{
-		return FrameHelper::GetTranslation(bodies[index]->WorldTx());
-	}
+	if (index >= 0) { return FrameHelper::GetTranslation(bodies[index]->WorldTx()); }
 	return Vector3D(0, 0, 0);
+}
+
+//--------------------------------------------------------------------------
+Matrix4D Robot::GetLinkTransform(const string& name)
+{
+	auto index = GetBoneIndex(name);
+	if (index >= 0) { return bodies[index]->LinkTx(); }
+	return Matrix4D::Identity();
+}
+
+//--------------------------------------------------------------------------
+Matrix4D Robot::GetWorldTransform(const string& name)
+{
+	auto index = GetBoneIndex(name);
+	if (index >= 0) { return bodies[index]->WorldTx(); }
+	return Matrix4D::Identity();
 }
 
 //--------------------------------------------------------------------------

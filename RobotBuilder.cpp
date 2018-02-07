@@ -1,7 +1,9 @@
 #include "pch.h"
 #include "RobotBuilder.h"
 
+#include "DXMathTransform.h"
 #include "VectorDXMathAdaptor.h"
+#include "FrameHelper.h"
 
 #include "RobotImplementation.h"
 
@@ -46,19 +48,19 @@ static BodyDesc desc[] =
 	{ "RLeg1", "Body", Vector3D(0.21 - g_margin, 0.0, 0.0), Vector3D(0.4, 0.17, 0.17), g_legRot * DXMathTransform<double>::Translation(0.0, 0.91f - g_margin, 0.115f) },
 
 	// ¿À¸¥ Á¾¾Æ¸®
-	{ "RLeg2", "RLeg1", Vector3D(0.21f - g_margin, 0.0, 0.0), Vector3D(0.4f, 0.16f, 0.16f), g_legRot * DXMathTransform<double>::Translation(0.0, 0.5f - g_margin, 0.1f) },
+	{ "RLeg2", "RLeg1", Vector3D(0.21f - g_margin, 0.0, 0.0), Vector3D(0.4f, 0.16f, 0.16f), g_legRot * DXMathTransform<double>::Translation(0.0, 0.5f - g_margin, 0.115f) },
 
 	// ¿À¸¥ ¹ß
-	{ "RFoot", "RLeg2", Vector3D(0.05, 0.0, 0.0), Vector3D(0.25, 0.09, 0.16), DXMathTransform<double>::Translation(0.00f, 0.045f, 0.1f) },
+	{ "RFoot", "RLeg2", Vector3D(0.05, 0.0, 0.0), Vector3D(0.25, 0.09, 0.16), DXMathTransform<double>::Translation(0.00f, 0.045f, 0.115f) },
 
 	// ¿Þ Çã¹÷Áö
 	{ "LLeg1", "Body", Vector3D(0.21f - g_margin, 0.0, 0.0), Vector3D(0.4f, 0.17f, 0.17f), g_legRot * DXMathTransform<double>::Translation(0.0, 0.91f - g_margin, -0.115f) },
 
 	// ¿Þ Á¾¾Æ¸®
-	{ "LLeg2", "LLeg1", Vector3D(0.21f - g_margin, 0.0, 0.0), Vector3D(0.4f, 0.16f, 0.16f), g_legRot * DXMathTransform<double>::Translation(0.0, 0.5f - g_margin, -0.1f) },
+	{ "LLeg2", "LLeg1", Vector3D(0.21f - g_margin, 0.0, 0.0), Vector3D(0.4f, 0.16f, 0.16f), g_legRot * DXMathTransform<double>::Translation(0.0, 0.5f - g_margin, -0.115f) },
 
 	// ¿Þ¹ß
-	{ "LFoot", "LLeg2", Vector3D(0.05, 0.0, 0.0), Vector3D(0.25, 0.09, 0.16), DXMathTransform<double>::Translation(0.00f, 0.045f, -0.1f) },
+	{ "LFoot", "LLeg2", Vector3D(0.05, 0.0, 0.0), Vector3D(0.25, 0.09, 0.16), DXMathTransform<double>::Translation(0.00f, 0.045f, -0.115f) },
 };
 
 //------------------------------------------------------------------------------
@@ -87,19 +89,18 @@ RobotBuilder::RobotBuilder(Robot* robot)
 			desc[i].worldTx);
 	}
 
-	{
-		auto l1 = robot->GetWorldPosition("LLeg1");
-		auto l2 = robot->GetWorldPosition("LLeg2");
-		auto l3 = robot->GetWorldPosition("LFoot");
-
-		robot->legLen.x = Distance(l1, l2);
-		robot->legLen.y = Distance(l2, l3);
-	}
-
 	for (size_t i = 0; i < robot->bodies.size(); ++i)
 	{
 		auto body = robot->bodies[i];
 		body->CalculateLinkTransform();
+	}
+
+	{
+		robot->ofs1 = FrameHelper::GetTranslation(robot->GetLinkTransform("LLeg2"));
+		robot->ofs2 = FrameHelper::GetTranslation(robot->GetLinkTransform("LFoot"));
+
+		robot->legLen.x = robot->ofs1.x;
+		robot->legLen.y = robot->ofs2.x;
 	}
 
 	robot->TransformMesh();

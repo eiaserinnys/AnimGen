@@ -165,6 +165,7 @@
     <ClInclude Include="AngleHelper.h" />
     <ClInclude Include="BasicMeshT.h" />
     <ClInclude Include="DeferredRenderer.h" />
+    <ClInclude Include="DXMathTransform.h" />
     <ClInclude Include="exp-map.h" />
     <ClInclude Include="ExponentialMap.h" />
     <ClInclude Include="FrameHelper.h" />

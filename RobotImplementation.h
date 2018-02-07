@@ -34,7 +34,10 @@ public:
 
 	const RobotBody* Find(const std::string& name) const;
 
+	Core::Matrix4D GetLinkTransform(const std::string& name);
+
 	Core::Vector3D GetWorldPosition(const std::string& name);
+	Core::Matrix4D GetWorldTransform(const std::string& name);
 
 	void SetFootPosition(bool left, const Core::Vector3D& pos_);
 
@@ -56,6 +59,7 @@ public:
 
 	RobotIK ik;
 
+	Core::Vector3D ofs1, ofs2;
 	Core::Vector2D legLen;
 
 	DWORD total = 0;
