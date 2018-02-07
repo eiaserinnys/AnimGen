@@ -1,10 +1,11 @@
 #include "pch.h"
 #include "RobotIK.h"
 
-#include "RobotImplementation.h"
-
+#include "ExponentialMap.h"
 #include "FrameHelper.h"
 #include "AngleHelper.h"
+
+#include "RobotImplementation.h"
 
 using namespace std;
 using namespace Core;
@@ -195,4 +196,21 @@ void RobotIK::SetFootPosition(bool left, const Vector3D& pos_)
 		FrameHelper::SetTranslation(worldTx, pos);
 		robot->bodies[index[2]]->SetWorldTx(worldTx);
 	}
+}
+
+//--------------------------------------------------------------------------
+void RobotIK::SetFootTransform(
+	bool left,
+	const Vector3D& pos_,
+	const Vector3D& rot_)
+{
+	SetFootPosition(left, pos_);
+
+	auto m = ExponentialMap::ToMatrix(rot_);
+
+	FrameHelper::SetTranslation(m, pos_);
+
+	int index = robot->GetBoneIndex(left ? "LFoot" : "RFoot");
+
+	robot->bodies[index]->SetWorldTx(m);
 }

@@ -28,9 +28,13 @@ Robot::Robot()
 void Robot::Update()
 {
 	UpdateWorldTransform();
+
 	gc = coord.ToGeneralCoordinate(this);
-	// 즉시 검증한다
-	coord.FromGeneralCoordinate(this, gc);
+	coord.SetTransform(this, gc, true);
+
+	auto sc = coord.ToSolutionCoordinate(this);
+	coord.SetTransform(this, sc, true);
+
 	TransformMesh();
 }
 
@@ -151,6 +155,12 @@ Matrix4D Robot::GetWorldTransform(const string& name)
 void Robot::SetFootPosition(bool left, const Vector3D& pos_)
 {
 	ik.SetFootPosition(left, pos_);
+}
+
+//--------------------------------------------------------------------------
+void Robot::SetFootTransform(bool left, const Vector3D& pos_, const Vector3D& rot_)
+{
+	ik.SetFootTransform(left, pos_, rot_);
 }
 
 //--------------------------------------------------------------------------

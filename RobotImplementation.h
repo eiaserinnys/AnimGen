@@ -40,6 +40,7 @@ public:
 	Core::Matrix4D GetWorldTransform(const std::string& name);
 
 	void SetFootPosition(bool left, const Core::Vector3D& pos_);
+	void SetFootTransform(bool left, const Core::Vector3D& pos, const Core::Vector3D& rot);
 
 	const Core::Vector3D GetLocalRotation(const std::string& name);
 

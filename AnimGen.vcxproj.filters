@@ -226,9 +226,6 @@
     <ClInclude Include="VectorTerneryOperator.h">
       <Filter>Mathematics\Vector\Operator</Filter>
     </ClInclude>
-    <ClInclude Include="RobotImplementation.h">
-      <Filter>Robot</Filter>
-    </ClInclude>
     <ClInclude Include="ExponentialMap.h">
       <Filter>Mathematics</Filter>
     </ClInclude>
@@ -246,6 +243,9 @@
     </ClInclude>
     <ClInclude Include="DXMathTransform.h">
       <Filter>Mathematics\Matrix</Filter>
+    </ClInclude>
+    <ClInclude Include="RobotImplementation.h">
+      <Filter>Robot\Build</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
