@@ -111,6 +111,10 @@ void Robot::Animate_Test(DWORD elapsed)
 	bodies[GetBoneIndex("RLeg2")]->SetLocalTx(DXMathTransform<double>::RotationZ(-leg2Swing));
 	bodies[GetBoneIndex("LLeg1")]->SetLocalTx(DXMathTransform<double>::RotationZ(-leg1Swing));
 	bodies[GetBoneIndex("LLeg2")]->SetLocalTx(DXMathTransform<double>::RotationZ(-leg2Swing));
+
+	// 발 위치를 다시 IK한다 (IK 로직과 다른 좌표로 가기 때문에 검증이 안 됨)
+	SetFootPosition(true, FrameHelper::GetTranslation(Find("LFoot")->WorldTx()));
+	SetFootPosition(false, FrameHelper::GetTranslation(Find("RFoot")->WorldTx()));
 }
 
 //--------------------------------------------------------------------------
