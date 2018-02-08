@@ -165,14 +165,14 @@ namespace Core
 
 		static inline VectorT<V, 4> QuaternionInverse(const VectorT<V, 4>& quat)
 		{
-			return Normalize(Conjugate(quat));
+			return Normalize(QuaternionConjugate(quat));
 		}
 
 		static inline VectorT<V, 4> QuaternionMultiply(
 			const VectorT<V, 4>& Q1, 
 			const VectorT<V, 4>& Q2)
 		{
-			return Vector<V, 4>
+			return VectorT<V, 4>
 			{
 				(Q2.w * Q1.x) + (Q2.x * Q1.w) + (Q2.y * Q1.z) - (Q2.z * Q1.y),
 				(Q2.w * Q1.y) - (Q2.x * Q1.z) + (Q2.y * Q1.w) + (Q2.z * Q1.x),

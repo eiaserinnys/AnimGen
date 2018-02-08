@@ -1,6 +1,8 @@
 #include "pch.h"
 #include "DiagnosticRenderer.h"
 
+#include <timeapi.h>
+
 #include <DX11Buffer.h>
 #include <DX11Shader.h>
 #include <DX11InputLayout.h>
@@ -12,8 +14,11 @@
 #include <WindowsUtility.h>
 
 #include "RenderContext.h"
+#include "FrameHelper.h"
 
 #include "Vector.h"
+#include "ExponentialMap.h"
+#include "DXMathTransform.h"
 #include "SceneDescriptor.h"
 
 #include "HermiteSpline.h"
@@ -75,6 +80,28 @@ struct LineBuffer : public MeshT<IMesh>
 	}
 
 	//--------------------------------------------------------------------------
+	void EnqueueFrame(const XMMATRIX& m, float length)
+	{
+		auto x = FrameHelper::GetX(m);
+		auto y = FrameHelper::GetY(m);
+		auto z = FrameHelper::GetZ(m);
+		auto v = FrameHelper::GetTranslation(m);
+
+		size_t pivot = pos.size();
+		pos.push_back(v); pos.push_back(v + x * length);
+		pos.push_back(v); pos.push_back(v + y * length);
+		pos.push_back(v); pos.push_back(v + z * length);
+
+		col.push_back(0xff0000ff); col.push_back(0xff0000ff);
+		col.push_back(0xff00ff00); col.push_back(0xff00ff00);
+		col.push_back(0xffff0000); col.push_back(0xffff0000);
+
+		ind.push_back(pivot++); ind.push_back(pivot++);
+		ind.push_back(pivot++); ind.push_back(pivot++);
+		ind.push_back(pivot++); ind.push_back(pivot++);
+	}
+
+	//--------------------------------------------------------------------------
 	void Enqueue(vector<XMFLOAT3>& p, DWORD c)
 	{
 		size_t pivot = pos.size();
@@ -114,6 +141,115 @@ struct LineBuffer : public MeshT<IMesh>
 };
 
 //------------------------------------------------------------------------------
+struct SplineTest
+{
+	unique_ptr<IHermiteSpline> spline;
+	vector<Vector3D> pos;
+	vector<Vector3D> rot;
+	vector<XMMATRIX> tx;
+
+	vector<XMFLOAT3> sampled;
+
+	DWORD lastTime = 0;
+	DWORD elapsed = 0;
+
+	int points = 5;
+
+	SplineTest()
+	{
+		for (int i = 0; i <= points; ++i)
+		{
+			auto r = [](float range)->float
+			{
+				return ((float)rand() / RAND_MAX) * range * 2 - range;
+			};
+
+			float range = 2.0;
+
+			Vector3D v(r(range), r(1) + 1.5, r(range));
+			Vector4D q = Normalize(Vector4D(r(1), r(1), r(1), r(1)));
+			Vector3D e = ExponentialMap::FromQuaternion(q);
+
+			Matrix4D m = DXMathTransform<double>::MatrixRotationQuaternion(q);
+			FrameHelper::SetTranslation(m, v);
+
+			pos.push_back(v);
+			rot.push_back(e);
+
+			XMMATRIX xm;
+			for (int i = 0; i < 4; ++i)
+			{
+				for (int j = 0; j < 4; ++j)
+				{
+					xm.r[i].m128_f32[j] = m.m[i][j];
+				}
+			}
+
+			tx.push_back(xm);
+		}
+
+		spline.reset(IHermiteSpline::Create(pos, rot));
+
+		Sample(20);
+	}
+
+	void Sample(int g)
+	{
+		for (int i = 0; i <= pos.size() * g; ++i)
+		{
+			auto p = spline->At((double)i / g).first;
+			sampled.push_back(XMFLOAT3(p.x, p.y, p.z));
+		}
+	}
+
+	void Enqueue(LineBuffer* lineBuffer)
+	{
+		auto curTime = timeGetTime();
+		if (lastTime != 0)
+		{
+			elapsed += curTime - lastTime;
+			lastTime = curTime;
+		}
+		else
+		{
+			elapsed = 0;
+			lastTime = curTime;
+		}
+
+		elapsed = elapsed % 30000;
+
+		double factor = (elapsed / 30000.0) * points;
+
+
+		for (auto it = tx.begin(); it != tx.end(); ++it)
+		{
+			lineBuffer->EnqueueFrame(*it, 0.25f);
+		}
+
+		{
+			auto ret = spline->At(factor);
+
+			auto m = DXMathTransform<double>::MatrixRotationQuaternion(
+				ExponentialMap::ToQuaternion(ret.second));
+			FrameHelper::SetTranslation(m, ret.first);
+
+			XMMATRIX xm;
+			for (int i = 0; i < 4; ++i)
+			{
+				for (int j = 0; j < 4; ++j)
+				{
+					xm.r[i].m128_f32[j] = m.m[i][j];
+				}
+			}
+
+			lineBuffer->EnqueueFrame(xm, 0.5f);
+		}
+
+		lineBuffer->Enqueue(sampled, 0xff00ffff);
+	}
+};
+
+//------------------------------------------------------------------------------
 class DiagnosticRenderer : public IDiagnosticRenderer {
 public:
 	//--------------------------------------------------------------------------
@@ -132,46 +268,19 @@ public:
 
 		lineBuffer.reset(new LineBuffer(d3dDev));
 
-		{
-			lineBuffer->Begin();
-
-			vector<Vector3D> pd;
-			for (int i = 0; i <= 20; ++i)
-			{
-				auto r = [](float range)->float
-				{
-					return ((float)rand() / RAND_MAX) * range * 2 - range;
-				};
-
-				float range = 2.0;
-
-				Vector3D v(r(range), r(1.5) + 1.5, r(range));
-
-				pd.push_back(v);
-
-				lineBuffer->EnqueueAnchor(XMFLOAT3(v.x, v.y, v.z), 0.05f, 0xff0000ff);
-			}
-
-			unique_ptr<IHermiteSpline> spline(IHermiteSpline::Create(pd));
-
-			vector<XMFLOAT3> c;
-			int g = 20;
-			for (int i = 0; i <= 20 * g; ++i)
-			{
-				auto v = spline->At((double) i / g);
-				c.push_back(XMFLOAT3(v.x, v.y, v.z));
-			}
-
-			lineBuffer->Enqueue(c, 0xff00ffff);
-
-			lineBuffer->End(devCtx);
-		}
+		test.reset(new SplineTest);
 	}
 
 	//--------------------------------------------------------------------------
 	void Render(const SceneDescriptor& sceneDesc)
 	{
 		ID3D11DeviceContext* devCtx = context->d3d11->immDevCtx;
+
+		{
+			lineBuffer->Begin();
+			test->Enqueue(lineBuffer.get());
+			lineBuffer->End(devCtx);
+		}
 
 		context->d3d11->immDevCtx->ClearState();
 		context->rts->Restore("deferred");
@@ -207,6 +316,7 @@ public:
 	unique_ptr<IDX11DepthStencilState> depthStateWire;
 
 	unique_ptr<LineBuffer> lineBuffer;
+	unique_ptr<SplineTest> test;
 };
 
 IDiagnosticRenderer::~IDiagnosticRenderer()

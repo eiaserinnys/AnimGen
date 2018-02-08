@@ -6,7 +6,7 @@
 struct ExponentialMap 
 {
 	static Core::Vector3D FromQuaternion(const Core::Vector4D& quat);
-	static Core::Vector4D ToQuaternion(const Core::Vector3D& expMap);
+	static Core::Vector4D ToQuaternion(const Core::Vector3D& expMap, bool reg = false);
 
 	static Core::Vector3D FromMatrix(const Core::Matrix4D& mat);
 	static Core::Matrix4D ToMatrix(const Core::Vector3D& expMap);

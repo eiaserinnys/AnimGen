@@ -34,11 +34,11 @@ Vector3D ExponentialMap::FromQuaternion(const Vector4D& quat_)
 }
 
 //------------------------------------------------------------------------------
-Vector4D ExponentialMap::ToQuaternion(const Vector3D& expMap)
+Vector4D ExponentialMap::ToQuaternion(const Vector3D& expMap, bool reg)
 {
 	double quatV[4] = { 0, 0, 0, 0 };
 
-	EM_To_Q((double*) expMap.m, quatV, 0);
+	EM_To_Q((double*) expMap.m, quatV, reg ? 1 : 0);
 
 	return Vector4D(quatV[0], quatV[1], quatV[2], quatV[3]);
 }
