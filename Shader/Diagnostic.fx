@@ -9,7 +9,6 @@ cbuffer cbNeverChanges : register(b0)
 struct VS_INPUT
 {
 	float4 Pos : POSITION;
-	float4 Nor : NORMAL;
 	float4 Col : COLOR;
 };
 
@@ -17,7 +16,6 @@ struct PS_INPUT
 {
 	float4 Pos		: SV_POSITION;
 	float4 Pos2		: TEXCOORD0;
-	float4 Nor		: TEXCOORD1;
 	float4 Col		: COLOR;
 };
 
@@ -35,7 +33,6 @@ PS_INPUT VS(VS_INPUT input)
 	PS_INPUT output = (PS_INPUT)0;
 	output.Pos = mul(float4(input.Pos.xyz, 1), WorldViewProjection);
 	output.Pos2 = output.Pos;
-	output.Nor = input.Nor;
 	output.Col = input.Col;
 	return output;
 }
@@ -44,8 +41,7 @@ PS_INPUT VS(VS_INPUT input)
 PS_OUTPUT PS(PS_INPUT input) : SV_Target
 {
 	PS_OUTPUT output = (PS_OUTPUT)0;
-	output.Col = input.Col;
-	output.Nor = float4((input.Nor.xyz + 1) / 2, 1);
+	output.Ems = input.Col;
 	output.Depth = float4(input.Pos2.w, 0, 0, 1);
 	return output;
 }

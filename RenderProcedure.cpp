@@ -39,6 +39,8 @@ void RenderProcedure::Render(const SceneDescriptor& sceneDesc)
 
 	context->objRenderer->Render(sceneDesc, context->objBuffer.get());
 
+	context->diagRenderer->Render(sceneDesc);
+
 	{
 		context->d3d11->immDevCtx->ClearState();
 		context->rts->Restore();
@@ -72,7 +74,7 @@ void RenderProcedure::Render(const SceneDescriptor& sceneDesc)
 		context->textRenderer->Draw(
 			sceneDesc.worldViewProj,
 			XMFLOAT2(
-			(float)context->rts->GetCurrent()->GetWidth(),
+				(float)context->rts->GetCurrent()->GetWidth(),
 				(float)context->rts->GetCurrent()->GetHeight()));
 	}
 

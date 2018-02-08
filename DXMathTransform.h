@@ -138,5 +138,28 @@ namespace Core
 
 			return m;
 		}
+
+		static inline VectorT<V, 4> QuaternionConjugate(const VectorT<V, 4>& quat)
+		{
+			return VectorT<V, 4>(-quat.x, -quat.y, -quat.z, quat.w);
+		}
+
+		static inline VectorT<V, 4> QuaternionInverse(const VectorT<V, 4>& quat)
+		{
+			return Normalize(Conjugate(quat));
+		}
+
+		static inline VectorT<V, 4> QuaternionMultiply(
+			const VectorT<V, 4>& Q1, 
+			const VectorT<V, 4>& Q2)
+		{
+			return Vector<V, 4>
+			{
+				(Q2.w * Q1.x) + (Q2.x * Q1.w) + (Q2.y * Q1.z) - (Q2.z * Q1.y),
+				(Q2.w * Q1.y) - (Q2.x * Q1.z) + (Q2.y * Q1.w) + (Q2.z * Q1.x),
+				(Q2.w * Q1.z) + (Q2.x * Q1.y) - (Q2.y * Q1.x) + (Q2.z * Q1.w),
+				(Q2.w * Q1.w) - (Q2.x * Q1.x) - (Q2.y * Q1.y) - (Q2.z * Q1.z)
+			};
+		}
 	};
 }

@@ -15,8 +15,8 @@ SamplerState	smAlbedo : register(s0);
 Texture2D		txNormal : register(t1);
 SamplerState	smNormal : register(s1);
 
-Texture2D		txView : register(t2);
-SamplerState	smView : register(s2);
+Texture2D		txEms	: register(t2);
+SamplerState	smEms	: register(s2);
 
 Texture2D		txDepth : register(t3);
 SamplerState	smDepth : register(s3);
@@ -140,6 +140,7 @@ float GetOutline(float3 vE, float3 vN, float2 tex, float depth)
 float4 PS(VS_OUTPUT input) : SV_Target
 {
 	float4 albedo = txAlbedo.Sample(smAlbedo, input.Tex);
+	float4 emissive = txEms.Sample(smEms, input.Tex);
 	float depth = txDepth.Sample(smDepth, input.Tex).x;
 	float3 vN = SampleNormal(input.Tex);
 
@@ -183,6 +184,8 @@ float4 PS(VS_OUTPUT input) : SV_Target
 		(1 - o) * (albedo.xyz * lit + s * shadow) + 
 		o * float3(1, 0.75, 0.25) * 0.05,
 		(albedo.w > 0) + o);
+
+	final = final + emissive;
 
 	//final = float4(float3(o, o, o), 1);
 	//final = float4(float3(l, l, l) + float3(o, o, o), albedo.w);

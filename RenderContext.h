@@ -14,6 +14,7 @@
 #include "UIRenderer.h"
 #include "ObjectRenderer.h"
 #include "DeferredRenderer.h"
+#include "DiagnosticRenderer.h"
 
 #include "Robot.h"
 
@@ -41,6 +42,7 @@ struct RenderContext
 	std::unique_ptr<IDeferredRenderer> deferredRenderer;
 	std::unique_ptr<ITextRenderer> textRenderer;
 	std::unique_ptr<IUIRenderer> uiRenderer;
+	std::unique_ptr<IDiagnosticRenderer> diagRenderer;
 
 	std::unique_ptr<ObjectBuffer> objBuffer;
 	std::unique_ptr<IMesh> floor;

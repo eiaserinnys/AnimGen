@@ -60,6 +60,9 @@
     <Filter Include="Robot\Component">
       <UniqueIdentifier>{62f22a43-b6b0-4746-bf73-9525af2718f2}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Visual\Rendering\Diagnostic">
+      <UniqueIdentifier>{5cc8eb1a-65c1-4a53-a8ec-7397f7b9b517}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="RenderContext.cpp">
@@ -127,6 +130,9 @@
     </ClCompile>
     <ClCompile Include="RobotIK.cpp">
       <Filter>Robot\Component</Filter>
+    </ClCompile>
+    <ClCompile Include="DiagnosticRenderer.cpp">
+      <Filter>Visual\Rendering\Diagnostic</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -247,6 +253,9 @@
     <ClInclude Include="RobotImplementation.h">
       <Filter>Robot\Build</Filter>
     </ClInclude>
+    <ClInclude Include="DiagnosticRenderer.h">
+      <Filter>Visual\Rendering\Diagnostic</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Shader\Object.fx">
@@ -260,6 +269,9 @@
     </FxCompile>
     <FxCompile Include="Shader\UI.fx">
       <Filter>Visual\Rendering\UI</Filter>
+    </FxCompile>
+    <FxCompile Include="Shader\Diagnostic.fx">
+      <Filter>Visual\Rendering\Diagnostic</Filter>
     </FxCompile>
   </ItemGroup>
 </Project>

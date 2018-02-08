@@ -135,6 +135,7 @@
   <ItemGroup>
     <ClCompile Include="AngleHelper.cpp" />
     <ClCompile Include="DeferredRendrerer.cpp" />
+    <ClCompile Include="DiagnosticRenderer.cpp" />
     <ClCompile Include="exp-map.cpp" />
     <ClCompile Include="ExponentialMap.cpp" />
     <ClCompile Include="FrameHelper.cpp" />
@@ -165,6 +166,7 @@
     <ClInclude Include="AngleHelper.h" />
     <ClInclude Include="BasicMeshT.h" />
     <ClInclude Include="DeferredRenderer.h" />
+    <ClInclude Include="DiagnosticRenderer.h" />
     <ClInclude Include="DXMathTransform.h" />
     <ClInclude Include="exp-map.h" />
     <ClInclude Include="ExponentialMap.h" />
@@ -215,6 +217,12 @@
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Shader\Deferred.fx">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </FxCompile>
+    <FxCompile Include="Shader\Diagnostic.fx">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>

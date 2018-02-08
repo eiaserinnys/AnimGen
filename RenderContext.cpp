@@ -88,6 +88,15 @@ RenderContext::RenderContext(HWND hwnd)
 		D3D11_INPUT_ELEMENT_DESC layout[] =
 		{
 			{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+			{ "COLOR", 0, DXGI_FORMAT_R8G8B8A8_UNORM, 1, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 }
+		};
+		sd->Load("Diagnostic", L"Shader/Diagnostic.fx", layout, COUNT_OF(layout));
+	}
+
+	{
+		D3D11_INPUT_ELEMENT_DESC layout[] =
+		{
+			{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
 		};
 		sd->Load("ObjectShadow", L"Shader/Shadow.fx", layout, COUNT_OF(layout));
 	}
@@ -111,6 +120,7 @@ RenderContext::RenderContext(HWND hwnd)
 		objRenderer.reset(IObjectRenderer::Create(this));
 		deferredRenderer.reset(IDeferredRenderer::Create(this));
 		uiRenderer.reset(IUIRenderer::Create(this));
+		diagRenderer.reset(IDiagnosticRenderer::Create(this));
 	}
 
 	// 씬을 만든다 (임시)
