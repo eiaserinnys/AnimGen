@@ -21,6 +21,25 @@ namespace Core
 				v.x * m.m[0][2] + v.y * m.m[1][2] + v.z * m.m[2][2] + m.m[3][2]);
 		}
 
+		template <int N, int M>
+		static inline VectorT<V, M> Transform(
+			const VectorT<V, N>& v,
+			const MatrixT<V, N, M>& m)
+		{
+			VectorT<V, M> ret;
+			ret.FillZero();
+
+			for (int i = 0; i < M; ++i)
+			{
+				for (int j = 0; j < N; ++j)
+				{
+					ret.m[i] += v.m[j] * m.m[j][i];
+				}
+			}
+
+			return ret;
+		}
+
 		static inline VectorT<V, 3> TransformNormal(
 			const VectorT<V, 3>& v,
 			const MatrixT<V, 4, 4>& m)

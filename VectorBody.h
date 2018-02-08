@@ -106,6 +106,13 @@ namespace Core
 		}
 
 		//--------------------------------------------------------------------------
+		template <typename X, ENABLE_IF(IS_CONVERTIBLE(X, ValueType))>
+		void Fill(X x) 
+		{ for (int i = 0; i < Dimension; ++i) { m[i] = x; } }
+
+		void FillZero() { Fill(0); }
+
+		//--------------------------------------------------------------------------
 		// template meta expression evaluation
 		__forceinline void PreEvaluate() const {}
 		__forceinline const ValueType Evaluate(int index) const { return m[index]; }

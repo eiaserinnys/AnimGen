@@ -139,6 +139,7 @@
     <ClCompile Include="exp-map.cpp" />
     <ClCompile Include="ExponentialMap.cpp" />
     <ClCompile Include="FrameHelper.cpp" />
+    <ClCompile Include="HermiteSpline.cpp" />
     <ClCompile Include="IKPicking.cpp" />
     <ClCompile Include="Logger.cpp" />
     <ClCompile Include="Mesh.cpp" />
@@ -171,6 +172,7 @@
     <ClInclude Include="exp-map.h" />
     <ClInclude Include="ExponentialMap.h" />
     <ClInclude Include="FrameHelper.h" />
+    <ClInclude Include="HermiteSpline.h" />
     <ClInclude Include="IKPicking.h" />
     <ClInclude Include="Logger.h" />
     <ClInclude Include="Matrix.h" />

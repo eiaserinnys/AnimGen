@@ -9,11 +9,14 @@
 #include <SimpleConstantBuffer.h>
 
 #include <Utility.h>
+#include <WindowsUtility.h>
 
 #include "RenderContext.h"
 
 #include "Vector.h"
 #include "SceneDescriptor.h"
+
+#include "HermiteSpline.h"
 
 using namespace std;
 using namespace Core;
@@ -51,6 +54,24 @@ struct LineBuffer : public MeshT<IMesh>
 		posB->UpdateDiscard(devCtx, &pos[0], (UINT)pos.size());
 		colB->UpdateDiscard(devCtx, &col[0], (UINT)col.size());
 		indB->UpdateDiscard(devCtx, &ind[0], (UINT)ind.size());
+	}
+
+	//--------------------------------------------------------------------------
+	void EnqueueAnchor(const XMFLOAT3& v, float length, DWORD c)
+	{
+		size_t pivot = pos.size();
+		pos.push_back(v - XMFLOAT3(length / 2, 0, 0));
+		pos.push_back(v + XMFLOAT3(length / 2, 0, 0));
+		pos.push_back(v - XMFLOAT3(0, length / 2, 0));
+		pos.push_back(v + XMFLOAT3(0, length / 2, 0));
+		pos.push_back(v - XMFLOAT3(0, 0, length / 2));
+		pos.push_back(v + XMFLOAT3(0, 0, length / 2));
+
+		col.insert(col.end(), 6, c);
+
+		ind.push_back(pivot++); ind.push_back(pivot++);
+		ind.push_back(pivot++); ind.push_back(pivot++);
+		ind.push_back(pivot++); ind.push_back(pivot++);
 	}
 
 	//--------------------------------------------------------------------------
@@ -114,19 +135,34 @@ public:
 		{
 			lineBuffer->Begin();
 
-			vector<XMFLOAT3> p;
-			for (int i = 0; i < 20; ++i)
+			vector<Vector3D> pd;
+			for (int i = 0; i <= 20; ++i)
 			{
 				auto r = [](float range)->float
 				{
 					return ((float)rand() / RAND_MAX) * range * 2 - range;
 				};
 
-				float range = 1.5;
-				p.push_back(XMFLOAT3(r(range), r(range) + range, r(range)));
+				float range = 2.0;
+
+				Vector3D v(r(range), r(1.5) + 1.5, r(range));
+
+				pd.push_back(v);
+
+				lineBuffer->EnqueueAnchor(XMFLOAT3(v.x, v.y, v.z), 0.05f, 0xff0000ff);
 			}
 
-			lineBuffer->Enqueue(p, 0xff0000ff);
+			unique_ptr<IHermiteSpline> spline(IHermiteSpline::Create(pd));
+
+			vector<XMFLOAT3> c;
+			int g = 20;
+			for (int i = 0; i <= 20 * g; ++i)
+			{
+				auto v = spline->At((double) i / g);
+				c.push_back(XMFLOAT3(v.x, v.y, v.z));
+			}
+
+			lineBuffer->Enqueue(c, 0xff00ffff);
 
 			lineBuffer->End(devCtx);
 		}
