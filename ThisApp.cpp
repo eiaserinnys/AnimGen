@@ -24,7 +24,7 @@ using namespace DirectX;
 class ThisApp : public IThisApp {
 public:
 	unique_ptr<RenderContext> global;
-	unique_ptr<RenderProcedure> render;
+	unique_ptr<IRenderProcedure> render;
 	HWND hWnd;
 
 	unique_ptr<IEulerControl> arcBall;
@@ -39,7 +39,7 @@ public:
 		: hWnd(hWnd)
 	{
 		global.reset(new RenderContext(hWnd));
-		render.reset(new RenderProcedure(global.get()));
+		render.reset(IRenderProcedure::Create(global.get()));
 
 		arcBall.reset(IEulerControl::Create(
 			210 / 180.0f * (float)M_PI, 
@@ -94,85 +94,6 @@ public:
 		ikPicking->Update(global->robot.get(), sceneDesc, global.get());
 
 		global->robot->Update();
-
-		static const char* name[] =
-		{
-			"Body",
-			"LLeg1", 
-			"LLeg2",
-			"LFoot",
-			"RLeg1",
-			"RLeg2",
-			"RFoot",
-		};
-
-		int y = 0;
-		
-		for (int i = 0; i < COUNT_OF(name); ++i)
-		{
-			auto expMap = global->robot->GetLocalRotation(name[i]);
-			auto quat = global->robot->GetLocalQuaternion(name[i]);
-			auto quatV = global->robot->GetLocalQuaternionVerify(name[i]);
-
-			auto diff = Distance(quat, quatV);
-
-			XMFLOAT4 color = XMFLOAT4(1, 1, 1, 1);
-			if (diff > 0.001) { color = XMFLOAT4(0.5f, 0.5f, 1, 1); }
-			if (diff > 0.01) { color = XMFLOAT4(0, 0, 1, 1); }
-
-			global->textRenderer->Enqueue(
-				TextToRender(
-					XMFLOAT2(50, y = i * 15 + 50),
-					Utility::FormatW(
-						L"Q(%+.4f,%+.4f,%+.4f,%+.4f) -> E(%+.4f,%+.4f,%+.4f) -> Q(%+.4f,%+.4f,%+.4f,%+.4f)",
-						quat.x, quat.y, quat.z, quat.w,
-						expMap.x, expMap.y, expMap.z,
-						quatV.x, quatV.y, quatV.z, quatV.w),
-					color));
-		}
-
-		auto gc = global->robot->Current();
-
-		y += 15;
-
-		global->textRenderer->Enqueue(
-			TextToRender(
-				XMFLOAT2(50, y += 15),
-				Utility::FormatW(
-					L"BP(%.4f,%.4f,%.4f) BP(%.4f,%.4f,%.4f)",
-					gc.bodyPos.x, gc.bodyPos.y, gc.bodyPos.y,
-					gc.bodyRot.x, gc.bodyRot.y, gc.bodyRot.z),
-				XMFLOAT4(1, 1, 1, 1)));
-
-		global->textRenderer->Enqueue(
-			TextToRender(
-				XMFLOAT2(50, y += 15),
-				Utility::FormatW(
-					L"LLR1(%.4f,%.4f,%.4f) LLL1(%.4f) "
-					L"LLR2(%.4f,%.4f,%.4f) LLL2(%.4f) "
-					L"LFR(%.4f,%.4f,%.4f) ",
-					gc.leg[0].rot1.x, gc.leg[0].rot1.y, gc.leg[0].rot1.z,
-					gc.leg[0].len1,
-					gc.leg[0].rot2.x, gc.leg[0].rot2.y, gc.leg[0].rot2.z,
-					gc.leg[0].len2,
-					gc.leg[0].footRot.x, gc.leg[0].footRot.y, gc.leg[0].footRot.z),
-				XMFLOAT4(1, 1, 1, 1)));
-
-		global->textRenderer->Enqueue(
-			TextToRender(
-				XMFLOAT2(50, y += 15),
-				Utility::FormatW(
-					L"RLR1(%.4f,%.4f,%.4f) RLL1(%.4f) "
-					L"RLR2(%.4f,%.4f,%.4f) RLL2(%.4f) "
-					L"RFR(%.4f,%.4f,%.4f) ",
-					gc.leg[1].rot1.x, gc.leg[1].rot1.y, gc.leg[1].rot1.z,
-					gc.leg[1].len1,
-					gc.leg[1].rot2.x, gc.leg[1].rot2.y, gc.leg[1].rot2.z,
-					gc.leg[1].len2,
-					gc.leg[1].footRot.x, gc.leg[1].footRot.y, gc.leg[1].footRot.z),
-				XMFLOAT4(1, 1, 1, 1)));
-
-		global->FillBuffer();
 
 		render->Render(sceneDesc);
 	}

@@ -153,7 +153,7 @@ struct SplineTest
 	DWORD lastTime = 0;
 	DWORD elapsed = 0;
 
-	int points = 5;
+	int points = 10;
 
 	SplineTest()
 	{
@@ -164,7 +164,7 @@ struct SplineTest
 				return ((float)rand() / RAND_MAX) * range * 2 - range;
 			};
 
-			float range = 2.0;
+			float range = 3.0;
 
 			Vector3D v(r(range), r(1) + 1.5, r(range));
 			Vector4D q = Normalize(Vector4D(r(1), r(1), r(1), r(1)));
@@ -197,7 +197,8 @@ struct SplineTest
 	{
 		for (int i = 0; i <= pos.size() * g; ++i)
 		{
-			auto p = spline->At((double)i / g).first;
+			auto ret = spline->At((double)i / g);
+			auto p = ret.first;
 			sampled.push_back(XMFLOAT3(p.x, p.y, p.z));
 		}
 	}
@@ -219,7 +220,6 @@ struct SplineTest
 		elapsed = elapsed % 30000;
 
 		double factor = (elapsed / 30000.0) * points;
-
 
 		for (auto it = tx.begin(); it != tx.end(); ++it)
 		{

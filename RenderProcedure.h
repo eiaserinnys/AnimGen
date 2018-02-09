@@ -22,15 +22,11 @@ struct Wireframe
 	};
 };
 
-class RenderProcedure {
+class IRenderProcedure {
 public:
-	RenderProcedure(RenderContext* context);
+	virtual ~IRenderProcedure() {}
 
-	void Render(const SceneDescriptor& sceneDesc);
+	static IRenderProcedure* Create(RenderContext* context);
 
-	void Begin();
-	void End();
-
-private:
-	RenderContext* context;
+	virtual void Render(const SceneDescriptor& sceneDesc) = 0;
 };
