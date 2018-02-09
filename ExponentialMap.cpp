@@ -1,6 +1,9 @@
 #include "pch.h"
 #include "ExponentialMap.h"
 
+#define _USE_MATH_DEFINES
+#include <math.h>
+
 #include "exp-map.h"
 #include "DXMathTransform.h"
 
@@ -31,6 +34,25 @@ Vector3D ExponentialMap::FromQuaternion(const Vector4D& quat_)
 	}
 
 	return Vector3D(m * quat.x, m * quat.y, m * quat.z);
+}
+
+//------------------------------------------------------------------------------
+Vector3D ExponentialMap::Negate(const Vector3D& exp)
+{
+	double len = Length(exp);
+	return len > 0 ? ((1 - 2 * M_PI / len) * exp).Evaluate() : exp;
+}
+
+//------------------------------------------------------------------------------
+Vector3D ExponentialMap::GetNearRotation(const Vector3D& pivot, const Vector3D& toEval)
+{
+	Vector3D negated = Negate(toEval);
+	double dist[] =
+	{
+		Distance(pivot, toEval),
+		Distance(pivot, negated)
+	};
+	return dist[0] < dist[1] ? toEval : negated;
 }
 
 //------------------------------------------------------------------------------

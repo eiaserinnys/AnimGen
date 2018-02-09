@@ -31,8 +31,13 @@ public:
 
 	Vector3D SphericalTangent(int i)
 	{
-		auto qp1 = ExponentialMap::ToQuaternion(R(i + 1));
-		auto qm1 = ExponentialMap::ToQuaternion(R(i - 1));
+		return SphericalTangent(R(i - 1), R(i + 1));
+	}
+
+	Vector3D SphericalTangent(const Vector3D& em1, const Vector3D& ep1)
+	{
+		auto qp1 = ExponentialMap::ToQuaternion(ep1);
+		auto qm1 = ExponentialMap::ToQuaternion(em1);
 
 		auto q = DXMathTransform<double>::QuaternionMultiply(
 			DXMathTransform<double>::QuaternionInverse(qm1),
@@ -62,6 +67,19 @@ public:
 		auto Eri = SphericalTangent(i);
 		auto Ei1 = R(i + 1);
 		auto El1 = SphericalTangent(i + 1);
+
+		Vector3D eSrc[] = { R(i - 1), R(i), R(i + 1), R(i + 2), };
+		Vector3D e[4];
+
+		e[0] = ExponentialMap::GetNearRotation(eSrc[1], eSrc[0]);
+		e[1] = eSrc[1];
+		e[2] = ExponentialMap::GetNearRotation(eSrc[1], eSrc[2]);
+		e[3] = ExponentialMap::GetNearRotation(e[2], eSrc[3]);
+
+		Ei = e[1];
+		Eri = SphericalTangent(e[0], e[2]);
+		Ei1 = e[2];
+		El1 = SphericalTangent(e[1], e[3]);
 
 		return make_pair(
 			Vector3D(um.x * Pi + um.y * Ri + um.z * Pi1 + um.w * Li1),

@@ -31,17 +31,23 @@ namespace Core
 		}
 
 		template <ENABLE_IF(Dimension == 1)>
-		__forceinline operator ValueType() const
+		__forceinline ValueType Evaluate() const
 		{
 			op.PreEvaluate(arg);
 			return op.Evaluate(0, arg);
 		}
 
+		template <ENABLE_IF(Dimension == 1)>
+		__forceinline operator ValueType() const
+		{ return Evaluate(); }
+
+		template <ENABLE_IF(Dimension > 1)>
+		__forceinline VectorT<ValueType, Dimension> Evaluate() const
+		{ return VectorT<ValueType, Dimension>(*this); }
+
 		template <ENABLE_IF(Dimension > 1)>
 		__forceinline operator VectorT<ValueType, Dimension>() const
-		{
-			return VectorT<ValueType, Dimension>(*this);
-		}
+		{ return Evaluate(); }
 
 	private:
 		const ArgType arg;
@@ -75,6 +81,10 @@ namespace Core
 
 		template <ENABLE_IF(Dimension == 1)>
 		__forceinline operator ValueType() const
+		{ return Evaluate(); }
+
+		template <ENABLE_IF(Dimension == 1)>
+		__forceinline ValueType Evaluate() const
 		{
 			op.PreEvaluate(lhs, rhs);
 			return op.Evaluate(0, lhs, rhs);
@@ -82,9 +92,11 @@ namespace Core
 
 		template <ENABLE_IF(Dimension > 1)>
 		__forceinline operator VectorT<ValueType, Dimension>() const
-		{
-			return VectorT<ValueType, Dimension>(*this);
-		}
+		{ return Evaluate(); }
+
+		template <ENABLE_IF(Dimension > 1)>
+		__forceinline VectorT<ValueType, Dimension> Evaluate() const
+		{ return VectorT<ValueType, Dimension>(*this); }
 
 	private:
 		const LhsType lhs;
@@ -119,17 +131,23 @@ namespace Core
 		}
 
 		template <ENABLE_IF(Dimension == 1)>
-		__forceinline operator ValueType() const
+		__forceinline ValueType Evalaute() const
 		{
 			op.PreEvaluate(lhs, mhs, rhs);
 			return op.Evaluate(0, lhs, mhs, rhs);
 		}
 
+		template <ENABLE_IF(Dimension == 1)>
+		__forceinline operator ValueType() const
+		{ return Evalaute(); }
+
+		template <ENABLE_IF(Dimension > 1)>
+		__forceinline VectorT<ValueType, Dimension> Evaluate() const
+		{ return VectorT<ValueType, Dimension>(*this); }
+
 		template <ENABLE_IF(Dimension > 1)>
 		__forceinline operator VectorT<ValueType, Dimension>() const
-		{
-			return VectorT<ValueType, Dimension>(*this);
-		}
+		{ return Evaluate(); }
 
 	private:
 		const LhsType lhs;
