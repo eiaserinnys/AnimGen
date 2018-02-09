@@ -69,10 +69,10 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>..\DX11RenderBase;..\DirectXTK\inc;..\DirectXTex\DirectXTex;$(IncludePath)</IncludePath>
+    <IncludePath>..\DX11RenderBase;..\DirectXTK\inc;..\DirectXTex\DirectXTex;D:\__Development__\ExternalLibraries\eigen-3_3_4;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IncludePath>..\DX11RenderBase;..\DirectXTK\inc;..\DirectXTex\DirectXTex;$(IncludePath)</IncludePath>
+    <IncludePath>..\DX11RenderBase;..\DirectXTK\inc;..\DirectXTex\DirectXTex;D:\__Development__\ExternalLibraries\eigen-3_3_4;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);..\DX11RenderBase;..\DirectXTK\inc;..\DirectXTex\DirectXTex;</IncludePath>
@@ -158,6 +158,8 @@
     <ClCompile Include="RobotCoordinate.cpp" />
     <ClCompile Include="RobotIK.cpp" />
     <ClCompile Include="SceneDescriptor.cpp" />
+    <ClCompile Include="SolutionVector.cpp" />
+    <ClCompile Include="Solver.cpp" />
     <ClCompile Include="ThisApp.cpp" />
     <ClCompile Include="UIRenderer.cpp" />
     <ClCompile Include="Vector.cpp" />
@@ -174,6 +176,7 @@
     <ClInclude Include="FrameHelper.h" />
     <ClInclude Include="HermiteSpline.h" />
     <ClInclude Include="IKPicking.h" />
+    <ClInclude Include="Jacobian.h" />
     <ClInclude Include="Logger.h" />
     <ClInclude Include="Matrix.h" />
     <ClInclude Include="Mesh.h" />
@@ -190,6 +193,9 @@
     <ClInclude Include="RobotIK.h" />
     <ClInclude Include="RobotImplementation.h" />
     <ClInclude Include="SceneDescriptor.h" />
+    <ClInclude Include="SolutionVector.h" />
+    <ClInclude Include="Solver.h" />
+    <ClInclude Include="SolverHelper.h" />
     <ClInclude Include="ThisApp.h" />
     <ClInclude Include="UIRenderer.h" />
     <ClInclude Include="Vector.h" />

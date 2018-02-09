@@ -66,6 +66,9 @@
     <Filter Include="Mathematics\Spline">
       <UniqueIdentifier>{5b9491dd-f50c-484e-a1a9-7541a354bca8}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Solver">
+      <UniqueIdentifier>{f563ce2d-bd53-4b77-a1b6-eb72c3fd7552}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="RenderContext.cpp">
@@ -139,6 +142,12 @@
     </ClCompile>
     <ClCompile Include="HermiteSpline.cpp">
       <Filter>Mathematics\Spline</Filter>
+    </ClCompile>
+    <ClCompile Include="Solver.cpp">
+      <Filter>Solver</Filter>
+    </ClCompile>
+    <ClCompile Include="SolutionVector.cpp">
+      <Filter>Solver</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -264,6 +273,18 @@
     </ClInclude>
     <ClInclude Include="HermiteSpline.h">
       <Filter>Mathematics\Spline</Filter>
+    </ClInclude>
+    <ClInclude Include="Solver.h">
+      <Filter>Solver</Filter>
+    </ClInclude>
+    <ClInclude Include="SolverHelper.h">
+      <Filter>Solver</Filter>
+    </ClInclude>
+    <ClInclude Include="Jacobian.h">
+      <Filter>Solver</Filter>
+    </ClInclude>
+    <ClInclude Include="SolutionVector.h">
+      <Filter>Solver</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
