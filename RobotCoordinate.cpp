@@ -32,15 +32,29 @@ void SetWorld(Robot* robot, const string& name, const Matrix4D& m, bool validate
 };
 
 //--------------------------------------------------------------------------
-void SetLocal(Robot* robot, const string& name, const Matrix4D& m, bool validate)
+bool SetLocal(Robot* robot, const string& name, const Matrix4D& m, bool validate)
 {
+	bool result = true;
 	auto body = robot->Find(name);
 
 	if (body != nullptr)
 	{
 		if (validate)
 		{
-			assert(m.AssertEqual(body->LocalTx()));
+			if (IsDebuggerPresent())
+			{
+				result = m.AssertEqual(body->LocalTx());
+				if (!result)
+				{
+					WindowsUtility::Debug(
+						L"Local transform is different at bone (%S)\n",
+						name.c_str());
+				}
+			}
+			else
+			{
+				assert(m.AssertEqual(body->LocalTx()));
+			}
 		}
 		body->SetLocalTx(m);
 	}
@@ -48,6 +62,7 @@ void SetLocal(Robot* robot, const string& name, const Matrix4D& m, bool validate
 	{
 		assert(!"body not found");
 	}
+	return result;
 };
 
 //--------------------------------------------------------------------------
@@ -104,43 +119,47 @@ GeneralCoordinate
 }
 
 //--------------------------------------------------------------------------
-void RobotCoordinate::SetTransform(
+bool RobotCoordinate::SetTransform(
 	Robot* robot,
 	const GeneralCoordinate& coord, 
 	bool validate) const
 {
+	bool result = true;
+
 	{
 		auto bodyM = ExponentialMap::ToMatrix(coord.bodyRot);
 		FrameHelper::SetTranslation(bodyM, coord.bodyPos);
 		SetWorld(robot, "Body", bodyM, validate);
 	}
 
-	SetLocal(robot, "LLeg1", ExponentialMap::ToMatrix(coord.leg[0].rot1), validate);
-	SetLocal(robot, "RLeg1", ExponentialMap::ToMatrix(coord.leg[1].rot1), validate);
+	result = SetLocal(robot, "LLeg1", ExponentialMap::ToMatrix(coord.leg[0].rot1), validate) && result;
+	result = SetLocal(robot, "RLeg1", ExponentialMap::ToMatrix(coord.leg[1].rot1), validate) && result;
 
 	{
 		auto m = ExponentialMap::ToMatrix(coord.leg[0].rot2);
 		FrameHelper::SetTranslation(m, Vector3D(coord.leg[0].len1, 0, 0));
-		SetLocal(robot, "LLeg2", m, validate);
+		result = SetLocal(robot, "LLeg2", m, validate) && result;
 	}
 
 	{
 		auto m = ExponentialMap::ToMatrix(coord.leg[0].footRot);
 		FrameHelper::SetTranslation(m, Vector3D(0, - coord.leg[0].len2, 0));
-		SetLocal(robot, "LFoot", m, validate);
+		result = SetLocal(robot, "LFoot", m, validate) && result;
 	}
 
 	{
 		auto m = ExponentialMap::ToMatrix(coord.leg[1].rot2);
 		FrameHelper::SetTranslation(m, Vector3D(coord.leg[1].len1, 0, 0));
-		SetLocal(robot, "RLeg2", m, validate);
+		result = SetLocal(robot, "RLeg2", m, validate) && result;
 	}
 
 	{
 		auto m = ExponentialMap::ToMatrix(coord.leg[1].footRot);
 		FrameHelper::SetTranslation(m, Vector3D(0, -coord.leg[1].len2, 0));
-		SetLocal(robot, "RFoot", m, validate);
+		result = SetLocal(robot, "RFoot", m, validate) && result;
 	}
+
+	return result;
 }
 
 //--------------------------------------------------------------------------

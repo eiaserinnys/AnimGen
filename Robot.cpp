@@ -217,15 +217,21 @@ void Robot::Apply(const SolutionCoordinate& sc)
 {
 	coord.SetTransform(this, sc, false);
 
-	WindowsUtility::Debug(L"--\n");
-	sc.Dump();
-
 	// ∞À¡ı
 	UpdateWorldTransform();
 
 	auto sc_ = coord.ToSolutionCoordinate(this);
-	sc_.Dump();
 	coord.SetTransform(this, sc_, true);
+
+	gc = coord.ToGeneralCoordinate(this);
+	if (!coord.SetTransform(this, gc, true))
+	{
+		if (IsDebuggerPresent())
+		{
+			DebugBreak();
+		}
+		coord.SetTransform(this, sc, false);
+	}
 }
 
 //------------------------------------------------------------------------------

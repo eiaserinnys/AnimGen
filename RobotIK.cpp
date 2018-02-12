@@ -134,9 +134,12 @@ void RobotIK::SetFootPosition(bool left, const Vector3D& pos_)
 	Vector3D z = Normalize(Cross(x, y));
 	y = Normalize(Cross(z, x));
 
-	if (newLegLen > robot->legLen.x + robot->legLen.y)
+	auto orgLegLen = robot->legLen.x + robot->legLen.y;
+	if (newLegLen > orgLegLen)
 	{
-		Vector3D kneePos = (orgPos[0] + pos) * (robot->legLen.x / (robot->legLen.x + robot->legLen.y));
+		Vector3D kneePos = 
+			orgPos[0] + 
+			x * newLegLen * (robot->legLen.x / (robot->legLen.x + robot->legLen.y));
 
 		{
 			Matrix4D worldTx = Matrix4D::Identity();

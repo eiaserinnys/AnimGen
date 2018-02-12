@@ -10,7 +10,7 @@ SolutionVector SolutionVector::BuildTest(const SolutionCoordinate& init)
 
 	auto delta = Vector3D(2, 0, 0);
 	auto deltaF = Vector3D(1.5, 0.5f, 0);
-	auto deltaF2 = Vector3D(2.5, 0, 0);
+	auto deltaF2 = Vector3D(3, 0, 0);
 
 	int phases = 8;
 
