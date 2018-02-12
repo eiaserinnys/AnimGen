@@ -35,9 +35,9 @@ struct SolutionCoordinate
 
 struct RobotCoordinate
 {
-	GeneralCoordinate ToGeneralCoordinate(Robot* robot);
-	void SetTransform(Robot* robot, const GeneralCoordinate& coord, bool validate);
+	GeneralCoordinate ToGeneralCoordinate(Robot* robot) const;
+	void SetTransform(Robot* robot, const GeneralCoordinate& coord, bool validate) const;
 
-	SolutionCoordinate ToSolutionCoordinate(Robot* robot);
-	void SetTransform(Robot* robot, const SolutionCoordinate& solution, bool validate);
+	SolutionCoordinate ToSolutionCoordinate(Robot* robot) const;
+	void SetTransform(Robot* robot, const SolutionCoordinate& solution, bool validate) const;
 };

@@ -51,8 +51,8 @@ namespace Core
 				const RhsType& rhs) const
 			{
 				return 
-					lhs.Evaluate(i) * rhs.Evaluate(i) + 
-					mhs.Evaluate(i) * (1 - rhs.Evaluate(i));
+					lhs.Evaluate(i) * (1 - rhs.Evaluate(i)) +
+					mhs.Evaluate(i) * rhs.Evaluate(i);
 			}
 		};
 	}

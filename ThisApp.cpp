@@ -17,6 +17,8 @@
 
 #include "IKPicking.h"
 
+#include "AnimationGeneration.h"
+
 using namespace std;
 using namespace Core;
 using namespace DirectX;
@@ -29,6 +31,7 @@ public:
 
 	unique_ptr<IEulerControl> arcBall;
 	unique_ptr<IIKPicking> ikPicking;
+	unique_ptr<IAnimationGeneration> animGen;
 
 	bool init = false;
 
@@ -46,6 +49,9 @@ public:
 			20 / 180.0f * (float)M_PI));
 
 		ikPicking.reset(IIKPicking::Create());
+
+		animGen.reset(IAnimationGeneration::Create(global->robot.get()));
+		animGen->UpdateSpline();
 	}
 
 	//--------------------------------------------------------------------------
@@ -94,6 +100,8 @@ public:
 		ikPicking->Update(global->robot.get(), sceneDesc, global.get());
 
 		global->robot->Update();
+
+		animGen->Enqueue(global->diagRenderer->Buffer());
 
 		render->Render(sceneDesc);
 	}

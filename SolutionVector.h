@@ -6,7 +6,7 @@
 
 struct SolutionVector
 {
-	std::vector<SolutionCoordinate> coords;
+	std::vector<std::pair<double, SolutionCoordinate>> coords;
 
 	static SolutionVector BuildTest(const SolutionCoordinate& init);
 };

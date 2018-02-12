@@ -12,6 +12,7 @@ public:
 	virtual void Update() = 0;
 
 	virtual const GeneralCoordinate& Current() const = 0;
+	virtual const SolutionCoordinate CurrentSC() const = 0;
 
 	virtual Core::Matrix4D GetLinkTransform(const std::string& name) = 0;
 

@@ -52,7 +52,7 @@ void SetLocal(Robot* robot, const string& name, const Matrix4D& m, bool validate
 //--------------------------------------------------------------------------
 // 일단 몸, 다리, 발만 계산한다
 GeneralCoordinate 
-	RobotCoordinate::ToGeneralCoordinate(Robot* robot)
+	RobotCoordinate::ToGeneralCoordinate(Robot* robot) const
 {
 	GeneralCoordinate coord;
 
@@ -106,7 +106,7 @@ GeneralCoordinate
 void RobotCoordinate::SetTransform(
 	Robot* robot,
 	const GeneralCoordinate& coord, 
-	bool validate)
+	bool validate) const
 {
 	{
 		auto bodyM = ExponentialMap::ToMatrix(coord.bodyRot);
@@ -143,7 +143,7 @@ void RobotCoordinate::SetTransform(
 }
 
 //--------------------------------------------------------------------------
-SolutionCoordinate RobotCoordinate::ToSolutionCoordinate(Robot* robot)
+SolutionCoordinate RobotCoordinate::ToSolutionCoordinate(Robot* robot) const
 {
 	SolutionCoordinate coord;
 
@@ -163,7 +163,7 @@ SolutionCoordinate RobotCoordinate::ToSolutionCoordinate(Robot* robot)
 void RobotCoordinate::SetTransform(
 	Robot* robot,
 	const SolutionCoordinate& coord, 
-	bool validate)
+	bool validate) const
 {
 	static const char* names[] =
 	{

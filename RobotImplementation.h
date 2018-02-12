@@ -49,6 +49,7 @@ public:
 	const Core::Vector4D GetLocalQuaternionVerify(const std::string& name);
 
 	virtual const GeneralCoordinate& Current() const { return gc; }
+	virtual const SolutionCoordinate CurrentSC() const;
 
 public:
 	std::unique_ptr<IMesh> frame;

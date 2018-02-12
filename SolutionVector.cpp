@@ -8,9 +8,9 @@ SolutionVector SolutionVector::BuildTest(const SolutionCoordinate& init)
 {
 	SolutionVector v;
 
-	auto delta = Vector3D(5, 0, 0);
+	auto delta = Vector3D(3, 0, 0);
 
-	int phases = 20;
+	int phases = 10;
 
 	for (int i = 0; i < phases; ++i)
 	{
@@ -24,7 +24,7 @@ SolutionVector SolutionVector::BuildTest(const SolutionCoordinate& init)
 		nc.footPos[0] += move;
 		nc.footPos[1] += move;
 
-		v.coords.push_back(nc);
+		v.coords.push_back(make_pair(i * 0.5, nc));
 	}
 
 	return v;

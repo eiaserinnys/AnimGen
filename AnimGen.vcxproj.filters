@@ -69,6 +69,9 @@
     <Filter Include="Solver">
       <UniqueIdentifier>{f563ce2d-bd53-4b77-a1b6-eb72c3fd7552}</UniqueIdentifier>
     </Filter>
+    <Filter Include="ThisApp\AnimationGeneration">
+      <UniqueIdentifier>{d1d3a29b-b767-4198-af76-040442099f37}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="RenderContext.cpp">
@@ -148,6 +151,15 @@
     </ClCompile>
     <ClCompile Include="SolutionVector.cpp">
       <Filter>Solver</Filter>
+    </ClCompile>
+    <ClCompile Include="AnimationGeneration.cpp">
+      <Filter>ThisApp\AnimationGeneration</Filter>
+    </ClCompile>
+    <ClCompile Include="SplineDiagnostic.cpp">
+      <Filter>Visual\Rendering\Diagnostic</Filter>
+    </ClCompile>
+    <ClCompile Include="LineBuffer.cpp">
+      <Filter>Visual\Rendering\Diagnostic</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -285,6 +297,15 @@
     </ClInclude>
     <ClInclude Include="SolutionVector.h">
       <Filter>Solver</Filter>
+    </ClInclude>
+    <ClInclude Include="AnimationGeneration.h">
+      <Filter>ThisApp\AnimationGeneration</Filter>
+    </ClInclude>
+    <ClInclude Include="SplineDiagnostic.h">
+      <Filter>Visual\Rendering\Diagnostic</Filter>
+    </ClInclude>
+    <ClInclude Include="LineBuffer.h">
+      <Filter>Visual\Rendering\Diagnostic</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

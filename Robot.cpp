@@ -205,6 +205,12 @@ const Vector4D Robot::GetLocalQuaternionVerify(const string& name)
 }
 
 //------------------------------------------------------------------------------
+const SolutionCoordinate Robot::CurrentSC() const
+{
+	return coord.ToSolutionCoordinate((Robot*)this);
+}
+
+//------------------------------------------------------------------------------
 IRobot* IRobot::Create()
 { return new Robot; }
 
@@ -213,3 +219,4 @@ Vector3D IRobot::GetFootDirection(const Vector3D& legDir)
 {
 	return RobotIK::GetFootDirection(legDir);
 }
+

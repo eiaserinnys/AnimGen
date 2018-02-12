@@ -280,8 +280,8 @@ static void TestVector2_Function()
 
 	double lf = 0.3;
 	Vector2D lerp = Lerp(a, b, lf);
-	assert(lerp.x == a.x * lf + b.x * (1 - lf));
-	assert(lerp.y == a.y * lf + b.y * (1 - lf));
+	assert(lerp.x == a.x * (1 - lf) + b.x * lf);
+	assert(lerp.y == a.y * (1 - lf) + b.y * lf);
 }
 
 //------------------------------------------------------------------------------
