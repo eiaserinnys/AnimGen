@@ -1,6 +1,8 @@
 #include "pch.h"
 #include "Robot.h"
 
+#include <WindowsUtility.h>
+
 #include "DXMathTransform.h"
 #include "FrameHelper.h"
 #include "AngleHelper.h"
@@ -208,6 +210,67 @@ const Vector4D Robot::GetLocalQuaternionVerify(const string& name)
 const SolutionCoordinate Robot::CurrentSC() const
 {
 	return coord.ToSolutionCoordinate((Robot*)this);
+}
+
+//------------------------------------------------------------------------------
+void Robot::Apply(const SolutionCoordinate& sc)
+{
+	coord.SetTransform(this, sc, false);
+
+	WindowsUtility::Debug(L"--\n");
+	sc.Dump();
+
+	// ∞À¡ı
+	UpdateWorldTransform();
+
+	auto sc_ = coord.ToSolutionCoordinate(this);
+	sc_.Dump();
+	coord.SetTransform(this, sc_, true);
+}
+
+//------------------------------------------------------------------------------
+void Robot::Dump()
+{
+	for (int i = 0; i < bodies.size(); ++i)
+	{
+		auto body = bodies[i];
+
+		auto& k = body->LinkTx();
+		auto& l = body->LocalTx();
+		auto& w = body->WorldTx();
+
+		WindowsUtility::Debug(L"[%S]\n", body->name.c_str());
+
+		WindowsUtility::Debug(
+			L"L(%.3f, %.3f, %.3f, %.3f) "
+			"(%.3f, %.3f, %.3f, %.3f) "
+			"(%.3f, %.3f, %.3f, %.3f) "
+			"(%.3f, %.3f, %.3f, %.3f)\n",
+			k.e[0 * 4 + 0], k.e[0 * 4 + 1], k.e[0 * 4 + 2], k.e[0 * 4 + 3],
+			k.e[1 * 4 + 0], k.e[1 * 4 + 1], k.e[1 * 4 + 2], k.e[1 * 4 + 3],
+			k.e[2 * 4 + 0], k.e[2 * 4 + 1], k.e[2 * 4 + 2], k.e[2 * 4 + 3],
+			k.e[3 * 4 + 0], k.e[3 * 4 + 1], k.e[3 * 4 + 2], k.e[3 * 4 + 3]);
+
+		WindowsUtility::Debug(
+			L"L(%.3f, %.3f, %.3f, %.3f) "
+			"(%.3f, %.3f, %.3f, %.3f) "
+			"(%.3f, %.3f, %.3f, %.3f) "
+			"(%.3f, %.3f, %.3f, %.3f)\n",
+			l.e[0 * 4 + 0], l.e[0 * 4 + 1], l.e[0 * 4 + 2], l.e[0 * 4 + 3],
+			l.e[1 * 4 + 0], l.e[1 * 4 + 1], l.e[1 * 4 + 2], l.e[1 * 4 + 3],
+			l.e[2 * 4 + 0], l.e[2 * 4 + 1], l.e[2 * 4 + 2], l.e[2 * 4 + 3],
+			l.e[3 * 4 + 0], l.e[3 * 4 + 1], l.e[3 * 4 + 2], l.e[3 * 4 + 3]);
+
+		WindowsUtility::Debug(
+			L"W(%.3f, %.3f, %.3f, %.3f) "
+			"(%.3f, %.3f, %.3f, %.3f) "
+			"(%.3f, %.3f, %.3f, %.3f) "
+			"(%.3f, %.3f, %.3f, %.3f)\n",
+			w.e[0 * 4 + 0], w.e[0 * 4 + 0], w.e[0 * 4 + 0], w.e[0 * 4 + 0],
+			w.e[1 * 4 + 0], w.e[1 * 4 + 0], w.e[1 * 4 + 0], w.e[1 * 4 + 0],
+			w.e[2 * 4 + 0], w.e[2 * 4 + 0], w.e[2 * 4 + 0], w.e[2 * 4 + 0],
+			w.e[3 * 4 + 0], w.e[3 * 4 + 0], w.e[3 * 4 + 0], w.e[3 * 4 + 0]);
+	}
 }
 
 //------------------------------------------------------------------------------

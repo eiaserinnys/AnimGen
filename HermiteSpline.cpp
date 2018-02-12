@@ -53,8 +53,6 @@ public:
 		int i = (int)v;
 		double f = v - i;
 
-		WindowsUtility::Debug(L"%d,%f - %d\n", i, f, pos.size());
-
 		if (i < 0) { return make_pair(P(0), R(0)); }
 		if (i + 1 >= pos.size()) { return make_pair(*pos.rbegin(), *rot.rbegin()); }
 

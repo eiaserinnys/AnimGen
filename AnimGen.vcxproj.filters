@@ -277,9 +277,6 @@
     <ClInclude Include="DXMathTransform.h">
       <Filter>Mathematics\Matrix</Filter>
     </ClInclude>
-    <ClInclude Include="RobotImplementation.h">
-      <Filter>Robot\Build</Filter>
-    </ClInclude>
     <ClInclude Include="DiagnosticRenderer.h">
       <Filter>Visual\Rendering\Diagnostic</Filter>
     </ClInclude>
@@ -306,6 +303,9 @@
     </ClInclude>
     <ClInclude Include="LineBuffer.h">
       <Filter>Visual\Rendering\Diagnostic</Filter>
+    </ClInclude>
+    <ClInclude Include="RobotImplementation.h">
+      <Filter>Robot\Component</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

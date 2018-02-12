@@ -14,6 +14,8 @@ public:
 	virtual const GeneralCoordinate& Current() const = 0;
 	virtual const SolutionCoordinate CurrentSC() const = 0;
 
+	virtual void Apply(const SolutionCoordinate& coord) = 0;
+
 	virtual Core::Matrix4D GetLinkTransform(const std::string& name) = 0;
 
 	virtual Core::Vector3D GetWorldPosition(const std::string& name) = 0;

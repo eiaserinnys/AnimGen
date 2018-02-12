@@ -36,7 +36,7 @@ Vector3D RobotIK::GetFootDirection(const Vector3D& legDir_)
 		-cos(angleZ_R) * sin(angleY_R));
 
 	// 다리 방향이 뒤로 향하는 경우는 바깥이 아니라 몸 안 쪽을 보게 한다
-	if (legDir.x < 0)
+	if (legDir.x < 0 && abs(angleZ_R) > 0.0001f)
 	{
 		footDir = -footDir;
 	}

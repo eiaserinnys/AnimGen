@@ -31,6 +31,8 @@ struct SolutionCoordinate
 
 	Core::Vector3D footPos[2];
 	Core::Vector3D footRot[2];
+
+	void Dump() const;
 };
 
 struct RobotCoordinate

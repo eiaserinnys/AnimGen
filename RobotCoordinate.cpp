@@ -2,6 +2,7 @@
 #include "RobotCoordinate.h"
 
 #include <Utility.h>
+#include <WindowsUtility.h>
 
 #include "ExponentialMap.h"
 #include "DXMathTransform.h"
@@ -175,27 +176,102 @@ void RobotCoordinate::SetTransform(
 	vector<Matrix4D> preserved;
 	if (validate)
 	{
+		robot->UpdateWorldTransform();
+
 		for (int i = 0; i < COUNT_OF(names); ++i)
 		{
 			preserved.push_back(robot->Find(names[i])->WorldTx());
 		}
 	}
 
-	{
-		auto bodyM = ExponentialMap::ToMatrix(coord.bodyRot);
-		FrameHelper::SetTranslation(bodyM, coord.bodyPos);
-		SetWorld(robot, "Body", bodyM, false);
-	}
+	bool retry = false;
 
-	robot->SetFootTransform(true, coord.footPos[0], coord.footRot[0]);
-	robot->SetFootTransform(false, coord.footPos[1], coord.footRot[1]);
-
-	if (validate)
+	do
 	{
-		for (int i = 0; i < COUNT_OF(names); ++i)
+		retry = false;
+
 		{
-			auto newWorldTx = robot->Find(names[i])->WorldTx();
-			assert(preserved[i].AssertEqual(newWorldTx));
+			auto bodyM = ExponentialMap::ToMatrix(coord.bodyRot);
+			FrameHelper::SetTranslation(bodyM, coord.bodyPos);
+			SetWorld(robot, "Body", bodyM, false);
 		}
-	}
+
+		robot->SetFootTransform(true, coord.footPos[0], coord.footRot[0]);
+		robot->SetFootTransform(false, coord.footPos[1], coord.footRot[1]);
+
+		if (validate)
+		{
+			bool valid = true;
+
+			robot->UpdateWorldTransform();
+
+			for (int i = 0; i < COUNT_OF(names); ++i)
+			{
+				auto newWorldTx = robot->Find(names[i])->WorldTx();
+
+				if (IsDebuggerPresent())
+				{
+					bool check = preserved[i].AssertEqual(newWorldTx);
+
+					if (!check)
+					{
+						WindowsUtility::Debug(
+							L"World Transform at Bone(%d,%S) is different\n",
+							i, names[i]);
+
+						auto a = preserved[i];
+						auto b = newWorldTx;
+
+						WindowsUtility::Debug(
+							L"(%.3f, %.3f, %.3f, %.3f) "
+							"(%.3f, %.3f, %.3f, %.3f) "
+							"(%.3f, %.3f, %.3f, %.3f) "
+							"(%.3f, %.3f, %.3f, %.3f)\n",
+							a.e[0 * 4 + 0], a.e[0 * 4 + 1], a.e[0 * 4 + 2], a.e[0 * 4 + 3],
+							a.e[1 * 4 + 0], a.e[1 * 4 + 1], a.e[1 * 4 + 2], a.e[1 * 4 + 3],
+							a.e[2 * 4 + 0], a.e[2 * 4 + 1], a.e[2 * 4 + 2], a.e[2 * 4 + 3],
+							a.e[3 * 4 + 0], a.e[3 * 4 + 1], a.e[3 * 4 + 2], a.e[3 * 4 + 3]);
+
+						WindowsUtility::Debug(
+							L"(%.3f, %.3f, %.3f, %.3f) "
+							"(%.3f, %.3f, %.3f, %.3f) "
+							"(%.3f, %.3f, %.3f, %.3f) "
+							"(%.3f, %.3f, %.3f, %.3f)\n",
+							b.e[0 * 4 + 0], b.e[0 * 4 + 1], b.e[0 * 4 + 2], b.e[0 * 4 + 3],
+							b.e[1 * 4 + 0], b.e[1 * 4 + 1], b.e[1 * 4 + 2], b.e[1 * 4 + 3],
+							b.e[2 * 4 + 0], b.e[2 * 4 + 1], b.e[2 * 4 + 2], b.e[2 * 4 + 3],
+							b.e[3 * 4 + 0], b.e[3 * 4 + 1], b.e[3 * 4 + 2], b.e[3 * 4 + 3]);
+					}
+
+					valid = valid && check;
+				}
+				else
+				{
+					assert(preserved[i].AssertEqual(newWorldTx));
+				}
+			}
+
+			if (IsDebuggerPresent() && !valid)
+			{
+				retry = true;
+				DebugBreak();
+			}
+		}
+	} 
+	while (retry);
+}
+
+//--------------------------------------------------------------------------
+void SolutionCoordinate::Dump() const
+{
+	WindowsUtility::Debug(
+		L"B(%.3f,%.3f,%.3f), (%.3f,%.3f,%.3f) "
+		"LF(%.3f,%.3f,%.3f), (%.3f,%.3f,%.3f) "
+		"RF(%.3f,%.3f,%.3f), (%.3f,%.3f,%.3f)\n",
+		bodyPos.x, bodyPos.y, bodyPos.z,
+		bodyRot.x, bodyRot.y, bodyRot.z,
+		footPos[0].x, footPos[0].y, footPos[0].z,
+		footRot[0].x, footRot[0].y, footRot[0].z,
+		footPos[1].x, footPos[1].y, footPos[1].z,
+		footRot[1].x, footRot[1].y, footRot[1].z);
 }

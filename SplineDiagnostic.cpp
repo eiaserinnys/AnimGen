@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "SplineDiagnostic.h"
 
-#include <timeapi.h>
+#include <WindowsUtility.h>
 
 #include "ExponentialMap.h"
 #include "FrameHelper.h"
@@ -59,24 +59,8 @@ void SplineDiagnostic::Sample(int g)
 }
 
 //------------------------------------------------------------------------------
-void SplineDiagnostic::Enqueue(LineBuffer* lineBuffer)
+void SplineDiagnostic::Enqueue(LineBuffer* lineBuffer, double factor)
 {
-	auto curTime = timeGetTime();
-	if (lastTime != 0)
-	{
-		elapsed += curTime - lastTime;
-		lastTime = curTime;
-	}
-	else
-	{
-		elapsed = 0;
-		lastTime = curTime;
-	}
-
-	elapsed = elapsed % 30000;
-
-	double factor = (elapsed / 30000.0) * points;
-
 	for (auto it = tx.begin(); it != tx.end(); ++it)
 	{
 		lineBuffer->EnqueueFrame(*it, 0.05f);

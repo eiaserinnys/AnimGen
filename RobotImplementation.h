@@ -51,6 +51,10 @@ public:
 	virtual const GeneralCoordinate& Current() const { return gc; }
 	virtual const SolutionCoordinate CurrentSC() const;
 
+	virtual void Apply(const SolutionCoordinate& coord);
+
+	void Dump();
+
 public:
 	std::unique_ptr<IMesh> frame;
 	std::vector<RobotBody*> bodies;

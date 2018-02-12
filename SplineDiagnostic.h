@@ -18,16 +18,11 @@ struct SplineDiagnostic
 
 	std::vector<DirectX::XMFLOAT3> sampled;
 
-	DWORD lastTime = 0;
-	DWORD elapsed = 0;
-
-	int points = 10;
-
 	SplineDiagnostic(
 		const std::vector<Core::Vector3D>& pos, 
 		const std::vector<Core::Vector3D>& rot);
 
 	void Sample(int g);
 
-	void Enqueue(LineBuffer* lineBuffer);
+	void Enqueue(LineBuffer* lineBuffer, double factor);
 };

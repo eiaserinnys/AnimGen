@@ -1,6 +1,8 @@
 #include "pch.h"
 #include "AnimationGeneration.h"
 
+#include <timeapi.h>
+
 #include "Robot.h"
 #include "SolutionVector.h"
 #include "SplineDiagnostic.h"
@@ -11,7 +13,12 @@ using namespace Core;
 
 class AnimationGeneration : public IAnimationGeneration {
 public:
-	AnimationGeneration(IRobot* robot)
+	DWORD lastTime = 0;
+	DWORD elapsed = 0;
+
+	IRobot* robot;
+
+	AnimationGeneration(IRobot* robot) : robot(robot)
 	{
 		solution = SolutionVector::BuildTest(robot->CurrentSC());
 	}
@@ -42,9 +49,57 @@ public:
 
 	void Enqueue(LineBuffer* buffer)
 	{
-		splines.body->Enqueue(buffer);
-		splines.foot[0]->Enqueue(buffer);
-		splines.foot[1]->Enqueue(buffer);
+		auto curTime = timeGetTime();
+		if (lastTime != 0)
+		{
+			elapsed += curTime - lastTime;
+			lastTime = curTime;
+		}
+		else
+		{
+			elapsed = 0;
+			lastTime = curTime;
+		}
+
+		int points = solution .coords.size();
+		int total = (int)((points - 1) * 0.5 * 1000);
+
+		elapsed = elapsed % total;
+
+		double factor = ((double)elapsed / total) * (points - 1);
+
+		splines.body->Enqueue(buffer, factor);
+		splines.foot[0]->Enqueue(buffer, factor);
+		splines.foot[1]->Enqueue(buffer, factor);
+
+		auto coord = At(factor);
+
+		robot->Apply(coord);
+	}
+
+	SolutionCoordinate At(double factor)
+	{
+		SolutionCoordinate coord;
+
+		{
+			auto b = splines.body->spline->At(factor);
+			coord.bodyPos = b.first;
+			coord.bodyRot = b.second;
+		}
+
+		{
+			auto b = splines.foot[0]->spline->At(factor);
+			coord.footPos[0] = b.first;
+			coord.footRot[0] = b.second;
+		}
+
+		{
+			auto b = splines.foot[1]->spline->At(factor);
+			coord.footPos[1] = b.first;
+			coord.footRot[1] = b.second;
+		}
+
+		return coord;
 	}
 
 	SolutionVector solution;

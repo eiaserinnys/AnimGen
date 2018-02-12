@@ -107,6 +107,7 @@ public:
 		for (auto it = children.begin(); it != children.end(); ++it)
 		{
 			(*it)->worldTxValid = false;
+			(*it)->InvalidateChildren();
 		}
 	}
 };
