@@ -11,6 +11,7 @@
 using namespace std;
 using namespace Core;
 
+//------------------------------------------------------------------------------
 class AnimationGeneration : public IAnimationGeneration {
 public:
 	DWORD lastTime = 0;
@@ -21,7 +22,7 @@ public:
 	//--------------------------------------------------------------------------
 	AnimationGeneration(IRobot* robot) : robot(robot)
 	{
-		solution = SolutionVector::BuildTest(robot->CurrentSC());
+		sol.reset(SolutionVector::BuildTest(robot->CurrentSC()));
 	}
 
 	//--------------------------------------------------------------------------
@@ -29,13 +30,13 @@ public:
 	{
 		const int m = 20;
 
-		splines.body.Sample(solution.splines.body.curve.get(), m);
-		splines.foot[0].Sample(solution.splines.foot[0].curve.get(), m);
-		splines.foot[1].Sample(solution.splines.foot[1].curve.get(), m);
+		splines.body.Sample(sol->splines.body.curve.get(), m);
+		splines.foot[0].Sample(sol->splines.foot[0].curve.get(), m);
+		splines.foot[1].Sample(sol->splines.foot[1].curve.get(), m);
 	}
 
 	//--------------------------------------------------------------------------
-	void Enqueue(LineBuffer* buffer)
+	double CurrentFactor()
 	{
 		auto curTime = timeGetTime();
 		if (lastTime != 0)
@@ -49,60 +50,41 @@ public:
 			lastTime = curTime;
 		}
 
-		int points = solution .coords.size();
-		int total = (int)((points - 1) * 0.5 * 1000);
+		int points = sol->coords.size();
+		int total = (int)((points - 1) * sol->Timestep() * 1000);
 
 		elapsed = elapsed % total;
 
-		double factor = ((double)elapsed / total) * (points - 1);
+		return ((double)elapsed / total) * (points - 1);
+	}
 
-		splines.body.Enqueue(solution.splines.body.curve.get(), buffer, factor);
-		splines.foot[0].Enqueue(solution.splines.foot[0].curve.get(), buffer, factor);
-		splines.foot[1].Enqueue(solution.splines.foot[1].curve.get(), buffer, factor);
+	//--------------------------------------------------------------------------
+	void Enqueue(LineBuffer* buffer)
+	{
+		auto factor = CurrentFactor();
 
-		auto coord = At(factor);
+		splines.body.Enqueue(sol->splines.body.curve.get(), buffer, factor);
+		splines.foot[0].Enqueue(sol->splines.foot[0].curve.get(), buffer, factor);
+		splines.foot[1].Enqueue(sol->splines.foot[1].curve.get(), buffer, factor);
+
+		auto coord = sol->AtByFactor(factor);
 
 		robot->Apply(coord);
 	}
 
 	//--------------------------------------------------------------------------
-	SolutionCoordinate At(double factor)
-	{
-		SolutionCoordinate coord;
+	unique_ptr<SolutionVector> sol;
 
-		{
-			auto b = solution.splines.body.curve->At(factor);
-			coord.bodyPos = b.first;
-			coord.bodyRot = b.second;
-		}
-
-		{
-			auto b = solution.splines.foot[0].curve->At(factor);
-			coord.footPos[0] = b.first;
-			coord.footRot[0] = b.second;
-		}
-
-		{
-			auto b = solution.splines.foot[1].curve->At(factor);
-			coord.footPos[1] = b.first;
-			coord.footRot[1] = b.second;
-		}
-
-		return coord;
-	}
-
-	//--------------------------------------------------------------------------
-	SolutionVector solution;
-
-	struct Splines
+	struct Diagnostic
 	{
 		SplineDiagnostic body;
 		SplineDiagnostic foot[2];
 	};
 
-	Splines splines;
+	Diagnostic splines;
 };
 
+//------------------------------------------------------------------------------
 IAnimationGeneration* IAnimationGeneration::Create(IRobot* robot)
 {
 	return new AnimationGeneration(robot);

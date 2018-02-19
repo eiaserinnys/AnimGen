@@ -50,11 +50,23 @@ public:
 
 	pair<Vector3D, Vector3D> At(double v)
 	{
-		int i = (int)v;
+		int i = (int) v;
 		double f = v - i;
 
-		if (i < 0) { return make_pair(P(0), R(0)); }
-		if (i + 1 >= pos.size()) { return make_pair(*pos.rbegin(), *rot.rbegin()); }
+		if (v < 0) 
+		{ 
+			if (i < 0) 
+			{ 
+				throw std::invalid_argument("argument too small"); 
+			}
+		}
+		if (i + 1 >= pos.size()) 
+		{ 
+			if (i >= pos.size())
+			{
+				throw std::invalid_argument("argument too large");
+			}
+		}
 
 		Vector4D u(f * f * f, f * f, f, 1);
 
@@ -91,18 +103,18 @@ public:
 	Vector3D P(int i) const
 	{
 		if (i < 0) { return pos[0]; }
-		if (i >= pos.size()) { return *pos.rbegin(); }
+		if (i + 1 >= pos.size()) { return *pos.rbegin(); }
 		return pos[i];
 	}
 
 	Vector3D R(int i) const
 	{
 		if (i < 0) { return rot[0]; }
-		if (i >= rot.size()) { return *rot.rbegin(); }
+		if (i + 1 >= rot.size()) { return *rot.rbegin(); }
 		return rot[i];
 	}
 
-	double GetMax() { return pos.size(); }
+	double GetMax() { return pos.size() - 1; }
 
 	Matrix4D m;
 	vector<Vector3D> pos;

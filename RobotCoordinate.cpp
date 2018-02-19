@@ -66,14 +66,151 @@ bool SetLocal(Robot* robot, const string& name, const Matrix4D& m, bool validate
 };
 
 //--------------------------------------------------------------------------
+GeneralCoordinate::Leg operator + (
+	const GeneralCoordinate::Leg& lhs, 
+	const GeneralCoordinate::Leg& rhs)
+{
+	GeneralCoordinate::Leg ret;
+
+	ret.rot1 = lhs.rot1 + rhs.rot1;
+	ret.len1 = lhs.len1 + rhs.len1;
+	ret.rot2 = lhs.rot2 + rhs.rot2;
+	ret.len2 = lhs.len2 + rhs.len2;
+	ret.footRot = lhs.footRot + rhs.footRot;
+
+	return ret;
+}
+
+//--------------------------------------------------------------------------
+GeneralCoordinate::Leg operator - (
+	const GeneralCoordinate::Leg& lhs,
+	const GeneralCoordinate::Leg& rhs)
+{
+	GeneralCoordinate::Leg ret;
+
+	ret.rot1 = lhs.rot1 - rhs.rot1;
+	ret.len1 = lhs.len1 - rhs.len1;
+	ret.rot2 = lhs.rot2 - rhs.rot2;
+	ret.len2 = lhs.len2 - rhs.len2;
+	ret.footRot = lhs.footRot - rhs.footRot;
+
+	return ret;
+}
+
+//--------------------------------------------------------------------------
+GeneralCoordinate::Leg operator * (
+	const GeneralCoordinate::Leg& lhs,
+	double rhs)
+{
+	GeneralCoordinate::Leg ret;
+
+	ret.rot1 = lhs.rot1 * rhs;
+	ret.len1 = lhs.len1 * rhs;
+	ret.rot2 = lhs.rot2 * rhs;
+	ret.len2 = lhs.len2 * rhs;
+	ret.footRot = lhs.footRot * rhs;
+
+	return ret;
+}
+
+//--------------------------------------------------------------------------
+GeneralCoordinate::Leg operator / (
+	const GeneralCoordinate::Leg& lhs,
+	double rhs)
+{
+	GeneralCoordinate::Leg ret;
+
+	ret.rot1 = lhs.rot1 / rhs;
+	ret.len1 = lhs.len1 / rhs;
+	ret.rot2 = lhs.rot2 / rhs;
+	ret.len2 = lhs.len2 / rhs;
+	ret.footRot = lhs.footRot / rhs;
+
+	return ret;
+}
+
+//--------------------------------------------------------------------------
+GeneralCoordinate operator - (const GeneralCoordinate& lhs, const GeneralCoordinate& rhs)
+{
+	GeneralCoordinate ret;
+
+	ret.body.first = lhs.body.first - rhs.body.first;
+	ret.body.second = lhs.body.second - rhs.body.second;
+	ret.leg[0] = lhs.leg[0] - rhs.leg[0];
+	ret.leg[1] = lhs.leg[1] - rhs.leg[1];
+
+	return ret;
+}
+
+//--------------------------------------------------------------------------
+GeneralCoordinate operator + (const GeneralCoordinate& lhs, const GeneralCoordinate& rhs)
+{
+	GeneralCoordinate ret;
+
+	ret.body.first = lhs.body.first + rhs.body.first;
+	ret.body.second = lhs.body.second + rhs.body.second;
+	ret.leg[0] = lhs.leg[0] + rhs.leg[0];
+	ret.leg[1] = lhs.leg[1] + rhs.leg[1];
+
+	return ret;
+}
+
+//--------------------------------------------------------------------------
+GeneralCoordinate operator / (const GeneralCoordinate& lhs, double rhs)
+{
+	GeneralCoordinate ret;
+
+	ret.body.first = lhs.body.first / rhs;
+	ret.body.second = lhs.body.second / rhs;
+	ret.leg[0] = lhs.leg[0] / rhs;
+	ret.leg[1] = lhs.leg[1] / rhs;
+
+	return ret;
+}
+
+//--------------------------------------------------------------------------
+GeneralCoordinate operator * (const GeneralCoordinate& lhs, double rhs)
+{
+	GeneralCoordinate ret;
+
+	ret.body.first = lhs.body.first * rhs;
+	ret.body.second = lhs.body.second * rhs;
+	ret.leg[0] = lhs.leg[0] * rhs;
+	ret.leg[1] = lhs.leg[1] * rhs;
+
+	return ret;
+}
+
+//--------------------------------------------------------------------------
+void GeneralCoordinate::Dump() const
+{
+	WindowsUtility::Debug(
+		L"B(%+.3f,%+.3f,%+.3f) (%+.3f,%+.3f,%+.3f) "
+		"LR1(%+.3f,%+.3f,%+.3f) LLen1(%+.3f), "
+		"LR2(%+.3f, %+.3f,%+.3f) LLen2(%+.3f), "
+		"LFR(%+.3f, %+.3f,%+.3f) "
+		"RR1(%+.3f,%+.3f,%+.3f) RLen1(%+.3f) "
+		"RR2(%+.3f,%+.3f,%+.3f) RLen2(%+.3f) "
+		"RFR(%+.3f,%+.3f,%+.3f)\n",
+		body.first.x, body.first.y, body.first.z,
+		body.second.x, body.second.y, body.second.z,
+		leg[0].rot1.x, leg[0].rot1.x, leg[0].rot1.x, leg[0].len1,
+		leg[0].rot2.x, leg[0].rot2.x, leg[0].rot2.x, leg[0].len2,
+		leg[0].footRot.x, leg[0].footRot.y, leg[0].footRot.z,
+		leg[1].rot1.x, leg[1].rot1.x, leg[1].rot1.x, leg[1].len1,
+		leg[1].rot2.x, leg[1].rot2.x, leg[1].rot2.x, leg[1].len2,
+		leg[1].footRot.x, leg[1].footRot.y, leg[1].footRot.z);
+}
+
+//--------------------------------------------------------------------------
 // 일단 몸, 다리, 발만 계산한다
 GeneralCoordinate 
 	RobotCoordinate::ToGeneralCoordinate(Robot* robot) const
 {
 	GeneralCoordinate coord;
 
-	coord.bodyPos = robot->GetWorldPosition("Body");
-	coord.bodyRot = robot->GetLocalRotation("Body");
+	coord.body.first = robot->GetWorldPosition("Body");
+	coord.body.second = robot->GetLocalRotation("Body");
 
 	{
 		coord.leg[0].rot1 = robot->GetLocalRotation("LLeg1");
@@ -127,8 +264,8 @@ bool RobotCoordinate::SetTransform(
 	bool result = true;
 
 	{
-		auto bodyM = ExponentialMap::ToMatrix(coord.bodyRot);
-		FrameHelper::SetTranslation(bodyM, coord.bodyPos);
+		auto bodyM = ExponentialMap::ToMatrix(coord.body.second);
+		FrameHelper::SetTranslation(bodyM, coord.body.first);
 		SetWorld(robot, "Body", bodyM, validate);
 	}
 
@@ -167,14 +304,14 @@ SolutionCoordinate RobotCoordinate::ToSolutionCoordinate(Robot* robot) const
 {
 	SolutionCoordinate coord;
 
-	coord.bodyPos = robot->GetWorldPosition("Body");
-	coord.bodyRot = robot->GetLocalRotation("Body");
+	coord.body.first = robot->GetWorldPosition("Body");
+	coord.body.second = robot->GetLocalRotation("Body");
 
-	coord.footPos[0] = robot->GetWorldPosition("LFoot");
-	coord.footRot[0] = ExponentialMap::FromMatrix(robot->GetWorldTransform("LFoot"));
+	coord.foot[0].first = robot->GetWorldPosition("LFoot");
+	coord.foot[0].second = ExponentialMap::FromMatrix(robot->GetWorldTransform("LFoot"));
 
-	coord.footPos[1] = robot->GetWorldPosition("RFoot");
-	coord.footRot[1] = ExponentialMap::FromMatrix(robot->GetWorldTransform("RFoot"));
+	coord.foot[1].first = robot->GetWorldPosition("RFoot");
+	coord.foot[1].second = ExponentialMap::FromMatrix(robot->GetWorldTransform("RFoot"));
 
 	return coord;
 }
@@ -210,13 +347,13 @@ void RobotCoordinate::SetTransform(
 		retry = false;
 
 		{
-			auto bodyM = ExponentialMap::ToMatrix(coord.bodyRot);
-			FrameHelper::SetTranslation(bodyM, coord.bodyPos);
+			auto bodyM = ExponentialMap::ToMatrix(coord.body.second);
+			FrameHelper::SetTranslation(bodyM, coord.body.first);
 			SetWorld(robot, "Body", bodyM, false);
 		}
 
-		robot->SetFootTransform(true, coord.footPos[0], coord.footRot[0]);
-		robot->SetFootTransform(false, coord.footPos[1], coord.footRot[1]);
+		robot->SetFootTransform(true, coord.foot[0].first, coord.foot[0].second);
+		robot->SetFootTransform(false, coord.foot[1].first, coord.foot[1].second);
 
 		if (validate)
 		{
@@ -287,10 +424,10 @@ void SolutionCoordinate::Dump() const
 		L"B(%.3f,%.3f,%.3f), (%.3f,%.3f,%.3f) "
 		"LF(%.3f,%.3f,%.3f), (%.3f,%.3f,%.3f) "
 		"RF(%.3f,%.3f,%.3f), (%.3f,%.3f,%.3f)\n",
-		bodyPos.x, bodyPos.y, bodyPos.z,
-		bodyRot.x, bodyRot.y, bodyRot.z,
-		footPos[0].x, footPos[0].y, footPos[0].z,
-		footRot[0].x, footRot[0].y, footRot[0].z,
-		footPos[1].x, footPos[1].y, footPos[1].z,
-		footRot[1].x, footRot[1].y, footRot[1].z);
+		body.first.x, body.first.y, body.first.z,
+		body.second.x, body.second.y, body.second.z,
+		foot[0].first.x, foot[0].first.y, foot[0].first.z,
+		foot[0].second.x, foot[0].second.y, foot[0].second.z,
+		foot[1].first.x, foot[1].first.y, foot[1].first.z,
+		foot[1].second.x, foot[1].second.y, foot[1].second.z);
 }
