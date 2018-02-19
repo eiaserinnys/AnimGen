@@ -18,35 +18,23 @@ public:
 
 	IRobot* robot;
 
+	//--------------------------------------------------------------------------
 	AnimationGeneration(IRobot* robot) : robot(robot)
 	{
 		solution = SolutionVector::BuildTest(robot->CurrentSC());
 	}
 
+	//--------------------------------------------------------------------------
 	void UpdateSpline()
 	{
-		SplineSource body, foot[2];
+		const int m = 20;
 
-		for (auto it = solution.coords.begin(); 
-			it != solution.coords.end(); ++it)
-		{
-			auto coord = it->second;
-			
-			body.pos.push_back(coord.bodyPos);
-			body.rot.push_back(coord.bodyRot);
-
-			foot[0].pos.push_back(coord.footPos[0]);
-			foot[0].rot.push_back(coord.footRot[0]);
-
-			foot[1].pos.push_back(coord.footPos[1]);
-			foot[1].rot.push_back(coord.footRot[1]);
-		}
-
-		splines.body.reset(new SplineDiagnostic(body.pos, body.rot));
-		splines.foot[0].reset(new SplineDiagnostic(foot[0].pos, foot[0].rot));
-		splines.foot[1].reset(new SplineDiagnostic(foot[1].pos, foot[1].rot));
+		splines.body.Sample(solution.splines.body.curve.get(), m);
+		splines.foot[0].Sample(solution.splines.foot[0].curve.get(), m);
+		splines.foot[1].Sample(solution.splines.foot[1].curve.get(), m);
 	}
 
+	//--------------------------------------------------------------------------
 	void Enqueue(LineBuffer* buffer)
 	{
 		auto curTime = timeGetTime();
@@ -68,33 +56,34 @@ public:
 
 		double factor = ((double)elapsed / total) * (points - 1);
 
-		splines.body->Enqueue(buffer, factor);
-		splines.foot[0]->Enqueue(buffer, factor);
-		splines.foot[1]->Enqueue(buffer, factor);
+		splines.body.Enqueue(solution.splines.body.curve.get(), buffer, factor);
+		splines.foot[0].Enqueue(solution.splines.foot[0].curve.get(), buffer, factor);
+		splines.foot[1].Enqueue(solution.splines.foot[1].curve.get(), buffer, factor);
 
 		auto coord = At(factor);
 
 		robot->Apply(coord);
 	}
 
+	//--------------------------------------------------------------------------
 	SolutionCoordinate At(double factor)
 	{
 		SolutionCoordinate coord;
 
 		{
-			auto b = splines.body->spline->At(factor);
+			auto b = solution.splines.body.curve->At(factor);
 			coord.bodyPos = b.first;
 			coord.bodyRot = b.second;
 		}
 
 		{
-			auto b = splines.foot[0]->spline->At(factor);
+			auto b = solution.splines.foot[0].curve->At(factor);
 			coord.footPos[0] = b.first;
 			coord.footRot[0] = b.second;
 		}
 
 		{
-			auto b = splines.foot[1]->spline->At(factor);
+			auto b = solution.splines.foot[1].curve->At(factor);
 			coord.footPos[1] = b.first;
 			coord.footRot[1] = b.second;
 		}
@@ -102,18 +91,13 @@ public:
 		return coord;
 	}
 
+	//--------------------------------------------------------------------------
 	SolutionVector solution;
-
-	struct SplineSource
-	{
-		vector<Vector3D> pos;
-		vector<Vector3D> rot;
-	};
 
 	struct Splines
 	{
-		unique_ptr<SplineDiagnostic> body;
-		unique_ptr<SplineDiagnostic> foot[2];
+		SplineDiagnostic body;
+		SplineDiagnostic foot[2];
 	};
 
 	Splines splines;

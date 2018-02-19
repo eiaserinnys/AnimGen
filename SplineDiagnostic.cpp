@@ -27,39 +27,42 @@ XMMATRIX ToXMMATRIX(const Matrix4D& m)
 }
 
 //------------------------------------------------------------------------------
-SplineDiagnostic::SplineDiagnostic(
-	const vector<Vector3D>& pos, 
-	const vector<Vector3D>& rot)
-	: pos(pos), 
-	rot(rot)
+void SplineDiagnostic::Sample(IHermiteSpline* spline, int g)
 {
-	spline.reset(IHermiteSpline::Create(pos, rot));
+	double m = spline->GetMax();
 
-	for (size_t i = 0; i < pos.size(); ++i)
-	{ 
-		Vector4D q = ExponentialMap::ToQuaternion(rot[i]);
-		Matrix4D m = DXMathTransform<double>::MatrixRotationQuaternion(q);
-		FrameHelper::SetTranslation(m, pos[i]);
-
-		tx.push_back(ToXMMATRIX(m));
-	}
-
-	Sample(20);
-}
-
-//------------------------------------------------------------------------------
-void SplineDiagnostic::Sample(int g)
-{
-	for (int i = 0; i <= pos.size() * g; ++i)
 	{
-		auto ret = spline->At((double)i / g);
-		auto p = ret.first;
-		sampled.push_back(XMFLOAT3(p.x, p.y, p.z));
+		tx.clear();
+
+		for (size_t i = 0; i < m; ++i)
+		{
+			auto ret = spline->At(i);
+
+			Vector4D q = ExponentialMap::ToQuaternion(ret.second);
+			Matrix4D m = DXMathTransform<double>::MatrixRotationQuaternion(q);
+			FrameHelper::SetTranslation(m, ret.first);
+
+			tx.push_back(ToXMMATRIX(m));
+		}
+	}
+
+	{
+		sampled.clear();
+
+		for (int i = 0; i <= m* g; ++i)
+		{
+			auto ret = spline->At((double)i / g);
+			auto p = ret.first;
+			sampled.push_back(XMFLOAT3(p.x, p.y, p.z));
+		}
 	}
 }
 
 //------------------------------------------------------------------------------
-void SplineDiagnostic::Enqueue(LineBuffer* lineBuffer, double factor)
+void SplineDiagnostic::Enqueue(
+	IHermiteSpline* spline, 
+	LineBuffer* lineBuffer, 
+	double factor)
 {
 	for (auto it = tx.begin(); it != tx.end(); ++it)
 	{

@@ -102,6 +102,8 @@ public:
 		return rot[i];
 	}
 
+	double GetMax() { return pos.size(); }
+
 	Matrix4D m;
 	vector<Vector3D> pos;
 	vector<Vector3D> rot;		// exponential map

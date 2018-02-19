@@ -9,6 +9,8 @@ public:
 
 	virtual std::pair<Core::Vector3D, Core::Vector3D> At(double v) = 0;
 
+	virtual double GetMax() = 0;
+
 	static IHermiteSpline* Create(
 		const std::vector<Core::Vector3D>& p, 
 		const std::vector<Core::Vector3D>& r);

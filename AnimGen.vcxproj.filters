@@ -155,11 +155,11 @@
     <ClCompile Include="AnimationGeneration.cpp">
       <Filter>ThisApp\AnimationGeneration</Filter>
     </ClCompile>
-    <ClCompile Include="SplineDiagnostic.cpp">
-      <Filter>Visual\Rendering\Diagnostic</Filter>
-    </ClCompile>
     <ClCompile Include="LineBuffer.cpp">
       <Filter>Visual\Rendering\Diagnostic</Filter>
+    </ClCompile>
+    <ClCompile Include="SplineDiagnostic.cpp">
+      <Filter>ThisApp\AnimationGeneration</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -298,14 +298,14 @@
     <ClInclude Include="AnimationGeneration.h">
       <Filter>ThisApp\AnimationGeneration</Filter>
     </ClInclude>
-    <ClInclude Include="SplineDiagnostic.h">
-      <Filter>Visual\Rendering\Diagnostic</Filter>
-    </ClInclude>
     <ClInclude Include="LineBuffer.h">
       <Filter>Visual\Rendering\Diagnostic</Filter>
     </ClInclude>
     <ClInclude Include="RobotImplementation.h">
       <Filter>Robot\Component</Filter>
+    </ClInclude>
+    <ClInclude Include="SplineDiagnostic.h">
+      <Filter>ThisApp\AnimationGeneration</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

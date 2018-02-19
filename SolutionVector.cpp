@@ -1,9 +1,12 @@
 #include "pch.h"
 #include "SolutionVector.h"
 
+#include "Robot.h"
+
 using namespace std;
 using namespace Core;
 
+//------------------------------------------------------------------------------
 SolutionVector SolutionVector::BuildTest(const SolutionCoordinate& init)
 {
 	SolutionVector v;
@@ -31,5 +34,38 @@ SolutionVector SolutionVector::BuildTest(const SolutionCoordinate& init)
 		v.coords.push_back(make_pair(i * 0.5, nc));
 	}
 
+	v.UpdateSpline();
+
 	return v;
+}
+
+//------------------------------------------------------------------------------
+void SolutionVector::UpdateSpline()
+{
+	for (auto it = coords.begin(); it != coords.end(); ++it)
+	{
+		auto coord = it->second;
+
+		splines.body.pos.push_back(coord.bodyPos);
+		splines.body.rot.push_back(coord.bodyRot);
+
+		splines.foot[0].pos.push_back(coord.footPos[0]);
+		splines.foot[0].rot.push_back(coord.footRot[0]);
+
+		splines.foot[1].pos.push_back(coord.footPos[1]);
+		splines.foot[1].rot.push_back(coord.footRot[1]);
+	}
+
+	splines.body.Update();
+	splines.foot[0].Update();
+	splines.foot[1].Update();
+}
+
+//------------------------------------------------------------------------------
+void SolutionVector::CalculateGenericCoordinates(IRobot* robot)
+{
+	for (size_t i = 0; i < coords.size(); ++i)
+	{
+		auto& c = coords[i];
+	}
 }

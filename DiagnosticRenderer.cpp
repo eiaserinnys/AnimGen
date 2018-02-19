@@ -44,30 +44,6 @@ public:
 		constants.reset(new SimpleConstant(d3dDev, devCtx));
 
 		lineBuffer.reset(new LineBuffer(d3dDev));
-
-		{
-			vector<Vector3D> pos;
-			vector<Vector3D> rot;
-
-			for (int i = 0; i <= 10; ++i)
-			{
-				auto r = [](float range)->float
-				{
-					return ((float)rand() / RAND_MAX) * range * 2 - range;
-				};
-
-				float range = 3.0;
-
-				Vector3D v(r(range), r(1) + 1.5, r(range));
-				Vector4D q = Normalize(Vector4D(r(1), r(1), r(1), r(1)));
-				Vector3D e = ExponentialMap::FromQuaternion(q);
-
-				pos.push_back(v);
-				rot.push_back(e);
-			}
-
-			test.reset(new SplineDiagnostic(pos, rot));
-		}
 	}
 
 	//--------------------------------------------------------------------------
