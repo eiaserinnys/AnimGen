@@ -182,6 +182,16 @@ GeneralCoordinate operator * (const GeneralCoordinate& lhs, double rhs)
 }
 
 //--------------------------------------------------------------------------
+void GeneralCoordinate::Clear()
+{
+	body.first.FillZero();
+	body.second.FillZero();
+
+	leg[0].FillZero();
+	leg[1].FillZero();
+}
+
+//--------------------------------------------------------------------------
 void GeneralCoordinate::Dump() const
 {
 	WindowsUtility::Debug(
@@ -194,11 +204,11 @@ void GeneralCoordinate::Dump() const
 		"RFR(%+.3f,%+.3f,%+.3f)\n",
 		body.first.x, body.first.y, body.first.z,
 		body.second.x, body.second.y, body.second.z,
-		leg[0].rot1.x, leg[0].rot1.x, leg[0].rot1.x, leg[0].len1,
-		leg[0].rot2.x, leg[0].rot2.x, leg[0].rot2.x, leg[0].len2,
+		leg[0].rot1.x, leg[0].rot1.y, leg[0].rot1.z, leg[0].len1,
+		leg[0].rot2.x, leg[0].rot2.y, leg[0].rot2.z, leg[0].len2,
 		leg[0].footRot.x, leg[0].footRot.y, leg[0].footRot.z,
-		leg[1].rot1.x, leg[1].rot1.x, leg[1].rot1.x, leg[1].len1,
-		leg[1].rot2.x, leg[1].rot2.x, leg[1].rot2.x, leg[1].len2,
+		leg[1].rot1.x, leg[1].rot1.y, leg[1].rot1.z, leg[1].len1,
+		leg[1].rot2.x, leg[1].rot2.y, leg[1].rot2.z, leg[1].len2,
 		leg[1].footRot.x, leg[1].footRot.y, leg[1].footRot.z);
 }
 

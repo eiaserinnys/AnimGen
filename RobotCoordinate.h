@@ -16,11 +16,24 @@ struct GeneralCoordinate
 		double len2;
 
 		Core::Vector3D footRot;
+
+		void FillZero()
+		{
+			rot1.FillZero();
+			len1 = 0;
+
+			rot2.FillZero();
+			len2 = 0;
+
+			footRot.FillZero();
+		}
 	};
 
 	std::pair<Core::Vector3D, Core::Vector3D> body;
 
 	Leg leg[2];
+
+	void Clear();
 
 	void Dump() const;
 };

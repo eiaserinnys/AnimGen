@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "SolutionVector.h"
 
+#include <stdio.h>
 #include <WindowsUtility.h>
 
 #include "Robot.h"
@@ -40,11 +41,8 @@ SolutionVector* SolutionVector::BuildTest(const SolutionCoordinate& init)
 
 		SolutionCoordinate nc = init;
 
-		double d = -0.05;
-		if (i % 2 == 0)
-		{
-			d = 0.05;
-		}
+		double d = 0;
+		d = i % 2 == 0 ? 0.05 : -0.05;
 
 		auto move = Lerp(Vector3D(0, 0, 0), delta, factor).Evaluate();
 		auto moveF = Lerp(Vector3D(0, 0, 0), deltaF, factor).Evaluate();
@@ -107,12 +105,67 @@ SolutionCoordinate SolutionVector::AtByTime(double time)
 //------------------------------------------------------------------------------
 void SolutionVector::UpdateGenericCoordinates()
 {
+	FILE *f = nullptr;
+	fopen_s(&f, "acclog.txt", "w");
+	if (f == NULL)
+	{
+		return;
+	}
+
+	auto& dump = [&f](
+		double t, 
+		const GeneralCoordinate& g, 
+		const GeneralCoordinate& gv,
+		const GeneralCoordinate& ga)
+	{
+		fprintf(f,
+			"%f\t"
+			"%f\t%f\t%f\t"
+			"%f\t%f\t%f\t"
+			"%f\t%f\t%f\t"
+			"\n",
+			t,
+			g.body.first.x,
+			g.body.first.y,
+			g.body.first.z,
+			gv.body.first.x,
+			gv.body.first.y,
+			gv.body.first.z,
+			ga.body.first.x,
+			ga.body.first.y,
+			ga.body.first.z);
+	};
+
+	fprintf(f, 
+		"time\t"
+		"b_p_x\ty\tz\t"
+		"b_pv_x\ty\tz\t"
+		"b_pa_x\ty\tz\t"
+		"\n");
+
 	gAcc.clear();
 
 	auto m = splines.body.curve->GetMax();
 
-	//for (double t = 0; t < m * g_timeStep; t += g_derStep)
-	for (double t = 0.45; t <= 0.5010; t += g_derStep)
+	double timeFrom = 0;
+	double timeTo = m * g_timeStep;
+
+	GeneralCoordinate zero;
+	zero.Clear();
+
+	{
+		double t = timeFrom - g_derStep;
+
+		auto c = AtByTime(t);
+		robot->Apply(c);
+		auto g = robot->Current();
+
+		dump(t, g, zero, zero);
+	}
+
+	for (double t = timeFrom; t <= timeTo; t += g_derStep)
+	//for (double t = 0.45; t <= 0.5010; t += g_derStep)
+	//for (double t = 0.0; t <= 1.0; t += g_derStep)
 	{
 		auto cm = AtByTime(t - g_derStep);
 		auto c = AtByTime(t);
@@ -127,14 +180,23 @@ void SolutionVector::UpdateGenericCoordinates()
 		robot->Apply(cp);
 		auto gp = robot->Current();
 
+		auto gv = (gp - gm) / (2 * g_derStep);
+
 		// https://www.scss.tcd.ie/~dahyotr/CS7ET01/01112007.pdf
 		auto ga = (gp - (g * 2.0) + gm) / (g_derStep * g_derStep);
 
-		WindowsUtility::Debug(L"time %.4f ", t);
-		gm.Dump();
-		g.Dump();
-		gp.Dump();
-		ga.Dump();
-		WindowsUtility::Debug(L"\n");
+		dump(t, g, gv, ga);
 	}
+
+	{
+		double t = timeFrom + g_derStep;
+
+		auto c = AtByTime(t);
+		robot->Apply(c);
+		auto g = robot->Current();
+
+		dump(t, g, zero, zero);
+	}
+
+	fclose(f);
 }
