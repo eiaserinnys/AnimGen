@@ -36,7 +36,7 @@ public:
 	}
 
 	//--------------------------------------------------------------------------
-	double CurrentFactor()
+	double CurrentTime()
 	{
 		auto curTime = timeGetTime();
 		if (lastTime != 0)
@@ -50,24 +50,24 @@ public:
 			lastTime = curTime;
 		}
 
-		int points = sol->coords.size();
-		int total = (int)((points - 1) * sol->Timestep() * 1000);
+		double t = sol->coords.rbegin()->first;
+		int total = (int)(t * 1000);
 
 		elapsed = elapsed % total;
 
-		return ((double)elapsed / total) * (points - 1);
+		return ((double)elapsed / total) * t;
 	}
 
 	//--------------------------------------------------------------------------
 	void Enqueue(LineBuffer* buffer)
 	{
-		auto factor = CurrentFactor();
+		auto t = CurrentTime();
 
-		splines.body.Enqueue(sol->splines.body.curve.get(), buffer, factor);
-		splines.foot[0].Enqueue(sol->splines.foot[0].curve.get(), buffer, factor);
-		splines.foot[1].Enqueue(sol->splines.foot[1].curve.get(), buffer, factor);
+		splines.body.Enqueue(sol->splines.body.curve.get(), buffer, t);
+		splines.foot[0].Enqueue(sol->splines.foot[0].curve.get(), buffer, t);
+		splines.foot[1].Enqueue(sol->splines.foot[1].curve.get(), buffer, t);
 
-		auto coord = sol->AtByFactor(factor);
+		auto coord = sol->At(t);
 
 		robot->Apply(coord);
 	}

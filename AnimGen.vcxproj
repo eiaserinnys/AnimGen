@@ -145,6 +145,7 @@
     <ClCompile Include="LineBuffer.cpp" />
     <ClCompile Include="Logger.cpp" />
     <ClCompile Include="Mesh.cpp" />
+    <ClCompile Include="ClampedSpline.cpp" />
     <ClCompile Include="ObjectRenderer.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
@@ -186,6 +187,7 @@
     <ClInclude Include="Matrix.h" />
     <ClInclude Include="Mesh.h" />
     <ClInclude Include="MeshT.h" />
+    <ClInclude Include="ClampedSpline.h" />
     <ClInclude Include="ObjectBuffer.h" />
     <ClInclude Include="ObjectRenderer.h" />
     <ClInclude Include="pch.h" />
@@ -201,6 +203,7 @@
     <ClInclude Include="SolutionVector.h" />
     <ClInclude Include="Solver.h" />
     <ClInclude Include="SolverHelper.h" />
+    <ClInclude Include="Spline.h" />
     <ClInclude Include="SplineDiagnostic.h" />
     <ClInclude Include="ThisApp.h" />
     <ClInclude Include="UIRenderer.h" />

@@ -74,9 +74,9 @@ void SolutionVector::UpdateSpline()
 	for (auto it = coords.begin(); it != coords.end(); ++it)
 	{
 		auto coord = it->second;
-		splines.body.Append(coord.body);
-		splines.foot[0].Append(coord.foot[0]);
-		splines.foot[1].Append(coord.foot[1]);
+		splines.body.Append(it->first, coord.body);
+		splines.foot[0].Append(it->first, coord.foot[0]);
+		splines.foot[1].Append(it->first, coord.foot[1]);
 	}
 
 	splines.body.Update();
@@ -85,26 +85,28 @@ void SolutionVector::UpdateSpline()
 }
 
 //------------------------------------------------------------------------------
-SolutionCoordinate SolutionVector::AtByFactor(double f)
+SolutionCoordinate SolutionVector::At(double t)
 {
 	SolutionCoordinate c;
 
-	c.body = splines.body.curve->At(f);
-	c.foot[0] = splines.foot[0].curve->At(f);
-	c.foot[1] = splines.foot[1].curve->At(f);
+	c.body = splines.body.curve->At(t);
+	c.foot[0] = splines.foot[0].curve->At(t);
+	c.foot[1] = splines.foot[1].curve->At(t);
 
 	return c;
 }
 
-//------------------------------------------------------------------------------
-SolutionCoordinate SolutionVector::AtByTime(double time)
-{
-	return AtByFactor(time / g_timeStep);
-}
+////------------------------------------------------------------------------------
+//SolutionCoordinate SolutionVector::AtByTime(double time)
+//{
+//	return AtByFactor(time / g_timeStep);
+//}
 
 //------------------------------------------------------------------------------
 void SolutionVector::UpdateGenericCoordinates()
 {
+	return;
+
 	FILE *f = nullptr;
 	fopen_s(&f, "acclog.txt", "w");
 	if (f == NULL)
@@ -156,7 +158,7 @@ void SolutionVector::UpdateGenericCoordinates()
 	{
 		double t = timeFrom - g_derStep;
 
-		auto c = AtByTime(t);
+		auto c = At(t);
 		robot->Apply(c);
 		auto g = robot->Current();
 
@@ -167,9 +169,9 @@ void SolutionVector::UpdateGenericCoordinates()
 	//for (double t = 0.45; t <= 0.5010; t += g_derStep)
 	//for (double t = 0.0; t <= 1.0; t += g_derStep)
 	{
-		auto cm = AtByTime(t - g_derStep);
-		auto c = AtByTime(t);
-		auto cp = AtByTime(t + g_derStep);
+		auto cm = At(t - g_derStep);
+		auto c = At(t);
+		auto cp = At(t + g_derStep);
 
 		robot->Apply(cm);
 		auto gm = robot->Current();
@@ -191,7 +193,7 @@ void SolutionVector::UpdateGenericCoordinates()
 	{
 		double t = timeFrom + g_derStep;
 
-		auto c = AtByTime(t);
+		auto c = At(t);
 		robot->Apply(c);
 		auto g = robot->Current();
 

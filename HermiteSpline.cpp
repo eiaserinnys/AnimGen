@@ -113,9 +113,6 @@ public:
 	vector<Vector3D> rot;		// exponential map
 };
 
-IHermiteSpline::~IHermiteSpline()
-{}
-
 IHermiteSpline* IHermiteSpline::Create(
 	const vector<Vector3D>& p,
 	const vector<Vector3D>& r)

@@ -161,6 +161,9 @@
     <ClCompile Include="SplineDiagnostic.cpp">
       <Filter>ThisApp\AnimationGeneration</Filter>
     </ClCompile>
+    <ClCompile Include="ClampedSpline.cpp">
+      <Filter>Mathematics\Spline</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="RenderContext.h">
@@ -306,6 +309,12 @@
     </ClInclude>
     <ClInclude Include="SplineDiagnostic.h">
       <Filter>ThisApp\AnimationGeneration</Filter>
+    </ClInclude>
+    <ClInclude Include="ClampedSpline.h">
+      <Filter>Mathematics\Spline</Filter>
+    </ClInclude>
+    <ClInclude Include="Spline.h">
+      <Filter>Mathematics\Spline</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

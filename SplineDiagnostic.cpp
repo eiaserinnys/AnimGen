@@ -27,7 +27,7 @@ XMMATRIX ToXMMATRIX(const Matrix4D& m)
 }
 
 //------------------------------------------------------------------------------
-void SplineDiagnostic::Sample(IHermiteSpline* spline, int g)
+void SplineDiagnostic::Sample(ISpline* spline, int g)
 {
 	double m = spline->GetMax();
 
@@ -60,9 +60,9 @@ void SplineDiagnostic::Sample(IHermiteSpline* spline, int g)
 
 //------------------------------------------------------------------------------
 void SplineDiagnostic::Enqueue(
-	IHermiteSpline* spline, 
+	ISpline* spline,
 	LineBuffer* lineBuffer, 
-	double factor)
+	double t)
 {
 	for (auto it = tx.begin(); it != tx.end(); ++it)
 	{
@@ -70,7 +70,7 @@ void SplineDiagnostic::Enqueue(
 	}
 
 	{
-		auto ret = spline->At(factor);
+		auto ret = spline->At(t);
 
 		auto m = DXMathTransform<double>::MatrixRotationQuaternion(
 			ExponentialMap::ToQuaternion(ret.second));

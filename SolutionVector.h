@@ -4,6 +4,7 @@
 
 #include "RobotCoordinate.h"
 #include "HermiteSpline.h"
+#include "ClampedSpline.h"
 
 class IRobot;
 
@@ -11,8 +12,7 @@ struct SolutionVector
 {
 	SolutionVector();
 
-	SolutionCoordinate AtByFactor(double f);
-	SolutionCoordinate AtByTime(double t);
+	SolutionCoordinate At(double t);
 
 	double Timestep();
 
@@ -29,17 +29,21 @@ struct SolutionVector
 
 	struct Spline
 	{
-		std::unique_ptr<IHermiteSpline> curve;
+		//std::unique_ptr<IHermiteSpline> curve;
+		std::unique_ptr<IClampedSpline> curve;
+		std::vector<double> time;
 		std::vector<Core::Vector3D> pos;
 		std::vector<Core::Vector3D> rot;
 
 		void Update()
 		{
-			curve.reset(IHermiteSpline::Create(pos, rot));
+			//curve.reset(IHermiteSpline::Create(pos, rot));
+			curve.reset(IClampedSpline::Create(time, pos, rot));
 		}
 
-		void Append(const std::pair<Core::Vector3D, Core::Vector3D>& p)
+		void Append(double t, const std::pair<Core::Vector3D, Core::Vector3D>& p)
 		{
+			time.push_back(t);
 			pos.push_back(p.first);
 			rot.push_back(p.second);
 		}
