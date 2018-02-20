@@ -49,9 +49,9 @@ struct SplineChannel
 
 		c.reserve(n + 1);
 
-		for (int i = 0; i < V.rows(); ++i)
+		for (int i = 0; i < B.rows(); ++i)
 		{
-			c.push_back(V(i));
+			c.push_back(B(i));
 		}
 	}
 
