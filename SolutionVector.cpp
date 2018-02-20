@@ -96,17 +96,9 @@ SolutionCoordinate SolutionVector::At(double t)
 	return c;
 }
 
-////------------------------------------------------------------------------------
-//SolutionCoordinate SolutionVector::AtByTime(double time)
-//{
-//	return AtByFactor(time / g_timeStep);
-//}
-
 //------------------------------------------------------------------------------
 void SolutionVector::UpdateGenericCoordinates()
 {
-	return;
-
 	FILE *f = nullptr;
 	fopen_s(&f, "acclog.txt", "w");
 	if (f == NULL)
@@ -147,10 +139,8 @@ void SolutionVector::UpdateGenericCoordinates()
 
 	gAcc.clear();
 
-	auto m = splines.body.curve->GetMax();
-
 	double timeFrom = 0;
-	double timeTo = m * g_timeStep;
+	double timeTo = splines.body.curve->GetMax();
 
 	GeneralCoordinate zero;
 	zero.Clear();
@@ -191,7 +181,7 @@ void SolutionVector::UpdateGenericCoordinates()
 	}
 
 	{
-		double t = timeFrom + g_derStep;
+		double t = timeTo + g_derStep;
 
 		auto c = At(t);
 		robot->Apply(c);

@@ -227,10 +227,6 @@ public:
 };
 
 //------------------------------------------------------------------------------
-ISpline::~ISpline()
-{}
-
-//------------------------------------------------------------------------------
 IClampedSpline* IClampedSpline::Create(
 	const vector<double>& t,
 	const vector<Vector3D>& p,

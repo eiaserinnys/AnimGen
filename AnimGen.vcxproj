@@ -135,6 +135,7 @@
   <ItemGroup>
     <ClCompile Include="AngleHelper.cpp" />
     <ClCompile Include="AnimationGeneration.cpp" />
+    <ClCompile Include="ClampedSplineFixedStep.cpp" />
     <ClCompile Include="DeferredRendrerer.cpp" />
     <ClCompile Include="DiagnosticRenderer.cpp" />
     <ClCompile Include="exp-map.cpp" />
@@ -163,6 +164,7 @@
     <ClCompile Include="SceneDescriptor.cpp" />
     <ClCompile Include="SolutionVector.cpp" />
     <ClCompile Include="Solver.cpp" />
+    <ClCompile Include="Spline.cpp" />
     <ClCompile Include="SplineDiagnostic.cpp" />
     <ClCompile Include="ThisApp.cpp" />
     <ClCompile Include="UIRenderer.cpp" />
@@ -173,6 +175,7 @@
     <ClInclude Include="AngleHelper.h" />
     <ClInclude Include="AnimationGeneration.h" />
     <ClInclude Include="BasicMeshT.h" />
+    <ClInclude Include="ClampedSplineFixedStep.h" />
     <ClInclude Include="DeferredRenderer.h" />
     <ClInclude Include="DiagnosticRenderer.h" />
     <ClInclude Include="DXMathTransform.h" />

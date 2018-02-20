@@ -164,6 +164,12 @@
     <ClCompile Include="ClampedSpline.cpp">
       <Filter>Mathematics\Spline</Filter>
     </ClCompile>
+    <ClCompile Include="ClampedSplineFixedStep.cpp">
+      <Filter>Mathematics\Spline</Filter>
+    </ClCompile>
+    <ClCompile Include="Spline.cpp">
+      <Filter>Mathematics\Spline</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="RenderContext.h">
@@ -314,6 +320,9 @@
       <Filter>Mathematics\Spline</Filter>
     </ClInclude>
     <ClInclude Include="Spline.h">
+      <Filter>Mathematics\Spline</Filter>
+    </ClInclude>
+    <ClInclude Include="ClampedSplineFixedStep.h">
       <Filter>Mathematics\Spline</Filter>
     </ClInclude>
   </ItemGroup>
