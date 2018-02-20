@@ -42,10 +42,12 @@ struct FixedSplineChannel
 		if (solver->info() != Success) { throw runtime_error("SimplicialLLT::solve() failed"); }
 
 		c.reserve(n + 1);
-		for (int i = 0; i < V.rows(); ++i)
+		for (int i = 0; i < B.rows(); ++i)
 		{
-			c.push_back(V(i));
+			c.push_back(B(i));
 		}
+
+		//ValidateVelocity();
 
 		//Test();
 	}
@@ -77,22 +79,44 @@ struct FixedSplineChannel
 		}
 	}
 
-	double At(double x)
+	double At(double x_)
 	{
-		if (x < 0) { return y[0]; }
-		if (x >= te) { return *y.rbegin(); }
+		int i = (int)(x_ / timeStep);
 
-		int i = (int)(x / timeStep);
+		if (x_ < 0) { i = 0; }
+		if (x_ >= te) { i = n - 1; }
 
-		auto d = (x - i * timeStep);
+		auto x = (x_ - i * timeStep);
 
 		double h = timeStep;
 
-		return
-			y[i] +
-			(1.0 / h * (y[i + 1] - y[i]) - h / 3 * (2 * c[i] + c[i + 1])) * d +
-			c[i] * d * d +
-			1 / (3 * h) * (c[i + 1] - c[i]) * d * d * d;
+		auto a = y[i];
+		auto b = (1.0 / h * (y[i + 1] - y[i]) - h / 3 * (2 * c[i] + c[i + 1]));
+		auto d = 1 / (3 * h) * (c[i + 1] - c[i]);
+
+		return a + b * x + c[i] * x * x + d * x * x * x;
+	}
+
+	void ValidateVelocity()
+	{
+		double h = timeStep;
+
+		for (int i = 0; i < n; ++i)
+		{
+			auto a = y[i];
+			auto b = (1.0 / h * (y[i + 1] - y[i]) - h / 3 * (2 * c[i] + c[i + 1]));
+			auto d = 1 / (3 * h) * (c[i + 1] - c[i]);
+
+			auto t0 = i * h;
+			auto t1 = (i + 1) * h;
+
+			auto v1 = b + 2 * c[i] * h + 3 * d * h * h;
+
+			WindowsUtility::Debug(
+				L"S'%d(%f)=%f, S'%d(%f)=%f\n", 
+				i, t0, b, 
+				i, t1, v1);
+		}
 	}
 
 	void Test()
