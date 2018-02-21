@@ -33,6 +33,8 @@ struct GeneralCoordinate
 
 	Leg leg[2];
 
+	void MakeNear(const GeneralCoordinate& pivot);
+
 	void Clear();
 
 	void Dump() const;

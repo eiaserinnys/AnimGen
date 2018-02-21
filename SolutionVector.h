@@ -23,6 +23,11 @@ struct SolutionVector
 
 	void UpdateGenericCoordinates();
 
+	void Rearrange(
+		GeneralCoordinate& prev,
+		GeneralCoordinate& current,
+		GeneralCoordinate& next);
+
 	static SolutionVector* BuildTest(const SolutionCoordinate& init);
 
 	// º÷∑Áº« ∫§≈Õ

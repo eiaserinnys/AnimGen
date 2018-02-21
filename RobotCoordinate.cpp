@@ -181,6 +181,19 @@ GeneralCoordinate operator * (const GeneralCoordinate& lhs, double rhs)
 	return ret;
 }
 
+//------------------------------------------------------------------------------
+void GeneralCoordinate::MakeNear(const GeneralCoordinate& pivot)
+{
+	ExponentialMap::MakeNearRotation(pivot.body.second, body.second);
+
+	for (int i = 0; i < COUNT_OF(leg); ++i)
+	{
+		ExponentialMap::MakeNearRotation(pivot.leg[i].rot1, leg[i].rot1);
+		ExponentialMap::MakeNearRotation(pivot.leg[i].rot2, leg[i].rot2);
+		ExponentialMap::MakeNearRotation(pivot.leg[i].footRot, leg[i].footRot);
+	}
+}
+
 //--------------------------------------------------------------------------
 void GeneralCoordinate::Clear()
 {

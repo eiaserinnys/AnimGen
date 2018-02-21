@@ -2,7 +2,12 @@
 #include "SolutionVector.h"
 
 #include <stdio.h>
+
+#include <Utility.h>
 #include <WindowsUtility.h>
+
+#include "ExponentialMap.h"
+#include "DXMathTransform.h"
 
 #include "Robot.h"
 
@@ -10,7 +15,7 @@ using namespace std;
 using namespace Core;
 
 const double g_timeStep = 0.5;
-const double g_derStep = 0.001;
+const double g_derStep = 0.0001;
 
 //------------------------------------------------------------------------------
 SolutionVector::SolutionVector()
@@ -51,6 +56,10 @@ SolutionVector* SolutionVector::BuildTest(const SolutionCoordinate& init)
 		nc.body.first += move + Vector3D(0, d, 0);
 		nc.foot[0].first += moveF;
 		nc.foot[1].first += moveF2;
+
+		auto m = DXMathTransform<double>::RotationY(-M_PI / 2 * i / phases);
+		auto rot = ExponentialMap::FromMatrix(m);
+		nc.body.second = rot;
 
 		v->coords.push_back(make_pair(i * g_timeStep, nc));
 	}
@@ -106,6 +115,12 @@ void SolutionVector::UpdateGenericCoordinates()
 		return;
 	}
 
+	fprintf(f,
+		"time\t"
+		"b_p_x\ty\tz\t"	"b_pv_x\ty\tz\t"	"b_pa_x\ty\tz\t"
+		"b_r_x\ty\tz\t"	"b_rv_x\ty\tz\t"	"b_ra_x\ty\tz\t"
+		"\n");
+
 	auto& dump = [&f](
 		double t, 
 		const GeneralCoordinate& g, 
@@ -114,28 +129,18 @@ void SolutionVector::UpdateGenericCoordinates()
 	{
 		fprintf(f,
 			"%f\t"
-			"%f\t%f\t%f\t"
-			"%f\t%f\t%f\t"
-			"%f\t%f\t%f\t"
+			"%f\t%f\t%f\t"		"%f\t%f\t%f\t"		"%f\t%f\t%f\t"
+			"%f\t%f\t%f\t"		"%f\t%f\t%f\t"		"%f\t%f\t%f\t"
 			"\n",
 			t,
-			g.body.first.x,
-			g.body.first.y,
-			g.body.first.z,
-			gv.body.first.x,
-			gv.body.first.y,
-			gv.body.first.z,
-			ga.body.first.x,
-			ga.body.first.y,
-			ga.body.first.z);
+			g.body.first.x, g.body.first.y, g.body.first.z,
+			gv.body.first.x, gv.body.first.y, gv.body.first.z, 
+			ga.body.first.x, ga.body.first.y, ga.body.first.z,
+			g.body.second.x, g.body.second.y, g.body.second.z,
+			gv.body.second.x, gv.body.second.y, gv.body.second.z,
+			ga.body.second.x, ga.body.second.y, ga.body.second.z
+		);
 	};
-
-	fprintf(f, 
-		"time\t"
-		"b_p_x\ty\tz\t"
-		"b_pv_x\ty\tz\t"
-		"b_pa_x\ty\tz\t"
-		"\n");
 
 	gAcc.clear();
 
@@ -155,15 +160,21 @@ void SolutionVector::UpdateGenericCoordinates()
 		dump(t, g, zero, zero);
 	}
 
-	for (double t = timeFrom; t <= timeTo; t += g_derStep)
+	//for (double t = timeFrom; t <= timeTo; t += g_derStep)
+	for (double t = 0.0891; t <= 0.0891; t += g_derStep)
 	//for (double t = 0.45; t <= 0.5010; t += g_derStep)
 	//for (double t = 0.0; t <= 1.0; t += g_derStep)
 	{
+		auto cmm = At(t - g_derStep * 2);
 		auto cm = At(t - g_derStep);
 		auto c = At(t);
 		auto cp = At(t + g_derStep);
+		auto cpp = At(t + g_derStep * 2);
 
-		robot->Apply(cm);
+		robot->Apply(cmm);
+		auto gmm = robot->Current();
+
+		robot->Apply(cm); 
 		auto gm = robot->Current();
 
 		robot->Apply(c);
@@ -171,6 +182,14 @@ void SolutionVector::UpdateGenericCoordinates()
 
 		robot->Apply(cp);
 		auto gp = robot->Current();
+
+		robot->Apply(cpp);
+		auto gpp = robot->Current();
+
+		gmm.MakeNear(g);
+		gm.MakeNear(g);
+		gp.MakeNear(g);
+		gpp.MakeNear(g);
 
 		auto gv = (gp - gm) / (2 * g_derStep);
 

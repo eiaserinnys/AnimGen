@@ -56,6 +56,12 @@ Vector3D ExponentialMap::GetNearRotation(const Vector3D& pivot, const Vector3D& 
 }
 
 //------------------------------------------------------------------------------
+void ExponentialMap::MakeNearRotation(const Vector3D& pivot, Vector3D& toEval)
+{
+	toEval = GetNearRotation(pivot, toEval);
+}
+
+//------------------------------------------------------------------------------
 Vector4D ExponentialMap::ToQuaternion(const Vector3D& expMap, bool reg)
 {
 	double quatV[4] = { 0, 0, 0, 0 };
