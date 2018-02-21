@@ -1,12 +1,12 @@
 #include "pch.h"
-#include "ErrorFunction.h"
+#include "Residual.h"
 
 using namespace std;
 using namespace Core;
 using namespace Eigen;
 
 //------------------------------------------------------------------------------
-void ErrorFunction::StartUp(int funcCount_)
+void Residual::StartUp(int funcCount_)
 {
 	funcCount = funcCount_;
 
@@ -14,26 +14,26 @@ void ErrorFunction::StartUp(int funcCount_)
 }
 
 //------------------------------------------------------------------------------
-void ErrorFunction::CleanUp()
+void Residual::CleanUp()
 {
 	//log = nullptr;
 	matF.reset(nullptr);
 }
 
 //------------------------------------------------------------------------------
-void ErrorFunction::Begin()
+void Residual::Begin()
 {
 	pY = 0;
 }
 
 //------------------------------------------------------------------------------
-void ErrorFunction::End()
+void Residual::End()
 {
 	assert(pY == funcCount);
 }
 
 //------------------------------------------------------------------------------
-double ErrorFunction::Set(double v, const Coefficient& w)
+double Residual::Set(double v, const Coefficient& w)
 {
 	assert(isfinite(v));
 

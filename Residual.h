@@ -10,7 +10,7 @@
 
 #include "SolverHelper.h"
 
-class ErrorFunction {
+class Residual {
 public:
 	void StartUp(int funcCount);
 	void CleanUp();

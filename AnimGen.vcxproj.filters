@@ -173,9 +173,6 @@
     <ClCompile Include="Variable.cpp">
       <Filter>Solver\Component</Filter>
     </ClCompile>
-    <ClCompile Include="ErrorFunction.cpp">
-      <Filter>Solver\Component</Filter>
-    </ClCompile>
     <ClCompile Include="SolverHelper.cpp">
       <Filter>Solver</Filter>
     </ClCompile>
@@ -183,6 +180,9 @@
       <Filter>Solver\Component</Filter>
     </ClCompile>
     <ClCompile Include="Jacobian.cpp">
+      <Filter>Solver\Component</Filter>
+    </ClCompile>
+    <ClCompile Include="Residual.cpp">
       <Filter>Solver\Component</Filter>
     </ClCompile>
   </ItemGroup>
@@ -337,9 +337,6 @@
     <ClInclude Include="Variable.h">
       <Filter>Solver\Component</Filter>
     </ClInclude>
-    <ClInclude Include="ErrorFunction.h">
-      <Filter>Solver\Component</Filter>
-    </ClInclude>
     <ClInclude Include="SolverHelper.h">
       <Filter>Solver</Filter>
     </ClInclude>
@@ -347,6 +344,9 @@
       <Filter>Solver\Component</Filter>
     </ClInclude>
     <ClInclude Include="SolutionVector.h">
+      <Filter>Solver\Component</Filter>
+    </ClInclude>
+    <ClInclude Include="Residual.h">
       <Filter>Solver\Component</Filter>
     </ClInclude>
   </ItemGroup>

@@ -8,7 +8,7 @@
 
 #include "Variable.h"
 #include "Coefficient.h"
-#include "ErrorFunction.h"
+#include "Residual.h"
 #include "Jacobian.h"
 
 #include "SolverHelper.h"
@@ -28,7 +28,7 @@ struct SolverContext
 	SolutionCoordinate dest;
 
 	Variable variables;
-	ErrorFunction errorFunc;
+	Residual errorFunc;
 	Jacobian jacobian;
 
 	//------------------------------------------------------------------------------
@@ -68,15 +68,15 @@ struct SolverContext
 	}
 
 	//------------------------------------------------------------------------------
-	double LoadError(bool writeDebug)
+	double LoadResidual(bool writeDebug)
 	{
 		double error = 0;
 
 		errorFunc.Begin();
 
-		error += LoadError_DestinationTask(solution, dest, one, writeDebug);
+		error += LoadResidual_DestinationTask(solution, dest, one, writeDebug);
 
-		error += LoadError_GeneralAcceleration(solution, one, writeDebug);
+		error += LoadResidual_GeneralAcceleration(solution, one, writeDebug);
 
 		errorFunc.End();
 
@@ -90,13 +90,13 @@ struct SolverContext
 
 		LoadJacobian_DestinationTask(solution, dest, one);
 
-		//LoadJacobian_DestinationTask(solution, dest, one);
+		//LoadJacobian_GeneralAcceleration(solution, one);
 
 		jacobian.End();
 	}
 
 	//------------------------------------------------------------------------------
-	double LoadError_DestinationTask(
+	double LoadResidual_DestinationTask(
 		const SolutionVector& s,
 		const SolutionCoordinate& d,
 		const Coefficient& w,
@@ -132,11 +132,43 @@ struct SolverContext
 	{
 		auto s2 = s;
 
+		auto& taskError0 = [](const SolutionVector& cur, const SolutionCoordinate& dest)
+		{
+			const auto& last = (*cur.coords.rbegin()).second;
+			double e = Distance(last.body.first, dest.body.first);
+			return e * e;
+		};
+
+		// 여기는 해석적으로 할 수 있다, 이렇게 할 필요 없음
+		// 여기는 해석적으로 할 수 있다, 이렇게 할 필요 없음
+		// 여기는 해석적으로 할 수 있다, 이렇게 할 필요 없음
+		// 여기는 해석적으로 할 수 있다, 이렇게 할 필요 없음
+		// 여기는 해석적으로 할 수 있다, 이렇게 할 필요 없음
+		// 여기는 해석적으로 할 수 있다, 이렇게 할 필요 없음
+		// 여기는 해석적으로 할 수 있다, 이렇게 할 필요 없음
+
+		double step = 0.0001;
+
+		for (int i = 0; i < s.VariableCount(); ++i)
+		{
+			double reserved = s2.GetVariableAt(i);
+
+			s2.SetVariableAt(i, reserved - step);
+			double e0 = taskError0(s2, d);
+
+			s2.SetVariableAt(i, reserved + step);
+			double e1 = taskError0(s2, d);
+
+			double j = (e1 - e0) / (step * 2);
+
+			jacobian.Set(i, w, j);
+		}
+
 		//jacobian.Set(0, w, );
 	}
 
 	//------------------------------------------------------------------------------
-	double LoadError_GeneralAcceleration(
+	double LoadResidual_GeneralAcceleration(
 		const SolutionVector& s,
 		const Coefficient& w,
 		bool writeDebug)
@@ -146,10 +178,40 @@ struct SolverContext
 		for (size_t i = 0; i < s.coords.size(); ++i)
 		{
 			auto ga = s.GeneralAccAt(s.coords[i].first);
-			error += errorFunc.Set(ga.SquaredLength(), w);
+			error += errorFunc.Set(sqrt(ga.SquaredLength()), w);
 		}
 
 		return error;
+	}
+
+	//------------------------------------------------------------------------------
+	void LoadJacobian_GeneralAcceleration(
+		const SolutionVector& s,
+		const Coefficient& w)
+	{
+		auto s2 = s;
+
+		double step = 0.0001;
+
+		for (size_t i = 0; i < s.coords.size(); ++i)
+		{
+			for (int j = 0; j < s.VariableCount(); ++j)
+			{
+				double reserved = s2.GetVariableAt(j);
+
+				s2.SetVariableAt(j, reserved - step);
+				double e0 = s2.GeneralAccAt(s.coords[i].first).SquaredLength();
+
+				s2.SetVariableAt(i, reserved + step);
+				double e1 = s2.GeneralAccAt(s.coords[i].first).SquaredLength();
+
+				double v = (e1 - e0) / (step * 2);
+
+				jacobian.Set(i, w, v);
+			}
+
+			jacobian.NextFunction();
+		}
 	}
 
 	void CleanUp() {}
@@ -177,7 +239,7 @@ public:
 		context->LoadX(LoadFlag::Load);
 
 		// 이제 풀자
-		fK = context->LoadError(true);
+		fK = context->LoadResidual(true);
 
 #	if DUMP
 		dump->WriteLine(
