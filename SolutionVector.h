@@ -15,18 +15,15 @@ struct SolutionVector
 
 	SolutionCoordinate At(double t);
 
+	GeneralCoordinate GeneralAccAt(double t);
+
 	static double Timestep();
 
 	void Update();
 
 	void UpdateSpline();
 
-	void UpdateGenericCoordinates();
-
-	void Rearrange(
-		GeneralCoordinate& prev,
-		GeneralCoordinate& current,
-		GeneralCoordinate& next);
+	void Dump();
 
 	static SolutionVector* BuildTest(const SolutionCoordinate& init);
 

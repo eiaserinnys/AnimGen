@@ -15,6 +15,8 @@
 #include "RobotImplementation.h"
 #include "RobotBuilder.h"
 
+#define VALIDATE 0
+
 using namespace std;
 using namespace Core;
 using namespace DirectX;
@@ -217,21 +219,32 @@ void Robot::Apply(const SolutionCoordinate& sc)
 {
 	coord.SetTransform(this, sc, false);
 
-	// 검증
 	UpdateWorldTransform();
 
-	auto sc_ = coord.ToSolutionCoordinate(this);
-	coord.SetTransform(this, sc_, true);
-
-	gc = coord.ToGeneralCoordinate(this);
-	if (!coord.SetTransform(this, gc, true))
+#	if VALIDATE
 	{
-		if (IsDebuggerPresent())
+		// 검증
+		auto sc_ = coord.ToSolutionCoordinate(this);
+		coord.SetTransform(this, sc_, true);
+
+		gc = coord.ToGeneralCoordinate(this);
+		if (!coord.SetTransform(this, gc, true))
 		{
-			DebugBreak();
+			if (IsDebuggerPresent())
+			{
+				DebugBreak();
+			}
+			coord.SetTransform(this, sc, false);
 		}
-		coord.SetTransform(this, sc, false);
 	}
+#	else
+	{
+		gc = coord.ToGeneralCoordinate(this);
+
+		// 에러가 누적되지 않도록 한다
+		gc.body = sc.body;
+	}
+#	endif
 }
 
 //------------------------------------------------------------------------------
