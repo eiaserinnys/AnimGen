@@ -58,6 +58,21 @@ namespace Core
 		};
 
 		template <typename A>
+		struct SquaredLength : public UnaryOperator<A>
+		{
+			enum { Dimension = 1 };
+
+			mutable ValueType evaluated;
+
+			__forceinline void PreEvaluate(const ArgType& arg) const;
+
+			__forceinline const ValueType Evaluate(const int i, const ArgType& arg) const
+			{
+				return evaluated;
+			}
+		};
+
+		template <typename A>
 		struct Normalize : public UnaryOperator<A>
 		{
 			mutable VectorType evaluated;

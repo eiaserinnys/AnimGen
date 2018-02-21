@@ -72,6 +72,9 @@
     <Filter Include="ThisApp\AnimationGeneration">
       <UniqueIdentifier>{d1d3a29b-b767-4198-af76-040442099f37}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Solver\Component">
+      <UniqueIdentifier>{7f06fb03-2694-4d57-abdf-b7312f1f98ce}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="RenderContext.cpp">
@@ -149,9 +152,6 @@
     <ClCompile Include="Solver.cpp">
       <Filter>Solver</Filter>
     </ClCompile>
-    <ClCompile Include="SolutionVector.cpp">
-      <Filter>Solver</Filter>
-    </ClCompile>
     <ClCompile Include="AnimationGeneration.cpp">
       <Filter>ThisApp\AnimationGeneration</Filter>
     </ClCompile>
@@ -169,6 +169,21 @@
     </ClCompile>
     <ClCompile Include="Spline.cpp">
       <Filter>Mathematics\Spline</Filter>
+    </ClCompile>
+    <ClCompile Include="Variable.cpp">
+      <Filter>Solver\Component</Filter>
+    </ClCompile>
+    <ClCompile Include="ErrorFunction.cpp">
+      <Filter>Solver\Component</Filter>
+    </ClCompile>
+    <ClCompile Include="SolverHelper.cpp">
+      <Filter>Solver</Filter>
+    </ClCompile>
+    <ClCompile Include="SolutionVector.cpp">
+      <Filter>Solver\Component</Filter>
+    </ClCompile>
+    <ClCompile Include="Jacobian.cpp">
+      <Filter>Solver\Component</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -295,15 +310,6 @@
     <ClInclude Include="Solver.h">
       <Filter>Solver</Filter>
     </ClInclude>
-    <ClInclude Include="SolverHelper.h">
-      <Filter>Solver</Filter>
-    </ClInclude>
-    <ClInclude Include="Jacobian.h">
-      <Filter>Solver</Filter>
-    </ClInclude>
-    <ClInclude Include="SolutionVector.h">
-      <Filter>Solver</Filter>
-    </ClInclude>
     <ClInclude Include="AnimationGeneration.h">
       <Filter>ThisApp\AnimationGeneration</Filter>
     </ClInclude>
@@ -324,6 +330,24 @@
     </ClInclude>
     <ClInclude Include="ClampedSplineFixedStep.h">
       <Filter>Mathematics\Spline</Filter>
+    </ClInclude>
+    <ClInclude Include="Jacobian.h">
+      <Filter>Solver\Component</Filter>
+    </ClInclude>
+    <ClInclude Include="Variable.h">
+      <Filter>Solver\Component</Filter>
+    </ClInclude>
+    <ClInclude Include="ErrorFunction.h">
+      <Filter>Solver\Component</Filter>
+    </ClInclude>
+    <ClInclude Include="SolverHelper.h">
+      <Filter>Solver</Filter>
+    </ClInclude>
+    <ClInclude Include="Coefficient.h">
+      <Filter>Solver\Component</Filter>
+    </ClInclude>
+    <ClInclude Include="SolutionVector.h">
+      <Filter>Solver\Component</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

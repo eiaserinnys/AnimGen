@@ -226,6 +226,17 @@ void GeneralCoordinate::Dump() const
 }
 
 //--------------------------------------------------------------------------
+double GeneralCoordinate::SquaredLength() const
+{
+	return
+		Core::SquaredLength(body.first) +
+		Core::SquaredLength(body.second)
+		+
+		leg[0].SquaredLength() + 
+		leg[1].SquaredLength();
+}
+
+//--------------------------------------------------------------------------
 // 일단 몸, 다리, 발만 계산한다
 GeneralCoordinate 
 	RobotCoordinate::ToGeneralCoordinate(Robot* robot) const

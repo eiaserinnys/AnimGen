@@ -26,6 +26,12 @@ namespace Core
 	}
 
 	template <typename A>
+	decltype(auto) SquaredLength(const A& arg)
+	{
+		return VectorUnaryExpression<VectorOperator::SquaredLength<A>>(arg);
+	}
+
+	template <typename A>
 	decltype(auto) Normalize(const A& arg)
 	{
 		return VectorUnaryExpression<VectorOperator::Normalize<A>>(arg);
@@ -103,14 +109,22 @@ namespace Core
 	{
 		VectorType v;
 		VectorAssignment<SelectRhs<VectorType, A>>().Evaluate(v, arg);
-		evaluated = std::sqrt(::Dot(arg, arg));
+		evaluated = std::sqrt(Core::Dot(arg, arg));
+	}
+
+	template <typename A>
+	__forceinline void VectorOperator::SquaredLength<A>::PreEvaluate(const ArgType& arg) const
+	{
+		VectorType v;
+		VectorAssignment<SelectRhs<VectorType, A>>().Evaluate(v, arg);
+		evaluated = Core::Dot(arg, arg);
 	}
 
 	template <typename A>
 	__forceinline void VectorOperator::Normalize<A>::PreEvaluate(const ArgType& arg) const
 	{
 		VectorAssignment<SelectRhs<VectorType, A>>().Evaluate(evaluated, arg);
-		ValueType length = ::Length(evaluated);
+		ValueType length = Core::Length(evaluated);
 		if (length > 0) { evaluated = evaluated / length; }
 	}
 
@@ -120,7 +134,7 @@ namespace Core
 		VectorType l, r;
 		VectorAssignment<SelectRhs<VectorType, L>>().Evaluate(l, lhs);
 		VectorAssignment<SelectRhs<VectorType, R>>().Evaluate(r, rhs);
-		evaluated = ::Length(l - r);
+		evaluated = Core::Length(l - r);
 	}
 
 }; 

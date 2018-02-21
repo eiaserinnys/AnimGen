@@ -138,11 +138,13 @@
     <ClCompile Include="ClampedSplineFixedStep.cpp" />
     <ClCompile Include="DeferredRendrerer.cpp" />
     <ClCompile Include="DiagnosticRenderer.cpp" />
+    <ClCompile Include="ErrorFunction.cpp" />
     <ClCompile Include="exp-map.cpp" />
     <ClCompile Include="ExponentialMap.cpp" />
     <ClCompile Include="FrameHelper.cpp" />
     <ClCompile Include="HermiteSpline.cpp" />
     <ClCompile Include="IKPicking.cpp" />
+    <ClCompile Include="Jacobian.cpp" />
     <ClCompile Include="LineBuffer.cpp" />
     <ClCompile Include="Logger.cpp" />
     <ClCompile Include="Mesh.cpp" />
@@ -164,10 +166,12 @@
     <ClCompile Include="SceneDescriptor.cpp" />
     <ClCompile Include="SolutionVector.cpp" />
     <ClCompile Include="Solver.cpp" />
+    <ClCompile Include="SolverHelper.cpp" />
     <ClCompile Include="Spline.cpp" />
     <ClCompile Include="SplineDiagnostic.cpp" />
     <ClCompile Include="ThisApp.cpp" />
     <ClCompile Include="UIRenderer.cpp" />
+    <ClCompile Include="Variable.cpp" />
     <ClCompile Include="Vector.cpp" />
     <ClCompile Include="WinMain.cpp" />
   </ItemGroup>
@@ -176,9 +180,11 @@
     <ClInclude Include="AnimationGeneration.h" />
     <ClInclude Include="BasicMeshT.h" />
     <ClInclude Include="ClampedSplineFixedStep.h" />
+    <ClInclude Include="Coefficient.h" />
     <ClInclude Include="DeferredRenderer.h" />
     <ClInclude Include="DiagnosticRenderer.h" />
     <ClInclude Include="DXMathTransform.h" />
+    <ClInclude Include="ErrorFunction.h" />
     <ClInclude Include="exp-map.h" />
     <ClInclude Include="ExponentialMap.h" />
     <ClInclude Include="FrameHelper.h" />
@@ -210,6 +216,7 @@
     <ClInclude Include="SplineDiagnostic.h" />
     <ClInclude Include="ThisApp.h" />
     <ClInclude Include="UIRenderer.h" />
+    <ClInclude Include="Variable.h" />
     <ClInclude Include="Vector.h" />
     <ClInclude Include="VectorBinaryOperator.h" />
     <ClInclude Include="VectorBody.h" />

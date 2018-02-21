@@ -2,20 +2,20 @@
 
 class ISolver {
 public:
-	virtual ~ISolver() {}
+	virtual ~ISolver() = 0;
+
+	virtual void Begin() = 0;
 
 	struct Result
 	{
 		enum Value
 		{
-			Solved,
-			StepAccepted,
-			StepRejected,
-			Unsolvable,
+			Unsolvable = -1,
+			Solved = 0,
+			StepAccepted = 1,
+			StepRejected = 2,
 		};
 	};
-
-	virtual void Begin() = 0;
 
 	virtual Result::Value SolveStep() = 0;
 

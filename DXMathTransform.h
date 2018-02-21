@@ -75,7 +75,7 @@ namespace Core
 			};
 		}
 
-		static inline Matrix RotationY(float Angle)
+		static inline Matrix RotationY(ValueType Angle)
 		{
 			ValueType s = std::sin(Angle);
 			ValueType c = std::cos(Angle);

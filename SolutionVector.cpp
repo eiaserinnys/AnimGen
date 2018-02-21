@@ -24,6 +24,14 @@ SolutionVector::SolutionVector()
 }
 
 //------------------------------------------------------------------------------
+SolutionVector::SolutionVector(const SolutionVector& rhs)
+{
+	robot.reset(IRobot::Create());
+	coords = rhs.coords;
+	splines = rhs.splines;
+}
+
+//------------------------------------------------------------------------------
 double SolutionVector::Timestep()
 {
 	return g_timeStep;
@@ -94,7 +102,7 @@ void SolutionVector::UpdateSpline()
 }
 
 //------------------------------------------------------------------------------
-SolutionCoordinate SolutionVector::At(double t)
+SolutionCoordinate SolutionVector::At(double t) const
 {
 	SolutionCoordinate c;
 
@@ -106,7 +114,7 @@ SolutionCoordinate SolutionVector::At(double t)
 }
 
 //------------------------------------------------------------------------------
-GeneralCoordinate SolutionVector::GeneralAccAt(double t)
+GeneralCoordinate SolutionVector::GeneralAccAt(double t) const
 {
 	auto cm = At(t - g_derStep);
 	auto c = At(t);
@@ -177,8 +185,6 @@ void SolutionVector::Dump()
 			ga.leg[0].rot2.x, ga.leg[0].rot2.y, ga.leg[0].rot2.z
 		);
 	};
-
-	gAcc.clear();
 
 	double timeFrom = 0;
 	double timeTo = splines.body.curve->GetMax();

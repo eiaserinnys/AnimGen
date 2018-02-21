@@ -27,11 +27,23 @@ struct GeneralCoordinate
 
 			footRot.FillZero();
 		}
+
+		double SquaredLength() const
+		{
+			return
+				Core::SquaredLength(rot1) +
+				len1 * len1 +
+				Core::SquaredLength(rot2) +
+				len2 * len2 +
+				Core::SquaredLength(footRot);
+		}
 	};
 
 	std::pair<Core::Vector3D, Core::Vector3D> body;
 
 	Leg leg[2];
+
+	double SquaredLength() const;
 
 	void MakeNear(const GeneralCoordinate& pivot);
 

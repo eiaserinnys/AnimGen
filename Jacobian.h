@@ -3,8 +3,8 @@
 #include <memory>
 #include <vector>
 #include <Eigen/Sparse>
-#include <DirectXMath.h>
 
+#include "Coefficient.h"
 #include "SolverHelper.h"
 
 class Jacobian {
@@ -17,33 +17,6 @@ public:
 	void NextFunction();
 
 	void Set(int x, const Coefficient& w, double v);
-
-	void SetRotation(
-		DeformGraph* graph,
-		const MatrixD* nodeTxD,
-		const Coefficient& w_rot,
-		const std::function<int(int, int, int)>& getOfs);
-	void SetRotation(
-		const MatrixD& tx,
-		int index,
-		const Coefficient& w_rot,
-		const std::function<int(int, int, int)>& getOfs);
-
-	void SetRotation_Null(DeformGraph* graph);
-
-	void SetRegularization(
-		DeformGraph* graph,
-		const MatrixD* tx,
-		const Coefficient& w_reg,
-		const std::function<int(int, int, int)>& getOfs);
-
-	void SetRegularization_Null(DeformGraph* graph);
-
-	void SetConfidence(
-		double* conf,
-		int nodeCount,
-		const Coefficient& w_conf,
-		const std::function<int(int)>& getOfs);
 
 	void End();
 
