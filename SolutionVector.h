@@ -37,5 +37,7 @@ public:
 
 	static double Timestep();
 
+	static ISolutionVector* Create(const SolutionCoordinate& init, int phases);
+
 	static ISolutionVector* BuildTest(const SolutionCoordinate& init);
 };

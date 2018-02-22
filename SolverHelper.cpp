@@ -1,6 +1,8 @@
 #include "pch.h"
 #include "SolverHelper.h"
 
+#undef min
+
 using namespace std;
 using namespace Eigen;
 
@@ -14,4 +16,22 @@ SparseMatrixD* InitializeSparseIdentity(int t)
 	(*identity).setFromTriplets(tp.begin(), tp.end());
 
 	return identity;
+}
+
+//------------------------------------------------------------------------------
+double InitialLambda(Eigen::SparseMatrix<double>& JtJ)
+{
+	double tau = 1e-6;
+
+	double r = std::numeric_limits<double>::min();
+
+	for (int i = 0; i < JtJ.cols(); ++i)
+	{
+		if (r < JtJ.coeffRef(i, i))
+		{
+			r = JtJ.coeffRef(i, i);
+		}
+	}
+
+	return tau * r;
 }

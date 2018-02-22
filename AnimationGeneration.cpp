@@ -5,6 +5,8 @@
 
 #include "Robot.h"
 #include "SolutionVector.h"
+#include "Solver.h"
+
 #include "SplineDiagnostic.h"
 #include "LineBuffer.h"
 
@@ -19,10 +21,24 @@ public:
 
 	IRobot* robot;
 
+	unique_ptr<ISolver> solver;
+
 	//--------------------------------------------------------------------------
 	AnimationGeneration(IRobot* robot) : robot(robot)
 	{
-		sol.reset(ISolutionVector::BuildTest(robot->CurrentSC()));
+		SolutionCoordinate begin = robot->CurrentSC();
+		
+		SolutionCoordinate dest = begin;
+		dest.body.first += Vector3D(2.5, 0, 0);
+		dest.foot[0].first += Vector3D(2.5, 0, 0);
+		dest.foot[1].first += Vector3D(2.5, 0, 0);
+
+		sol.reset(ISolutionVector::Create(begin, 8));
+
+		solver.reset(ISolver::Create(begin, dest, 8));
+
+		// Å×½ºÆ®!
+		solver->Begin();
 	}
 
 	//--------------------------------------------------------------------------
@@ -69,7 +85,7 @@ public:
 
 		auto coord = sol->At(t);
 
-		robot->Apply(coord);
+		//robot->Apply(coord);
 	}
 
 	//--------------------------------------------------------------------------

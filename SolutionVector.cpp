@@ -164,9 +164,9 @@ public:
 	//--------------------------------------------------------------------------
 	pair<int, int> GetVariableIndex(int i) const
 	{
-		i = i + 1;
-
 		int varPerEntry = SolutionCoordinate::VariableCount();
+
+		i = i + varPerEntry;
 
 		if (0 <= i && i < varPerEntry * coords.size())
 		{
@@ -194,7 +194,7 @@ public:
 		// 커브를 업데이트한다
 		int ci = index.second / 6;
 		int co = index.second % 6;
-		splines[ci].SetValue(i, co, v);
+		splines[ci].SetValue(index.first, co, v);
 	}
 
 	//--------------------------------------------------------------------------
@@ -250,6 +250,21 @@ ISolutionVector::~ISolutionVector() = default;
 
 //------------------------------------------------------------------------------
 double ISolutionVector::Timestep() { return g_timeStep; }
+
+//------------------------------------------------------------------------------
+ISolutionVector* ISolutionVector::Create(
+	const SolutionCoordinate& init,
+	int phases)
+{
+	vector<pair<double, SolutionCoordinate>> coords;
+
+	for (int i = 0; i <= phases; ++i)
+	{
+		coords.push_back(make_pair(i * g_timeStep, init));
+	}
+
+	return new SolutionVector(coords);
+}
 
 //------------------------------------------------------------------------------
 ISolutionVector* ISolutionVector::BuildTest(const SolutionCoordinate& init)

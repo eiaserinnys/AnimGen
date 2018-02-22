@@ -42,6 +42,7 @@ void Jacobian::End()
 void Jacobian::Set(int x, const Coefficient& w, double v)
 {
 	assert(x < varCount);
+	assert(pY < funCount);
 	Set(x, w.Sqrt() * v);
 }
 
@@ -61,6 +62,5 @@ void Jacobian::Set(int x, double v)
 void Jacobian::NextFunction()
 {
 	pY++;
-	assert(pY < funCount);
 }
 

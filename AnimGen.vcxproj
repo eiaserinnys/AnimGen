@@ -166,6 +166,7 @@
     <ClCompile Include="SceneDescriptor.cpp" />
     <ClCompile Include="SolutionVector.cpp" />
     <ClCompile Include="Solver.cpp" />
+    <ClCompile Include="SolverContext.cpp" />
     <ClCompile Include="SolverHelper.cpp" />
     <ClCompile Include="Spline.cpp" />
     <ClCompile Include="SplineDiagnostic.cpp" />
@@ -211,6 +212,7 @@
     <ClInclude Include="SceneDescriptor.h" />
     <ClInclude Include="SolutionVector.h" />
     <ClInclude Include="Solver.h" />
+    <ClInclude Include="SolverContext.h" />
     <ClInclude Include="SolverHelper.h" />
     <ClInclude Include="Spline.h" />
     <ClInclude Include="SplineDiagnostic.h" />

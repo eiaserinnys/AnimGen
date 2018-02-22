@@ -166,6 +166,27 @@ namespace Core
 		};
 
 		template <typename L, typename R>
+		struct SquaredDistance : public BinaryOperator<L, R>
+		{
+			typedef decltype(std::sqrt(DECLVAL(LhsType) - DECLVAL(RhsType))) ValueType;
+			typedef VectorT<ValueType, Dimension> VectorType;
+
+			enum { Dimension = 1 };
+
+			mutable ValueType evaluated;
+
+			template <ENABLE_IF(HAS_SAME_DIMENSION(LhsType, RhsType))>
+			SquaredDistance() {}
+
+			__forceinline void PreEvaluate(const LhsType& lhs, const RhsType& rhs) const;
+
+			__forceinline const ValueType Evaluate(const int i, const LhsType& lhs, const RhsType& rhs) const
+			{
+				return evaluated;
+			}
+		};
+
+		template <typename L, typename R>
 		struct Cross2D : public BinaryOperator<L, R>
 		{
 			typedef decltype(DECLVAL(LhsType) * DECLVAL(RhsType)) ValueType;

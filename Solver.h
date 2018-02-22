@@ -1,5 +1,7 @@
 #pragma once
 
+struct SolutionCoordinate;
+
 class ISolver {
 public:
 	virtual ~ISolver() = 0;
@@ -21,5 +23,8 @@ public:
 
 	virtual void End() = 0;
 
-	static ISolver* Create();
+	static ISolver* Create(
+		const SolutionCoordinate& start,
+		const SolutionCoordinate& dest,
+		int phases);
 };

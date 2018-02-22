@@ -75,6 +75,12 @@ namespace Core
 		return VectorBinaryExpression<VectorOperator::Distance<L, R>>(lhs, rhs);
 	}
 
+	template <typename L, typename R>
+	decltype(auto) SquaredDistance(const L& lhs, const R& rhs)
+	{
+		return VectorBinaryExpression<VectorOperator::SquaredDistance<L, R>>(lhs, rhs);
+	}
+
 	template <
 		typename L, typename R,
 		ENABLE_IF(
@@ -135,6 +141,15 @@ namespace Core
 		VectorAssignment<SelectRhs<VectorType, L>>().Evaluate(l, lhs);
 		VectorAssignment<SelectRhs<VectorType, R>>().Evaluate(r, rhs);
 		evaluated = Core::Length(l - r);
+	}
+
+	template <typename L, typename R>
+	__forceinline void VectorOperator::SquaredDistance<L, R>::PreEvaluate(const LhsType& lhs, const RhsType& rhs) const
+	{
+		VectorType l, r;
+		VectorAssignment<SelectRhs<VectorType, L>>().Evaluate(l, lhs);
+		VectorAssignment<SelectRhs<VectorType, R>>().Evaluate(r, rhs);
+		evaluated = Core::SquaredLength(l - r);
 	}
 
 }; 

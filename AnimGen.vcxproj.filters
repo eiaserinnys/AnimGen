@@ -185,6 +185,9 @@
     <ClCompile Include="Residual.cpp">
       <Filter>Solver\Component</Filter>
     </ClCompile>
+    <ClCompile Include="SolverContext.cpp">
+      <Filter>Solver</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="RenderContext.h">
@@ -348,6 +351,9 @@
     </ClInclude>
     <ClInclude Include="Residual.h">
       <Filter>Solver\Component</Filter>
+    </ClInclude>
+    <ClInclude Include="SolverContext.h">
+      <Filter>Solver</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
