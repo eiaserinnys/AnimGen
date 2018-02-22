@@ -13,6 +13,7 @@ using namespace std;
 static unique_ptr<IThisApp> thisApp;
 
 extern void TestVector();
+extern void TestCurve();
 
 //------------------------------------------------------------------------------
 INT WINAPI wWinMain(
@@ -25,6 +26,7 @@ INT WINAPI wWinMain(
 	UNREFERENCED_PARAMETER(lpCmdLine);
 
 	TestVector();
+	TestCurve();
 	//return 0;
 
 	auto ret = WindowsUtility::RegisterAndCreateOverlappedWindow(

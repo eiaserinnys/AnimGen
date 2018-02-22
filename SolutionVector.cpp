@@ -10,6 +10,7 @@
 #include "DXMathTransform.h"
 
 #include "Robot.h"
+#include "ClampedSplineFixedStep.h"
 
 using namespace std;
 using namespace Core;
@@ -32,6 +33,11 @@ struct SolutionSpline
 		rot = rhs.rot;
 		Update();
 		return *this;
+	}
+
+	void SetValue(int index, int channel, double v)
+	{
+		curve->SetValue(index, channel, v);
 	}
 
 	void Update()
@@ -184,6 +190,11 @@ public:
 	{
 		auto index = GetVariableIndex(i);
 		coords[index.first].second.At(index.second) = v;
+
+		// 커브를 업데이트한다
+		int ci = index.second / 6;
+		int co = index.second % 6;
+		splines[ci].SetValue(i, co, v);
 	}
 
 	//--------------------------------------------------------------------------

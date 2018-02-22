@@ -9,5 +9,7 @@ public:
 
 	virtual std::pair<Core::Vector3D, Core::Vector3D> At(double v) = 0;
 
+	virtual void SetValue(int index, int channel, double v) {}
+
 	virtual double GetMax() = 0;
 };

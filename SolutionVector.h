@@ -1,12 +1,8 @@
 #pragma once
 
-#include <vector>
-
-#include "Robot.h"
 #include "RobotCoordinate.h"
-#include "ClampedSplineFixedStep.h"
 
-class IRobot;
+class ISpline;
 
 class ISolutionVector {
 public:
