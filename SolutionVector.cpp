@@ -18,80 +18,238 @@ const double g_timeStep = 0.5;
 const double g_derStep = 0.001;
 
 //------------------------------------------------------------------------------
-SolutionVector::SolutionVector()
+struct SolutionSpline
 {
-	robot.reset(IRobot::Create());
-}
+	unique_ptr<ISpline> curve;
+	vector<Vector3D> pos;
+	vector<Vector3D> rot;
 
-//------------------------------------------------------------------------------
-SolutionVector::SolutionVector(const SolutionVector& rhs)
-{
-	robot.reset(IRobot::Create());
-	coords = rhs.coords;
-	splines = rhs.splines;
-}
+	SolutionSpline() = default;
 
-//------------------------------------------------------------------------------
-double SolutionVector::Timestep()
-{
-	return g_timeStep;
-}
-
-int SolutionVector::GetPhaseCount() const
-{
-	return (int) coords.size();
-}
-
-double SolutionVector::GetPhaseTime(int i) const
-{
-	return coords[i].first;
-}
-
-double SolutionVector::GetLastPhaseTime() const
-{
-	return coords.rbegin()->first;
-}
-
-SolutionCoordinate& SolutionVector::GetPhase(int i)
-{
-	return coords[i].second;
-}
-
-const SolutionCoordinate& SolutionVector::GetPhase(int i) const
-{
-	return const_cast<SolutionVector*>(this)->GetPhase(i);
-}
-
-SolutionCoordinate& SolutionVector::GetLastPhase()
-{
-	return coords.rbegin()->second;
-}
-
-const SolutionCoordinate& SolutionVector::GetLastPhase() const
-{
-	return const_cast<SolutionVector*>(this)->GetLastPhase();
-}
-
-ISpline* SolutionVector::GetCurve(int i)
-{
-	switch (i) {
-	case 0: return splines.body.curve.get();
-	case 1: return splines.foot[0].curve.get();
-	case 2: return splines.foot[1].curve.get();
+	SolutionSpline& operator = (const SolutionSpline& rhs)
+	{
+		pos = rhs.pos;
+		rot = rhs.rot;
+		Update();
+		return *this;
 	}
-	return nullptr;
-}
+
+	void Update()
+	{
+		curve.reset(IClampedSplineFixedStep::Create(g_timeStep, pos, rot));
+	}
+
+	void Append(double t, const pair<Vector3D, Vector3D>& p)
+	{
+		pos.push_back(p.first);
+		rot.push_back(p.second);
+	}
+};
 
 //------------------------------------------------------------------------------
-SolutionVector* SolutionVector::BuildTest(const SolutionCoordinate& init)
-{
-	auto v = new SolutionVector;
+class SolutionVector : public ISolutionVector {
+public:
+	//--------------------------------------------------------------------------
+	SolutionVector(vector<pair<double, SolutionCoordinate>>& coords)
+		: coords(coords)
+	{
+		robot.reset(IRobot::Create());
 
+		for (auto it = coords.begin(); it != coords.end(); ++it)
+		{
+			auto coord = it->second;
+			
+			splines[0].Append(it->first, coord.body);
+			splines[1].Append(it->first, coord.foot[0]);
+			splines[2].Append(it->first, coord.foot[1]);
+		}
+
+		for (int i = 0; i < COUNT_OF(splines); ++i)
+		{
+			splines[i].Update();
+		}
+	}
+
+	//--------------------------------------------------------------------------
+	SolutionVector(const SolutionVector& rhs)
+	{
+		robot.reset(IRobot::Create());
+		coords = rhs.coords;
+		for (int i = 0; i < COUNT_OF(splines); ++i)
+		{
+			splines[i] = rhs.splines[i];
+		}
+	}
+
+	//------------------------------------------------------------------------------
+	ISolutionVector* Clone() const
+	{ return new SolutionVector(*this); }
+
+	//--------------------------------------------------------------------------
+	void ValidatePhaseRange() const
+	{ if (coords.empty()) { throw out_of_range(""); } }
+
+	//--------------------------------------------------------------------------
+	void ValidatePhaseRange(int i) const
+	{ if (i < 0 || i >= coords.size()) { throw out_of_range(""); } }
+
+	//--------------------------------------------------------------------------
+	int GetPhaseCount() const
+	{ return (int)coords.size(); }
+
+	//--------------------------------------------------------------------------
+	double GetPhaseTime(int i) const
+	{
+		ValidatePhaseRange(i);
+		return coords[i].first;
+	}
+
+	//--------------------------------------------------------------------------
+	double GetLastPhaseTime() const
+	{
+		ValidatePhaseRange();
+		return coords.rbegin()->first;
+	}
+
+	//--------------------------------------------------------------------------
+	SolutionCoordinate& GetPhase(int i)
+	{
+		ValidatePhaseRange(i);
+		return coords[i].second;
+	}
+
+	//--------------------------------------------------------------------------
+	const SolutionCoordinate& GetPhase(int i) const
+	{
+		return const_cast<SolutionVector*>(this)->GetPhase(i);
+	}
+
+	//--------------------------------------------------------------------------
+	SolutionCoordinate& GetLastPhase()
+	{
+		ValidatePhaseRange();
+		return coords.rbegin()->second;
+	}
+
+	//--------------------------------------------------------------------------
+	const SolutionCoordinate& GetLastPhase() const
+	{
+		return const_cast<SolutionVector*>(this)->GetLastPhase();
+	}
+
+	//--------------------------------------------------------------------------
+	ISpline* GetCurve(int i)
+	{
+		if (0 <= i && i < COUNT_OF(splines))
+		{
+			return splines[i].curve.get();
+		}
+		return nullptr;
+	}
+
+	//--------------------------------------------------------------------------
+	int VariableCount() const
+	{
+		return coords.empty() ?
+			0 :
+			(int)(coords.size() - 1) * SolutionCoordinate::VariableCount();
+	}
+
+	//--------------------------------------------------------------------------
+	pair<int, int> GetVariableIndex(int i) const
+	{
+		i = i + 1;
+
+		int varPerEntry = SolutionCoordinate::VariableCount();
+
+		if (0 <= i && i < varPerEntry * coords.size())
+		{
+			int ei = i / varPerEntry;
+			int ej = i % varPerEntry;
+			return make_pair(ei, ej);
+		}
+
+		throw invalid_argument("");
+	}
+
+	//--------------------------------------------------------------------------
+	double GetVariableAt(int i) const
+	{
+		auto index = GetVariableIndex(i);
+		return coords[index.first].second.At(index.second);
+	}
+
+	//--------------------------------------------------------------------------
+	void SetVariableAt(int i, double v)
+	{
+		auto index = GetVariableIndex(i);
+		coords[index.first].second.At(index.second) = v;
+	}
+
+	//--------------------------------------------------------------------------
+	SolutionCoordinate At(double t) const
+	{
+		SolutionCoordinate c;
+
+		c.body = splines[0].curve->At(t);
+		c.foot[0] = splines[1].curve->At(t);
+		c.foot[1] = splines[2].curve->At(t);
+
+		return c;
+	}
+
+	//--------------------------------------------------------------------------
+	GeneralCoordinate GeneralAccelerationAt(double t) const
+	{
+		auto cm = At(t - g_derStep);
+		auto c = At(t);
+		auto cp = At(t + g_derStep);
+
+		robot->Apply(cm);
+		auto gm = robot->Current();
+
+		robot->Apply(c);
+		auto g = robot->Current();
+
+		robot->Apply(cp);
+		auto gp = robot->Current();
+
+		gm.MakeNear(g);
+		gp.MakeNear(g);
+
+		// https://www.scss.tcd.ie/~dahyotr/CS7ET01/01112007.pdf
+		return (gp - (g * 2.0) + gm) / (g_derStep * g_derStep);
+	}
+
+	void Dump();
+
+public:
+	// 솔루션 벡터
+	vector<pair<double, SolutionCoordinate>> coords;
+
+	// 솔루션 벡터 -> 스플라인
+	SolutionSpline splines[3];
+
+	// 내부용 로봇
+	unique_ptr<IRobot> robot;
+};
+
+//------------------------------------------------------------------------------
+ISolutionVector::~ISolutionVector() = default;
+
+//------------------------------------------------------------------------------
+double ISolutionVector::Timestep() { return g_timeStep; }
+
+//------------------------------------------------------------------------------
+ISolutionVector* ISolutionVector::BuildTest(const SolutionCoordinate& init)
+{
 	auto delta = Vector3D(2, 0, 0);
 	auto deltaF = Vector3D(1.5, 0.0f, 0);
 	auto deltaF2 = Vector3D(3, 0, 0);
 
 	int phases = 8;
+
+	vector<pair<double, SolutionCoordinate>> coords;
 
 	for (int i = 0; i <= phases; ++i)
 	{
@@ -114,71 +272,10 @@ SolutionVector* SolutionVector::BuildTest(const SolutionCoordinate& init)
 		auto rot = ExponentialMap::FromMatrix(m);
 		nc.body.second = rot;
 
-		v->coords.push_back(make_pair(i * g_timeStep, nc));
+		coords.push_back(make_pair(i * g_timeStep, nc));
 	}
 
-	v->Update();
-
-	return v;
-}
-
-//------------------------------------------------------------------------------
-void SolutionVector::Update()
-{
-	UpdateSpline();
-
-	//UpdateGenericCoordinates();
-}
-
-//------------------------------------------------------------------------------
-void SolutionVector::UpdateSpline()
-{
-	for (auto it = coords.begin(); it != coords.end(); ++it)
-	{
-		auto coord = it->second;
-		splines.body.Append(it->first, coord.body);
-		splines.foot[0].Append(it->first, coord.foot[0]);
-		splines.foot[1].Append(it->first, coord.foot[1]);
-	}
-
-	splines.body.Update();
-	splines.foot[0].Update();
-	splines.foot[1].Update();
-}
-
-//------------------------------------------------------------------------------
-SolutionCoordinate SolutionVector::At(double t) const
-{
-	SolutionCoordinate c;
-
-	c.body = splines.body.curve->At(t);
-	c.foot[0] = splines.foot[0].curve->At(t);
-	c.foot[1] = splines.foot[1].curve->At(t);
-
-	return c;
-}
-
-//------------------------------------------------------------------------------
-GeneralCoordinate SolutionVector::GeneralAccelerationAt(double t) const
-{
-	auto cm = At(t - g_derStep);
-	auto c = At(t);
-	auto cp = At(t + g_derStep);
-
-	robot->Apply(cm);
-	auto gm = robot->Current();
-
-	robot->Apply(c);
-	auto g = robot->Current();
-
-	robot->Apply(cp);
-	auto gp = robot->Current();
-
-	gm.MakeNear(g);
-	gp.MakeNear(g);
-
-	// https://www.scss.tcd.ie/~dahyotr/CS7ET01/01112007.pdf
-	return (gp - (g * 2.0) + gm) / (g_derStep * g_derStep);
+	return new SolutionVector(coords);
 }
 
 //------------------------------------------------------------------------------
@@ -200,8 +297,8 @@ void SolutionVector::Dump()
 		"\n");
 
 	auto& dump = [&f](
-		double t, 
-		const GeneralCoordinate& g, 
+		double t,
+		const GeneralCoordinate& g,
 		const GeneralCoordinate& gv,
 		const GeneralCoordinate& ga)
 	{
@@ -214,7 +311,7 @@ void SolutionVector::Dump()
 			"\n",
 			t,
 			g.body.first.x, g.body.first.y, g.body.first.z,
-			gv.body.first.x, gv.body.first.y, gv.body.first.z, 
+			gv.body.first.x, gv.body.first.y, gv.body.first.z,
 			ga.body.first.x, ga.body.first.y, ga.body.first.z,
 
 			g.body.second.x, g.body.second.y, g.body.second.z,
@@ -232,7 +329,7 @@ void SolutionVector::Dump()
 	};
 
 	double timeFrom = 0;
-	double timeTo = splines.body.curve->GetMax();
+	double timeTo = splines[0].curve->GetMax();
 
 	GeneralCoordinate zero;
 	zero.Clear();
@@ -250,8 +347,8 @@ void SolutionVector::Dump()
 	//for (double t = timeFrom; t <= timeTo; t += g_derStep)
 	double p = 1.573;
 	for (double t = p - g_derStep; t <= p + g_derStep; t += g_derStep)
-	//for (double t = 0.45; t <= 0.5010; t += g_derStep)
-	//for (double t = 0.0; t <= 1.0; t += g_derStep)
+		//for (double t = 0.45; t <= 0.5010; t += g_derStep)
+		//for (double t = 0.0; t <= 1.0; t += g_derStep)
 	{
 		auto cmm = At(t - g_derStep * 2);
 		auto cm = At(t - g_derStep);
@@ -259,7 +356,7 @@ void SolutionVector::Dump()
 		auto cp = At(t + g_derStep);
 		auto cpp = At(t + g_derStep * 2);
 
-		robot->Apply(cm); 
+		robot->Apply(cm);
 		auto gm = robot->Current();
 
 		robot->Apply(c);

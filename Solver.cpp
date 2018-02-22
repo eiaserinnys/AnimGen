@@ -24,7 +24,7 @@ struct SolverContext
 {
 	Coefficient one;
 
-	SolutionVector solution;
+	unique_ptr<ISolutionVector> solution;
 	SolutionCoordinate dest;
 
 	Variable variables;
@@ -40,7 +40,7 @@ struct SolverContext
 	//------------------------------------------------------------------------------
 	int VariableCount() const
 	{ 
-		return solution.VariableCount();
+		return solution->VariableCount();
 	}
 
 	//------------------------------------------------------------------------------
@@ -48,12 +48,12 @@ struct SolverContext
 	{
 		variables.Begin();
 
-		auto nodeCount = solution.GetPhaseCount();
+		auto nodeCount = solution->GetPhaseCount();
 
 		// 0번 = 초기 위치는 수정하지 않으므로 스킵한다
 		for (size_t i = 1; i < nodeCount; i++)
 		{
-			auto& sc = solution.GetPhase(i);
+			auto& sc = solution->GetPhase(i);
 			variables.Load(sc.body.first, flag);
 			variables.Load(sc.body.second, flag);
 			variables.Load(sc.foot[0].first, flag);
@@ -72,9 +72,9 @@ struct SolverContext
 
 		errorFunc.Begin();
 
-		error += LoadResidual_DestinationTask(solution, dest, one, writeDebug);
+		error += LoadResidual_DestinationTask(solution.get(), dest, one, writeDebug);
 
-		error += LoadResidual_GeneralAcceleration(solution, one, writeDebug);
+		error += LoadResidual_GeneralAcceleration(solution.get(), one, writeDebug);
 
 		errorFunc.End();
 
@@ -86,7 +86,7 @@ struct SolverContext
 	{
 		jacobian.Begin();
 
-		LoadJacobian_DestinationTask(solution, dest, one);
+		LoadJacobian_DestinationTask(solution.get(), dest, one);
 
 		//LoadJacobian_GeneralAcceleration(solution, one);
 
@@ -95,14 +95,14 @@ struct SolverContext
 
 	//------------------------------------------------------------------------------
 	double LoadResidual_DestinationTask(
-		const SolutionVector& s,
+		const ISolutionVector* s,
 		const SolutionCoordinate& d,
 		const Coefficient& w,
 		bool writeDebug)
 	{
 		double error = 0;
 
-		const auto& last = s.GetLastPhase();
+		const auto& last = s->GetLastPhase();
 
 		auto& setRot = [&](const Vector3D& dest, const Vector3D& cur) -> double
 		{
@@ -124,30 +124,30 @@ struct SolverContext
 
 	//------------------------------------------------------------------------------
 	void LoadJacobian_DestinationTask(
-		const SolutionVector& s,
+		const ISolutionVector* s,
 		const SolutionCoordinate& d,
 		const Coefficient& w)
 	{
-		auto s2 = s;
+		unique_ptr<ISolutionVector> s2(s->Clone());
 
-		auto& taskError0 = [](const SolutionVector& cur, const SolutionCoordinate& dest)
+		auto& taskError0 = [](const ISolutionVector* cur, const SolutionCoordinate& dest)
 		{
-			const auto& last = cur.GetLastPhase();
+			const auto& last = cur->GetLastPhase();
 			double e = Distance(last.body.first, dest.body.first);
 			return e * e;
 		};
 
 		double step = 0.0001;
 
-		for (int i = 0; i < s.VariableCount(); ++i)
+		for (int i = 0; i < s->VariableCount(); ++i)
 		{
-			double reserved = s2.GetVariableAt(i);
+			double reserved = s2->GetVariableAt(i);
 
-			s2.SetVariableAt(i, reserved - step);
-			double e0 = taskError0(s2, d);
+			s2->SetVariableAt(i, reserved - step);
+			double e0 = taskError0(s2.get(), d);
 
-			s2.SetVariableAt(i, reserved + step);
-			double e1 = taskError0(s2, d);
+			s2->SetVariableAt(i, reserved + step);
+			double e1 = taskError0(s2.get(), d);
 
 			double j = (e1 - e0) / (step * 2);
 
@@ -159,15 +159,15 @@ struct SolverContext
 
 	//------------------------------------------------------------------------------
 	double LoadResidual_GeneralAcceleration(
-		const SolutionVector& s,
+		const ISolutionVector* s,
 		const Coefficient& w,
 		bool writeDebug)
 	{
 		double error = 0;
 
-		for (size_t i = 0; i < s.GetPhaseCount(); ++i)
+		for (size_t i = 0; i < s->GetPhaseCount(); ++i)
 		{
-			auto ga = s.GeneralAccelerationAt(s.GetPhaseTime(i));
+			auto ga = s->GeneralAccelerationAt(s->GetPhaseTime(i));
 			error += errorFunc.Set(sqrt(ga.SquaredLength()), w);
 		}
 
@@ -176,25 +176,25 @@ struct SolverContext
 
 	//------------------------------------------------------------------------------
 	void LoadJacobian_GeneralAcceleration(
-		const SolutionVector& s,
+		const ISolutionVector* s,
 		const Coefficient& w)
 	{
-		auto s2 = s;
+		unique_ptr<ISolutionVector> s2(s->Clone());
 
 		double step = 0.0001;
 
-		for (size_t i = 0; i < s.GetPhaseCount(); ++i)
+		for (size_t i = 0; i < s->GetPhaseCount(); ++i)
 		{
-			for (int j = 0; j < s.VariableCount(); ++j)
+			for (int j = 0; j < s->VariableCount(); ++j)
 			{
-				double reserved = s2.GetVariableAt(j);
+				double reserved = s2->GetVariableAt(j);
 
-				s2.SetVariableAt(j, reserved - step);
-				auto ga0 = s2.GeneralAccelerationAt(s.GetPhaseTime(i));
+				s2->SetVariableAt(j, reserved - step);
+				auto ga0 = s2->GeneralAccelerationAt(s->GetPhaseTime(i));
 				double e0 = ga0.SquaredLength();
 
-				s2.SetVariableAt(i, reserved + step);
-				auto ga1 = s2.GeneralAccelerationAt(s.GetPhaseTime(i));
+				s2->SetVariableAt(i, reserved + step);
+				auto ga1 = s2->GeneralAccelerationAt(s->GetPhaseTime(i));
 				double e1 = ga1.SquaredLength();
 
 				double v = (e1 - e0) / (step * 2);

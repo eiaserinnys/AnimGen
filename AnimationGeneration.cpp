@@ -22,7 +22,7 @@ public:
 	//--------------------------------------------------------------------------
 	AnimationGeneration(IRobot* robot) : robot(robot)
 	{
-		sol.reset(SolutionVector::BuildTest(robot->CurrentSC()));
+		sol.reset(ISolutionVector::BuildTest(robot->CurrentSC()));
 	}
 
 	//--------------------------------------------------------------------------
@@ -73,7 +73,7 @@ public:
 	}
 
 	//--------------------------------------------------------------------------
-	unique_ptr<SolutionVector> sol;
+	unique_ptr<ISolutionVector> sol;
 
 	struct Diagnostic
 	{
