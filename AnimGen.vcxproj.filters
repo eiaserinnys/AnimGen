@@ -72,7 +72,7 @@
     <Filter Include="ThisApp\AnimationGeneration">
       <UniqueIdentifier>{d1d3a29b-b767-4198-af76-040442099f37}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Solver\Component">
+    <Filter Include="Solver\Utility">
       <UniqueIdentifier>{7f06fb03-2694-4d57-abdf-b7312f1f98ce}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
@@ -171,22 +171,22 @@
       <Filter>Mathematics\Spline</Filter>
     </ClCompile>
     <ClCompile Include="Variable.cpp">
-      <Filter>Solver\Component</Filter>
-    </ClCompile>
-    <ClCompile Include="SolverHelper.cpp">
-      <Filter>Solver</Filter>
-    </ClCompile>
-    <ClCompile Include="SolutionVector.cpp">
-      <Filter>Solver\Component</Filter>
+      <Filter>Solver\Utility</Filter>
     </ClCompile>
     <ClCompile Include="Jacobian.cpp">
-      <Filter>Solver\Component</Filter>
+      <Filter>Solver\Utility</Filter>
     </ClCompile>
     <ClCompile Include="Residual.cpp">
-      <Filter>Solver\Component</Filter>
+      <Filter>Solver\Utility</Filter>
     </ClCompile>
     <ClCompile Include="SolverContext.cpp">
       <Filter>Solver</Filter>
+    </ClCompile>
+    <ClCompile Include="SolutionVector.cpp">
+      <Filter>Solver</Filter>
+    </ClCompile>
+    <ClCompile Include="SolverHelper.cpp">
+      <Filter>Solver\Utility</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -335,25 +335,25 @@
       <Filter>Mathematics\Spline</Filter>
     </ClInclude>
     <ClInclude Include="Jacobian.h">
-      <Filter>Solver\Component</Filter>
+      <Filter>Solver\Utility</Filter>
     </ClInclude>
     <ClInclude Include="Variable.h">
-      <Filter>Solver\Component</Filter>
-    </ClInclude>
-    <ClInclude Include="SolverHelper.h">
-      <Filter>Solver</Filter>
+      <Filter>Solver\Utility</Filter>
     </ClInclude>
     <ClInclude Include="Coefficient.h">
-      <Filter>Solver\Component</Filter>
-    </ClInclude>
-    <ClInclude Include="SolutionVector.h">
-      <Filter>Solver\Component</Filter>
+      <Filter>Solver\Utility</Filter>
     </ClInclude>
     <ClInclude Include="Residual.h">
-      <Filter>Solver\Component</Filter>
+      <Filter>Solver\Utility</Filter>
     </ClInclude>
     <ClInclude Include="SolverContext.h">
       <Filter>Solver</Filter>
+    </ClInclude>
+    <ClInclude Include="SolutionVector.h">
+      <Filter>Solver</Filter>
+    </ClInclude>
+    <ClInclude Include="SolverHelper.h">
+      <Filter>Solver\Utility</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

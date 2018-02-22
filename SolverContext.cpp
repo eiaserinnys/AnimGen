@@ -1,6 +1,8 @@
 #include "pch.h"
 #include "SolverContext.h"
 
+#include <WindowsUtility.h>
+
 #include "ExponentialMap.h"
 
 #include "Coefficient.h"
@@ -32,7 +34,7 @@ public:
 		solution.reset(ISolutionVector::Create(start, phases));
 
 		int var = solution->VariableCount();
-		int fn = 6 + solution->GetPhaseCount();
+		int fn = 6 + 12 * solution->GetPhaseCount();
 
 		variables.StartUp(var);
 		residual.StartUp(fn);
@@ -231,10 +233,29 @@ public:
 		for (size_t i = 0; i < s->GetPhaseCount(); ++i)
 		{
 			auto ga = s->GeneralAccelerationAt(s->GetPhaseTime(i));
-			error += residual.Set(sqrt(ga.SquaredLength()), w);
+
+			error += residual.Set(Length(ga.body.first), w);
+			error += residual.Set(Length(ga.body.second), w);
+
+			error += residual.Set(Length(ga.leg[0].rot1), w);
+			error += residual.Set((ga.leg[0].len1), w);
+			error += residual.Set(Length(ga.leg[0].rot2), w);
+			error += residual.Set((ga.leg[0].len2), w);
+			error += residual.Set(Length(ga.leg[0].footRot), w);
+
+			error += residual.Set(Length(ga.leg[1].rot1), w);
+			error += residual.Set((ga.leg[1].len1), w);
+			error += residual.Set(Length(ga.leg[1].rot2), w);
+			error += residual.Set((ga.leg[1].len2), w);
+			error += residual.Set(Length(ga.leg[1].footRot), w);
 		}
 
 		return error;
+	}
+
+	double Squared(double v)
+	{
+		return v * v;
 	}
 
 	//------------------------------------------------------------------------------
@@ -246,37 +267,66 @@ public:
 		double step = 0.0001;
 
 		// 초기는 어쩔 수 없다고 치고
-		jacobian.NextFunction();
-
-		for (size_t i = 1; i < s->GetPhaseCount(); ++i)
+		for (int i = 0; i < 12; ++i)
 		{
+			jacobian.NextFunction();
+		}
+
+		WindowsUtility::Debug(L"GeneralAcceleration\n");
+
+		for (size_t p = 1; p < s->GetPhaseCount(); ++p)
+		{
+			auto coordVar = SolutionCoordinate::VariableCount();
+
+			double* d = new double[12 * coordVar];
+
 			// 정확하지 않은데 느려서 답이 안 나온다;;;
 			// 일단은 각 페이즈 가속도는 자신의 변화만 영향을 미치게 하자
-			//for (int j = 0; j < s->VariableCount(); ++j)
-			for (int j = 0; j < SolutionCoordinate::VariableCount(); ++j)
+			for (int v = 0; v < coordVar; ++v)
 			{
-				auto var = (i - 1) * SolutionCoordinate::VariableCount() + j;
+				auto& curCoord = s2->GetPhase(p);
+
+				auto varOfs = (p - 1) * coordVar + v;
 
 				// 원래 값을 보존
-				double reserved = s2->GetVariableAt(var);
+				double reserved = s2->GetVariableAt(varOfs);
 
-				s2->SetVariableAt(var, reserved - step);
-				auto ga0 = s2->GeneralAccelerationAt(s->GetPhaseTime(i));
-				double e0 = ga0.SquaredLength();
+				s2->SetVariableAt(varOfs, reserved - step);
+				auto ga0 = s2->GeneralAccelerationAt(s->GetPhaseTime(p));
 
-				s2->SetVariableAt(var, reserved + step);
-				auto ga1 = s2->GeneralAccelerationAt(s->GetPhaseTime(i));
-				double e1 = ga1.SquaredLength();
+				s2->SetVariableAt(varOfs, reserved + step);
+				auto ga1 = s2->GeneralAccelerationAt(s->GetPhaseTime(p));
 
-				double v = (e1 - e0) / (step * 2);
-
-				jacobian.Set(var, w, v);
+				d[0 * coordVar + v] = (SquaredLength(ga1.body.first) - SquaredLength(ga0.body.first)) / (step * 2);
+				d[1 * coordVar + v] = (SquaredLength(ga1.body.second) - SquaredLength(ga0.body.second)) / (step * 2);
+				d[2 * coordVar + v] = (SquaredLength(ga1.leg[0].rot1) - SquaredLength(ga0.leg[0].rot1)) / (step * 2);
+				d[3 * coordVar + v] = (Squared(ga1.leg[0].len1) - Squared(ga0.leg[0].len1)) / (step * 2);
+				d[4 * coordVar + v] = (SquaredLength(ga1.leg[0].rot2) - SquaredLength(ga0.leg[0].rot2)) / (step * 2);
+				d[5 * coordVar + v] = (Squared(ga1.leg[0].len2) - Squared(ga0.leg[0].len2)) / (step * 2);
+				d[6 * coordVar + v] = (SquaredLength(ga1.leg[0].footRot) - SquaredLength(ga0.leg[0].footRot)) / (step * 2);
+				d[7 * coordVar + v] = (SquaredLength(ga1.leg[1].rot1) - SquaredLength(ga0.leg[1].rot1)) / (step * 2);
+				d[8 * coordVar + v] = (Squared(ga1.leg[1].len1) - Squared(ga0.leg[1].len1)) / (step * 2);
+				d[9 * coordVar + v] = (SquaredLength(ga1.leg[1].rot2) - SquaredLength(ga0.leg[1].rot2)) / (step * 2);
+				d[10 * coordVar + v] = (Squared(ga1.leg[1].len2) - Squared(ga0.leg[1].len2)) / (step * 2);
+				d[11 * coordVar + v] = (SquaredLength(ga1.leg[1].footRot) - SquaredLength(ga0.leg[1].footRot)) / (step * 2);
 
 				// 다시 원복
-				s2->SetVariableAt(var, reserved);
+				s2->SetVariableAt(varOfs, reserved);
+
 			}
 
-			jacobian.NextFunction();
+			for (int f = 0; f < 12; ++f)
+			{
+				for (int v = 0; v < coordVar; ++v)
+				{
+					auto varOfs = (p - 1) * coordVar + v;
+
+					jacobian.Set(varOfs, w, d[f * coordVar + v]);
+				}
+				jacobian.NextFunction();
+			}
+
+			delete[] d;
 		}
 	}
 

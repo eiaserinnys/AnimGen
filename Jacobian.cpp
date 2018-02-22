@@ -1,6 +1,8 @@
 #include "pch.h"
 #include "Jacobian.h"
 
+#include <WindowsUtility.h>
+
 using namespace std;
 using namespace Eigen;
 using namespace DirectX;
@@ -41,8 +43,6 @@ void Jacobian::End()
 //------------------------------------------------------------------------------
 void Jacobian::Set(int x, const Coefficient& w, double v)
 {
-	assert(x < varCount);
-	assert(pY < funCount);
 	Set(x, w.Sqrt() * v);
 }
 
@@ -53,7 +53,11 @@ void Jacobian::Set(int x, double v)
 
 	if (v != 0)
 	{
+		assert(pY >= 0 && pY < matJ->rows());
 		assert(x >= 0 && x < matJ->cols());
+
+		WindowsUtility::Debug(L"\tJ(%d,%d)=%f\n", pY, x, v);
+
 		tp.push_back(Tpd(pY, x, v));
 	}
 }
@@ -62,5 +66,6 @@ void Jacobian::Set(int x, double v)
 void Jacobian::NextFunction()
 {
 	pY++;
+	WindowsUtility::Debug(L"J(%d,X)\n", pY);
 }
 
