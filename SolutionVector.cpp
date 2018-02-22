@@ -212,24 +212,72 @@ public:
 	//--------------------------------------------------------------------------
 	GeneralCoordinate GeneralAccelerationAt(double t) const
 	{
-		auto cm = At(t - g_derStep);
-		auto c = At(t);
-		auto cp = At(t + g_derStep);
+#if HIGH_ORDER
+		SolutionCoordinate sc[] =
+		{
+			At(t - g_derStep * 2),
+			At(t - g_derStep),
+			At(t),
+			At(t + g_derStep),
+			At(t + g_derStep * 2),
+		};
 
-		robot->Apply(cm);
-		auto gm = robot->Current();
+		GeneralCoordinate gc[5];
 
-		robot->Apply(c);
-		auto g = robot->Current();
+		for (int i = 0; i < COUNT_OF(gc); ++i)
+		{
+			robot->Apply(sc[i]);
+			gc[i] = robot->Current();
 
-		robot->Apply(cp);
-		auto gp = robot->Current();
+			WindowsUtility::Debug(L"\t\tgc[%d]=%f\n", i, gc[i].leg[0].rot1.z);
+		}
 
-		gm.MakeNear(g);
-		gp.MakeNear(g);
+		int pivot = COUNT_OF(gc) / 2;
+		for (int i = 0; i < COUNT_OF(gc); ++i)
+		{
+			if (i != pivot)
+			{
+				gc[i].MakeNear(gc[pivot]);
+			}
+		}
+
+		// http://www.mathematik.uni-dortmund.de/~kuzmin/cfdintro/lecture4.pdf
+		return (
+			gc[4] * (-1.0) +
+			gc[3] * 16.0 +
+			gc[2] * (-30.0) +
+			gc[1] * 16.0 +
+			gc[0] * (-1.0)) / (12 * g_derStep * g_derStep);
+#else
+		SolutionCoordinate sc[] =
+		{
+			At(t - g_derStep),
+			At(t),
+			At(t + g_derStep),
+		};
+
+		GeneralCoordinate gc[3];
+
+		for (int i = 0; i < COUNT_OF(gc); ++i)
+		{
+			robot->Apply(sc[i]);
+			gc[i] = robot->Current();
+
+			WindowsUtility::Debug(L"\t\tgc[%d]=%f\n", i, gc[i].leg[0].rot1.z);
+		}
+
+		int pivot = COUNT_OF(gc) / 2;
+		for (int i = 0; i < COUNT_OF(gc); ++i)
+		{
+			if (i != pivot)
+			{
+				gc[i].MakeNear(gc[pivot]);
+			}
+		}
 
 		// https://www.scss.tcd.ie/~dahyotr/CS7ET01/01112007.pdf
-		return (gp - (g * 2.0) + gm) / (g_derStep * g_derStep);
+		return (gc[2] - (gc[1] * 2.0) + gc[0]) / (g_derStep * g_derStep);
+#endif
 	}
 
 	void Dump();

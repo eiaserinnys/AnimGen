@@ -33,6 +33,34 @@ public:
 	{
 		solution.reset(ISolutionVector::Create(start, phases));
 
+		auto& test = [&](double step)
+		{
+			unique_ptr<ISolutionVector> s2(solution->Clone());
+
+			double reserved = s2->GetVariableAt(1);
+
+			int p = 1;
+
+			double pt = s2->GetPhaseTime(p);
+
+			WindowsUtility::Debug(L"step %f\n", step);
+
+			s2->SetVariableAt(1, reserved - step);
+			auto ga0 = s2->GeneralAccelerationAt(pt);
+			WindowsUtility::Debug(L"\tacc0 %f\n", ga0.leg[0].rot1.z);
+
+			//s2->SetVariableAt(1, reserved + step);
+			//auto ga1 = s2->GeneralAccelerationAt(pt);
+			//WindowsUtility::Debug(L"\tacc1 %f\n", ga1.leg[0].rot1.z);
+
+			double error = (0 - SquaredLength(ga0.leg[0].rot1)) / (step * 2);
+
+			WindowsUtility::Debug(L"\terror -> %f\n", error);
+		};
+
+		test(0.000001);
+		test(0.00001);
+
 		int var = solution->VariableCount();
 		int fn = 6 + 12 * solution->GetPhaseCount();
 

@@ -163,7 +163,7 @@ void RobotIK::SetFootPosition(bool left, const Vector3D& pos_)
 		double R = robot->legLen.x;
 		double r = robot->legLen.y;
 		double d1 = (d * d - r * r + R * R) / (2 * d);
-		double a = 1 / d * sqrt((-d + r - R) * (-d - r + R) * (-d + r + R) *(d + r + R));
+		double a = 1 / d * std::sqrt((-d + r - R) * (-d - r + R) * (-d + r + R) *(d + r + R));
 
 		// »õ ¹«¸­ À§Ä¡
 		Vector3D kneePos = x * d1 + y * (a / 2) + orgPos[0];
