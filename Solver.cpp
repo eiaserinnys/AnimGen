@@ -40,9 +40,7 @@ struct SolverContext
 	//------------------------------------------------------------------------------
 	int VariableCount() const
 	{ 
-		return 
-			(int) (solution.coords.size() - 1) * 
-			(3 + 3 + 3 + 3 + 3 + 3);
+		return solution.VariableCount();
 	}
 
 	//------------------------------------------------------------------------------
@@ -50,12 +48,12 @@ struct SolverContext
 	{
 		variables.Begin();
 
-		auto nodeCount = solution.coords.size();
+		auto nodeCount = solution.GetPhaseCount();
 
 		// 0번 = 초기 위치는 수정하지 않으므로 스킵한다
 		for (size_t i = 1; i < nodeCount; i++)
 		{
-			auto& sc = solution.coords[i].second;
+			auto& sc = solution.GetPhase(i);
 			variables.Load(sc.body.first, flag);
 			variables.Load(sc.body.second, flag);
 			variables.Load(sc.foot[0].first, flag);
@@ -104,7 +102,7 @@ struct SolverContext
 	{
 		double error = 0;
 
-		const auto& last = (*s.coords.rbegin()).second;
+		const auto& last = s.GetLastPhase();
 
 		auto& setRot = [&](const Vector3D& dest, const Vector3D& cur) -> double
 		{
@@ -134,18 +132,10 @@ struct SolverContext
 
 		auto& taskError0 = [](const SolutionVector& cur, const SolutionCoordinate& dest)
 		{
-			const auto& last = (*cur.coords.rbegin()).second;
+			const auto& last = cur.GetLastPhase();
 			double e = Distance(last.body.first, dest.body.first);
 			return e * e;
 		};
-
-		// 여기는 해석적으로 할 수 있다, 이렇게 할 필요 없음
-		// 여기는 해석적으로 할 수 있다, 이렇게 할 필요 없음
-		// 여기는 해석적으로 할 수 있다, 이렇게 할 필요 없음
-		// 여기는 해석적으로 할 수 있다, 이렇게 할 필요 없음
-		// 여기는 해석적으로 할 수 있다, 이렇게 할 필요 없음
-		// 여기는 해석적으로 할 수 있다, 이렇게 할 필요 없음
-		// 여기는 해석적으로 할 수 있다, 이렇게 할 필요 없음
 
 		double step = 0.0001;
 
@@ -175,9 +165,9 @@ struct SolverContext
 	{
 		double error = 0;
 
-		for (size_t i = 0; i < s.coords.size(); ++i)
+		for (size_t i = 0; i < s.GetPhaseCount(); ++i)
 		{
-			auto ga = s.GeneralAccAt(s.coords[i].first);
+			auto ga = s.GeneralAccelerationAt(s.GetPhaseTime(i));
 			error += errorFunc.Set(sqrt(ga.SquaredLength()), w);
 		}
 
@@ -193,17 +183,19 @@ struct SolverContext
 
 		double step = 0.0001;
 
-		for (size_t i = 0; i < s.coords.size(); ++i)
+		for (size_t i = 0; i < s.GetPhaseCount(); ++i)
 		{
 			for (int j = 0; j < s.VariableCount(); ++j)
 			{
 				double reserved = s2.GetVariableAt(j);
 
 				s2.SetVariableAt(j, reserved - step);
-				double e0 = s2.GeneralAccAt(s.coords[i].first).SquaredLength();
+				auto ga0 = s2.GeneralAccelerationAt(s.GetPhaseTime(i));
+				double e0 = ga0.SquaredLength();
 
 				s2.SetVariableAt(i, reserved + step);
-				double e1 = s2.GeneralAccAt(s.coords[i].first).SquaredLength();
+				auto ga1 = s2.GeneralAccelerationAt(s.GetPhaseTime(i));
+				double e1 = ga1.SquaredLength();
 
 				double v = (e1 - e0) / (step * 2);
 

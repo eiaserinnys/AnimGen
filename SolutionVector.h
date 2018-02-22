@@ -4,8 +4,6 @@
 
 #include "Robot.h"
 #include "RobotCoordinate.h"
-#include "HermiteSpline.h"
-#include "ClampedSpline.h"
 #include "ClampedSplineFixedStep.h"
 
 class IRobot;
@@ -15,9 +13,24 @@ struct SolutionVector
 	SolutionVector();
 	SolutionVector(const SolutionVector& rhs);
 
+	int GetPhaseCount() const;
+
+	double GetPhaseTime(int i) const;
+	double GetLastPhaseTime() const;
+
+	SolutionCoordinate& GetPhase(int i);
+	const SolutionCoordinate& GetPhase(int i) const;
+
+	SolutionCoordinate& GetLastPhase();
+	const SolutionCoordinate& GetLastPhase() const;
+
+	ISpline* GetCurve(int i);
+
 	int VariableCount() const 
 	{ 
-		return (int) coords.size() * SolutionCoordinate::VariableCount(); 
+		return coords.empty() ? 
+			0 :
+			(int) (coords.size() - 1) * SolutionCoordinate::VariableCount();
 	}
 
 	double GetVariableAt(int i) const
@@ -56,7 +69,7 @@ struct SolutionVector
 
 	SolutionCoordinate At(double t) const;
 
-	GeneralCoordinate GeneralAccAt(double t) const;
+	GeneralCoordinate GeneralAccelerationAt(double t) const;
 
 	static double Timestep();
 
@@ -68,7 +81,7 @@ struct SolutionVector
 
 	static SolutionVector* BuildTest(const SolutionCoordinate& init);
 
-public:
+private:
 	struct Spline
 	{
 		std::unique_ptr<ISpline> curve;

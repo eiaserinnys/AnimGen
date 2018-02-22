@@ -37,6 +37,51 @@ double SolutionVector::Timestep()
 	return g_timeStep;
 }
 
+int SolutionVector::GetPhaseCount() const
+{
+	return (int) coords.size();
+}
+
+double SolutionVector::GetPhaseTime(int i) const
+{
+	return coords[i].first;
+}
+
+double SolutionVector::GetLastPhaseTime() const
+{
+	return coords.rbegin()->first;
+}
+
+SolutionCoordinate& SolutionVector::GetPhase(int i)
+{
+	return coords[i].second;
+}
+
+const SolutionCoordinate& SolutionVector::GetPhase(int i) const
+{
+	return const_cast<SolutionVector*>(this)->GetPhase(i);
+}
+
+SolutionCoordinate& SolutionVector::GetLastPhase()
+{
+	return coords.rbegin()->second;
+}
+
+const SolutionCoordinate& SolutionVector::GetLastPhase() const
+{
+	return const_cast<SolutionVector*>(this)->GetLastPhase();
+}
+
+ISpline* SolutionVector::GetCurve(int i)
+{
+	switch (i) {
+	case 0: return splines.body.curve.get();
+	case 1: return splines.foot[0].curve.get();
+	case 2: return splines.foot[1].curve.get();
+	}
+	return nullptr;
+}
+
 //------------------------------------------------------------------------------
 SolutionVector* SolutionVector::BuildTest(const SolutionCoordinate& init)
 {
@@ -114,7 +159,7 @@ SolutionCoordinate SolutionVector::At(double t) const
 }
 
 //------------------------------------------------------------------------------
-GeneralCoordinate SolutionVector::GeneralAccAt(double t) const
+GeneralCoordinate SolutionVector::GeneralAccelerationAt(double t) const
 {
 	auto cm = At(t - g_derStep);
 	auto c = At(t);

@@ -30,9 +30,9 @@ public:
 	{
 		const int m = 20;
 
-		splines.body.Sample(sol->splines.body.curve.get(), m);
-		splines.foot[0].Sample(sol->splines.foot[0].curve.get(), m);
-		splines.foot[1].Sample(sol->splines.foot[1].curve.get(), m);
+		splines.body.Sample(sol->GetCurve(0), m);
+		splines.foot[0].Sample(sol->GetCurve(1), m);
+		splines.foot[1].Sample(sol->GetCurve(2), m);
 	}
 
 	//--------------------------------------------------------------------------
@@ -50,7 +50,7 @@ public:
 			lastTime = curTime;
 		}
 
-		double t = sol->coords.rbegin()->first;
+		double t = sol->GetLastPhaseTime();
 		int total = (int)(t * 1000);
 
 		elapsed = elapsed % total;
@@ -63,9 +63,9 @@ public:
 	{
 		auto t = CurrentTime();
 
-		splines.body.Enqueue(sol->splines.body.curve.get(), buffer, t);
-		splines.foot[0].Enqueue(sol->splines.foot[0].curve.get(), buffer, t);
-		splines.foot[1].Enqueue(sol->splines.foot[1].curve.get(), buffer, t);
+		splines.body.Enqueue(sol->GetCurve(0), buffer, t);
+		splines.foot[0].Enqueue(sol->GetCurve(1), buffer, t);
+		splines.foot[1].Enqueue(sol->GetCurve(2), buffer, t);
 
 		auto coord = sol->At(t);
 
