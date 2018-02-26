@@ -1,6 +1,8 @@
 #include "pch.h"
 #include "RobotIK.h"
 
+#include <WindowsUtility.h>
+
 #include "ExponentialMap.h"
 #include "FrameHelper.h"
 #include "AngleHelper.h"
@@ -164,6 +166,13 @@ void RobotIK::SetFootPosition(bool left, const Vector3D& pos_)
 		double r = robot->legLen.y;
 		double d1 = (d * d - r * r + R * R) / (2 * d);
 		double a = 1 / d * std::sqrt((-d + r - R) * (-d - r + R) * (-d + r + R) *(d + r + R));
+
+		//if (left)
+		//{
+		//	WindowsUtility::Debug(
+		//		L"\t\t%f <- %f,%f,%f,%f,%f,%f\n",
+		//		a, d, d1, (-d + r - R), (-d - r + R), (-d + r + R), (d + r + R));
+		//}
 
 		// »õ ¹«¸­ À§Ä¡
 		Vector3D kneePos = x * d1 + y * (a / 2) + orgPos[0];

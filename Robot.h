@@ -11,10 +11,12 @@ public:
 	virtual void Animate_Test(DWORD elapsed) = 0;
 	virtual void Update() = 0;
 
+	virtual void ResetTransform() = 0;
+
 	virtual const GeneralCoordinate& Current() const = 0;
 	virtual const SolutionCoordinate CurrentSC() const = 0;
 
-	virtual void Apply(const SolutionCoordinate& coord) = 0;
+	virtual void Apply(const SolutionCoordinate& coord, bool dump = false) = 0;
 
 	virtual Core::Matrix4D GetLinkTransform(const std::string& name) = 0;
 

@@ -33,33 +33,107 @@ public:
 	{
 		solution.reset(ISolutionVector::Create(start, phases));
 
-		auto& test = [&](double step)
+#if 0
 		{
 			unique_ptr<ISolutionVector> s2(solution->Clone());
 
 			double reserved = s2->GetVariableAt(1);
 
+			double step = 0.000001;
+			for (int i = 0; i < 20; ++i)
+			{ 
+				WindowsUtility::Debug(L"%f", i * step);
+
+				s2->SetVariableAt(1, reserved - i * step);
+
+				int p = 1;
+
+				double pt = s2->GetPhaseTime(p);
+
+				s2->GeneralCoordinateAt(pt);
+			}
+		}
+#endif
+
+		auto& test = [&](double step, bool highOrder)
+		{
+			unique_ptr<ISolutionVector> s2(solution->Clone());
+			double reserved = s2->GetVariableAt(1) - 0.5;
 			int p = 1;
-
 			double pt = s2->GetPhaseTime(p);
+			WindowsUtility::Debug(L"%.8f\t%S", step, highOrder ? "H" : "L");
 
-			WindowsUtility::Debug(L"step %f\n", step);
+			s2->SetVariableAt(1, reserved - step * 2);
+			GeneralCoordinate gamm = s2->GeneralAccelerationAt(pt, highOrder);
 
 			s2->SetVariableAt(1, reserved - step);
-			auto ga0 = s2->GeneralAccelerationAt(pt);
-			WindowsUtility::Debug(L"\tacc0 %f\n", ga0.leg[0].rot1.z);
+			GeneralCoordinate gam = s2->GeneralAccelerationAt(pt, highOrder);
 
-			//s2->SetVariableAt(1, reserved + step);
-			//auto ga1 = s2->GeneralAccelerationAt(pt);
-			//WindowsUtility::Debug(L"\tacc1 %f\n", ga1.leg[0].rot1.z);
+			s2->SetVariableAt(1, reserved);
+			GeneralCoordinate gac = s2->GeneralAccelerationAt(pt, highOrder);
 
-			double error = (0 - SquaredLength(ga0.leg[0].rot1)) / (step * 2);
+			s2->SetVariableAt(1, reserved + step);
+			GeneralCoordinate gap = s2->GeneralAccelerationAt(pt, highOrder);
 
-			WindowsUtility::Debug(L"\terror -> %f\n", error);
+			s2->SetVariableAt(1, reserved + step * 2);
+			GeneralCoordinate gapp = s2->GeneralAccelerationAt(pt, highOrder);
+
+			double gammAbs = Length(gamm.leg[0].rot1);
+			double gamAbs = Length(gam.leg[0].rot1);
+			double gacAbs = Length(gac.leg[0].rot1);
+			double gapAbs = Length(gap.leg[0].rot1);
+			double gappAbs = Length(gapp.leg[0].rot1);
+
+			double derivative = highOrder ?
+				2 * (-gappAbs + 8 * gapAbs - 8 * gamAbs + gammAbs) / (12 * step) * gacAbs :
+				(gapAbs - gamAbs) / step * gacAbs;
+
+			//WindowsUtility::Debug(L"\tab = %+.8f\t%+.8f\t%+.8f\n", gapAbs, gacAbs, gamAbs);
+
+			//WindowsUtility::Debug(L"\tdelta = %+.8f\n", gapAbs - gamAbs);
+			//WindowsUtility::Debug(L"\tsqr delta = %+.8f\n", gapAbs * gapAbs - gamAbs * gamAbs);
+			//WindowsUtility::Debug(L"\tstep = %+.8f\n", step);
+
+			auto& sqr = [](double v) { return v * v; };
+
+			//auto der2 = (
+			//	- sqr(gappAbs) 
+			//	+ 8 * sqr(gapAbs) 
+			//	- 8 * sqr(gamAbs) 
+			//	+ sqr(gammAbs)
+			//	) / (12 * step);
+
+			// https://coast.nd.edu/jjwteach/www/www/30125/pdfnotes/lecture7_12v09.pdf
+			WindowsUtility::Debug(L"\t%+.8f", derivative);
+
+			if (highOrder)
+			{
+				WindowsUtility::Debug(
+					L"\t%+.8f\t%+.8f\t%+.8f\t%+.8f\t%+.8f",
+					gamm.leg[0].rot1.z,
+					gam.leg[0].rot1.z,
+					gac.leg[0].rot1.z,
+					gap.leg[0].rot1.z,
+					gapp.leg[0].rot1.z);
+			}
+			else
+			{
+				WindowsUtility::Debug(
+					L"\t%+.8f\t%+.8f\t%+.8f",
+					gam.leg[0].rot1.z,
+					gac.leg[0].rot1.z,
+					gap.leg[0].rot1.z);
+			}
+
+			WindowsUtility::Debug(L"\n");
 		};
 
-		test(0.000001);
-		test(0.00001);
+		double step = 0.00001;
+		for (double i = 0.0003; i < 0.002; i += step)
+		{
+			test(i, false);
+			//test(i, true);
+		}
 
 		int var = solution->VariableCount();
 		int fn = 6 + 12 * solution->GetPhaseCount();
@@ -260,7 +334,7 @@ public:
 
 		for (size_t i = 0; i < s->GetPhaseCount(); ++i)
 		{
-			auto ga = s->GeneralAccelerationAt(s->GetPhaseTime(i));
+			auto ga = s->GeneralAccelerationAt(s->GetPhaseTime(i), true);
 
 			error += residual.Set(Length(ga.body.first), w);
 			error += residual.Set(Length(ga.body.second), w);
@@ -320,10 +394,10 @@ public:
 				double reserved = s2->GetVariableAt(varOfs);
 
 				s2->SetVariableAt(varOfs, reserved - step);
-				auto ga0 = s2->GeneralAccelerationAt(s->GetPhaseTime(p));
+				auto ga0 = s2->GeneralAccelerationAt(s->GetPhaseTime(p), true);
 
 				s2->SetVariableAt(varOfs, reserved + step);
-				auto ga1 = s2->GeneralAccelerationAt(s->GetPhaseTime(p));
+				auto ga1 = s2->GeneralAccelerationAt(s->GetPhaseTime(p), true);
 
 				d[0 * coordVar + v] = (SquaredLength(ga1.body.first) - SquaredLength(ga0.body.first)) / (step * 2);
 				d[1 * coordVar + v] = (SquaredLength(ga1.body.second) - SquaredLength(ga0.body.second)) / (step * 2);

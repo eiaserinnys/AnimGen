@@ -114,6 +114,38 @@ GeneralCoordinate::Leg operator * (
 }
 
 //--------------------------------------------------------------------------
+GeneralCoordinate::Leg operator * (
+	double lhs, 
+	const GeneralCoordinate::Leg& rhs)
+{
+	GeneralCoordinate::Leg ret;
+
+	ret.rot1 = lhs * rhs.rot1;
+	ret.len1 = lhs * rhs.len1;
+	ret.rot2 = lhs * rhs.rot2;
+	ret.len2 = lhs * rhs.len2;
+	ret.footRot = lhs * rhs.footRot;
+
+	return ret;
+}
+
+//--------------------------------------------------------------------------
+GeneralCoordinate::Leg operator * (
+	const GeneralCoordinate::Leg& lhs,
+	const GeneralCoordinate::Leg& rhs)
+{
+	GeneralCoordinate::Leg ret;
+
+	ret.rot1 = lhs.rot1 * rhs.rot1;
+	ret.len1 = lhs.len1 * rhs.len1;
+	ret.rot2 = lhs.rot2 * rhs.rot2;
+	ret.len2 = lhs.len2 * rhs.len2;
+	ret.footRot = lhs.footRot * rhs.footRot;
+
+	return ret;
+}
+
+//--------------------------------------------------------------------------
 GeneralCoordinate::Leg operator / (
 	const GeneralCoordinate::Leg& lhs,
 	double rhs)
@@ -177,6 +209,32 @@ GeneralCoordinate operator * (const GeneralCoordinate& lhs, double rhs)
 	ret.body.second = lhs.body.second * rhs;
 	ret.leg[0] = lhs.leg[0] * rhs;
 	ret.leg[1] = lhs.leg[1] * rhs;
+
+	return ret;
+}
+
+//--------------------------------------------------------------------------
+GeneralCoordinate operator * (const GeneralCoordinate& lhs, const GeneralCoordinate& rhs)
+{
+	GeneralCoordinate ret;
+
+	ret.body.first = lhs.body.first * rhs.body.first;
+	ret.body.second = lhs.body.second * rhs.body.second;
+	ret.leg[0] = lhs.leg[0] * rhs.leg[0];
+	ret.leg[1] = lhs.leg[1] * rhs.leg[1];
+
+	return ret;
+}
+
+//--------------------------------------------------------------------------
+GeneralCoordinate operator * (double lhs, const GeneralCoordinate& rhs)
+{
+	GeneralCoordinate ret;
+
+	ret.body.first = lhs * rhs.body.first;
+	ret.body.second = lhs * rhs.body.second;
+	ret.leg[0] = lhs * rhs.leg[0];
+	ret.leg[1] = lhs * rhs.leg[1];
 
 	return ret;
 }
@@ -455,9 +513,9 @@ void RobotCoordinate::SetTransform(
 void SolutionCoordinate::Dump() const
 {
 	WindowsUtility::Debug(
-		L"B(%.3f,%.3f,%.3f), (%.3f,%.3f,%.3f) "
-		"LF(%.3f,%.3f,%.3f), (%.3f,%.3f,%.3f) "
-		"RF(%.3f,%.3f,%.3f), (%.3f,%.3f,%.3f)\n",
+		L"B(%.10f,%.10f,%.10f), (%.10f,%.10f,%.10f) "
+		"LF(%.10f,%.10f,%.10f), (%.10f,%.10f,%.10f) "
+		"RF(%.10f,%.10f,%.10f), (%.10f,%.10f,%.10f)\n",
 		body.first.x, body.first.y, body.first.z,
 		body.second.x, body.second.y, body.second.z,
 		foot[0].first.x, foot[0].first.y, foot[0].first.z,

@@ -43,6 +43,16 @@ void Robot::Update()
 }
 
 //--------------------------------------------------------------------------
+void Robot::ResetTransform()
+{
+	for (auto it = bodies.begin(); it != bodies.end(); ++it)
+	{
+		auto body = *it;
+		body->SetLocalTx(Matrix4D::Identity());
+	}
+}
+
+//--------------------------------------------------------------------------
 void Robot::UpdateWorldTransform()
 {
 	for (auto it = bodies.begin(); it != bodies.end(); ++it)
@@ -215,8 +225,10 @@ const SolutionCoordinate Robot::CurrentSC() const
 }
 
 //------------------------------------------------------------------------------
-void Robot::Apply(const SolutionCoordinate& sc)
+void Robot::Apply(const SolutionCoordinate& sc, bool dump)
 {
+	ResetTransform();
+
 	coord.SetTransform(this, sc, false);
 
 	UpdateWorldTransform();
@@ -245,6 +257,11 @@ void Robot::Apply(const SolutionCoordinate& sc)
 		gc.body = sc.body;
 	}
 #	endif
+
+	if (dump)
+	{
+		Dump();
+	}
 }
 
 //------------------------------------------------------------------------------
@@ -261,30 +278,30 @@ void Robot::Dump()
 		WindowsUtility::Debug(L"[%S]\n", body->name.c_str());
 
 		WindowsUtility::Debug(
-			L"L(%.3f, %.3f, %.3f, %.3f) "
-			"(%.3f, %.3f, %.3f, %.3f) "
-			"(%.3f, %.3f, %.3f, %.3f) "
-			"(%.3f, %.3f, %.3f, %.3f)\n",
+			L"L(%.8f, %.8f, %.8f, %.8f) "
+			"(%.8f, %.8f, %.8f, %.8f) "
+			"(%.8f, %.8f, %.8f, %.8f) "
+			"(%.8f, %.8f, %.8f, %.8f)\n",
 			k.e[0 * 4 + 0], k.e[0 * 4 + 1], k.e[0 * 4 + 2], k.e[0 * 4 + 3],
 			k.e[1 * 4 + 0], k.e[1 * 4 + 1], k.e[1 * 4 + 2], k.e[1 * 4 + 3],
 			k.e[2 * 4 + 0], k.e[2 * 4 + 1], k.e[2 * 4 + 2], k.e[2 * 4 + 3],
 			k.e[3 * 4 + 0], k.e[3 * 4 + 1], k.e[3 * 4 + 2], k.e[3 * 4 + 3]);
 
 		WindowsUtility::Debug(
-			L"L(%.3f, %.3f, %.3f, %.3f) "
-			"(%.3f, %.3f, %.3f, %.3f) "
-			"(%.3f, %.3f, %.3f, %.3f) "
-			"(%.3f, %.3f, %.3f, %.3f)\n",
+			L"L(%.8f, %.8f, %.8f, %.8f) "
+			"(%.8f, %.8f, %.8f, %.8f) "
+			"(%.8f, %.8f, %.8f, %.8f) "
+			"(%.8f, %.8f, %.8f, %.8f)\n",
 			l.e[0 * 4 + 0], l.e[0 * 4 + 1], l.e[0 * 4 + 2], l.e[0 * 4 + 3],
 			l.e[1 * 4 + 0], l.e[1 * 4 + 1], l.e[1 * 4 + 2], l.e[1 * 4 + 3],
 			l.e[2 * 4 + 0], l.e[2 * 4 + 1], l.e[2 * 4 + 2], l.e[2 * 4 + 3],
 			l.e[3 * 4 + 0], l.e[3 * 4 + 1], l.e[3 * 4 + 2], l.e[3 * 4 + 3]);
 
 		WindowsUtility::Debug(
-			L"W(%.3f, %.3f, %.3f, %.3f) "
-			"(%.3f, %.3f, %.3f, %.3f) "
-			"(%.3f, %.3f, %.3f, %.3f) "
-			"(%.3f, %.3f, %.3f, %.3f)\n",
+			L"W(%.8f, %.8f, %.8f, %.8f) "
+			"(%.8f, %.8f, %.8f, %.8f) "
+			"(%.8f, %.8f, %.8f, %.8f) "
+			"(%.8f, %.8f, %.8f, %.8f)\n",
 			w.e[0 * 4 + 0], w.e[0 * 4 + 0], w.e[0 * 4 + 0], w.e[0 * 4 + 0],
 			w.e[1 * 4 + 0], w.e[1 * 4 + 0], w.e[1 * 4 + 0], w.e[1 * 4 + 0],
 			w.e[2 * 4 + 0], w.e[2 * 4 + 0], w.e[2 * 4 + 0], w.e[2 * 4 + 0],

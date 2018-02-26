@@ -54,12 +54,16 @@ struct GeneralCoordinate
 
 GeneralCoordinate::Leg operator + (const GeneralCoordinate::Leg& lhs, const GeneralCoordinate::Leg& rhs);
 GeneralCoordinate::Leg operator - (const GeneralCoordinate::Leg& lhs, const GeneralCoordinate::Leg& rhs);
+GeneralCoordinate::Leg operator * (double lhs, const GeneralCoordinate::Leg& rhs);
 GeneralCoordinate::Leg operator * (const GeneralCoordinate::Leg& lhs, double rhs);
+GeneralCoordinate::Leg operator * (const GeneralCoordinate::Leg& lhs, const GeneralCoordinate::Leg& rhs);
 GeneralCoordinate::Leg operator / (const GeneralCoordinate::Leg& lhs, double rhs);
 
 GeneralCoordinate operator + (const GeneralCoordinate& lhs, const GeneralCoordinate& rhs);
 GeneralCoordinate operator - (const GeneralCoordinate& lhs, const GeneralCoordinate& rhs);
+GeneralCoordinate operator * (double lhs, const GeneralCoordinate& rhs);
 GeneralCoordinate operator * (const GeneralCoordinate& lhs, double rhs);
+GeneralCoordinate operator * (const GeneralCoordinate& lhs, const GeneralCoordinate& rhs);
 GeneralCoordinate operator / (const GeneralCoordinate& lhs, double rhs);
 
 struct SolutionCoordinate

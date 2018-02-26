@@ -29,7 +29,9 @@ public:
 
 	virtual SolutionCoordinate At(double t) const = 0;
 
-	virtual GeneralCoordinate GeneralAccelerationAt(double t) const = 0;
+	virtual GeneralCoordinate GeneralCoordinateAt(double t, bool dump = false) const = 0;
+
+	virtual GeneralCoordinate GeneralAccelerationAt(double t, bool highOrder, bool dump = false) const = 0;
 
 	virtual void Dump() = 0;
 

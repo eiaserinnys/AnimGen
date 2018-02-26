@@ -30,6 +30,8 @@ public:
 
 	void Update();
 
+	void ResetTransform();
+
 	RobotBody* Find(const std::string& name);
 
 	const RobotBody* Find(const std::string& name) const;
@@ -51,7 +53,7 @@ public:
 	virtual const GeneralCoordinate& Current() const { return gc; }
 	virtual const SolutionCoordinate CurrentSC() const;
 
-	virtual void Apply(const SolutionCoordinate& coord);
+	virtual void Apply(const SolutionCoordinate& coord, bool dump = false);
 
 	void Dump();
 

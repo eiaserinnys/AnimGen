@@ -16,7 +16,6 @@ using namespace std;
 using namespace Core;
 
 const double g_timeStep = 0.5;
-const double g_derStep = 0.001;
 
 //------------------------------------------------------------------------------
 struct SolutionSpline
@@ -210,74 +209,96 @@ public:
 	}
 
 	//--------------------------------------------------------------------------
-	GeneralCoordinate GeneralAccelerationAt(double t) const
+	GeneralCoordinate GeneralCoordinateAt(double t, bool dump = false) const
 	{
-#if HIGH_ORDER
-		SolutionCoordinate sc[] =
+		SolutionCoordinate sc = At(t);
+
+		if (dump) { sc.Dump(); }
+
+		robot->Apply(sc, dump);
+
+		return robot->Current();
+	}
+
+	//--------------------------------------------------------------------------
+	GeneralCoordinate GeneralAccelerationAt(double t, bool highOrder, bool dump) const
+	{
+		const double derStep = 0.001;
+
+		if (highOrder)
 		{
-			At(t - g_derStep * 2),
-			At(t - g_derStep),
-			At(t),
-			At(t + g_derStep),
-			At(t + g_derStep * 2),
-		};
-
-		GeneralCoordinate gc[5];
-
-		for (int i = 0; i < COUNT_OF(gc); ++i)
-		{
-			robot->Apply(sc[i]);
-			gc[i] = robot->Current();
-
-			WindowsUtility::Debug(L"\t\tgc[%d]=%f\n", i, gc[i].leg[0].rot1.z);
-		}
-
-		int pivot = COUNT_OF(gc) / 2;
-		for (int i = 0; i < COUNT_OF(gc); ++i)
-		{
-			if (i != pivot)
+			SolutionCoordinate sc[] =
 			{
-				gc[i].MakeNear(gc[pivot]);
-			}
-		}
+				At(t - derStep * 2),
+				At(t - derStep),
+				At(t),
+				At(t + derStep),
+				At(t + derStep * 2),
+			};
 
-		// http://www.mathematik.uni-dortmund.de/~kuzmin/cfdintro/lecture4.pdf
-		return (
-			gc[4] * (-1.0) +
-			gc[3] * 16.0 +
-			gc[2] * (-30.0) +
-			gc[1] * 16.0 +
-			gc[0] * (-1.0)) / (12 * g_derStep * g_derStep);
-#else
-		SolutionCoordinate sc[] =
-		{
-			At(t - g_derStep),
-			At(t),
-			At(t + g_derStep),
-		};
+			GeneralCoordinate gc[5];
 
-		GeneralCoordinate gc[3];
-
-		for (int i = 0; i < COUNT_OF(gc); ++i)
-		{
-			robot->Apply(sc[i]);
-			gc[i] = robot->Current();
-
-			WindowsUtility::Debug(L"\t\tgc[%d]=%f\n", i, gc[i].leg[0].rot1.z);
-		}
-
-		int pivot = COUNT_OF(gc) / 2;
-		for (int i = 0; i < COUNT_OF(gc); ++i)
-		{
-			if (i != pivot)
+			for (int i = 0; i < COUNT_OF(gc); ++i)
 			{
-				gc[i].MakeNear(gc[pivot]);
-			}
-		}
+				robot->Apply(sc[i]);
+				gc[i] = robot->Current();
 
-		// https://www.scss.tcd.ie/~dahyotr/CS7ET01/01112007.pdf
-		return (gc[2] - (gc[1] * 2.0) + gc[0]) / (g_derStep * g_derStep);
-#endif
+				if (dump)
+				{
+					WindowsUtility::Debug(L"\t\tgc[%d]=%f\n", i, gc[i].leg[0].rot1.z);
+				}
+			}
+
+			int pivot = COUNT_OF(gc) / 2;
+			for (int i = 0; i < COUNT_OF(gc); ++i)
+			{
+				if (i != pivot)
+				{
+					gc[i].MakeNear(gc[pivot]);
+				}
+			}
+
+			// http://www.mathematik.uni-dortmund.de/~kuzmin/cfdintro/lecture4.pdf
+			return (
+				gc[4] * (-1.0) +
+				gc[3] * 16.0 +
+				gc[2] * (-30.0) +
+				gc[1] * 16.0 +
+				gc[0] * (-1.0)) / (12 * derStep * derStep);
+		}
+		else
+		{
+			GeneralCoordinate gc[3] =
+			{
+				GeneralCoordinateAt(t - derStep),
+				GeneralCoordinateAt(t),
+				GeneralCoordinateAt(t + derStep),
+			};
+
+			if (dump)
+			{
+				for (int i = 0; i < COUNT_OF(gc); ++i)
+				{
+					WindowsUtility::Debug(
+						L"\t\tgc[%d]=%f, %f\n",
+						i,
+						gc[i].leg[0].rot1.z,
+						gc[i].leg[0].rot1.z / M_PI * 180);
+				}
+			}
+
+			int pivot = COUNT_OF(gc) / 2;
+			for (int i = 0; i < COUNT_OF(gc); ++i)
+			{
+				if (i != pivot)
+				{
+					gc[i].MakeNear(gc[pivot]);
+				}
+			}
+
+			// https://www.scss.tcd.ie/~dahyotr/CS7ET01/01112007.pdf
+			return (gc[2] - (gc[1] * 2.0) + gc[0]) / (derStep * derStep);
+		}
 	}
 
 	void Dump();
@@ -408,8 +429,10 @@ void SolutionVector::Dump()
 	GeneralCoordinate zero;
 	zero.Clear();
 
+	const double derStep = 0.001;
+
 	{
-		double t = timeFrom - g_derStep;
+		double t = timeFrom - derStep;
 
 		auto c = At(t);
 		robot->Apply(c);
@@ -418,17 +441,17 @@ void SolutionVector::Dump()
 		dump(t, g, zero, zero);
 	}
 
-	//for (double t = timeFrom; t <= timeTo; t += g_derStep)
+	//for (double t = timeFrom; t <= timeTo; t += derStep)
 	double p = 1.573;
-	for (double t = p - g_derStep; t <= p + g_derStep; t += g_derStep)
-		//for (double t = 0.45; t <= 0.5010; t += g_derStep)
-		//for (double t = 0.0; t <= 1.0; t += g_derStep)
+	for (double t = p - derStep; t <= p + derStep; t += derStep)
+		//for (double t = 0.45; t <= 0.5010; t += derStep)
+		//for (double t = 0.0; t <= 1.0; t += derStep)
 	{
-		auto cmm = At(t - g_derStep * 2);
-		auto cm = At(t - g_derStep);
+		auto cmm = At(t - derStep * 2);
+		auto cm = At(t - derStep);
 		auto c = At(t);
-		auto cp = At(t + g_derStep);
-		auto cpp = At(t + g_derStep * 2);
+		auto cp = At(t + derStep);
+		auto cpp = At(t + derStep * 2);
 
 		robot->Apply(cm);
 		auto gm = robot->Current();
@@ -442,16 +465,16 @@ void SolutionVector::Dump()
 		gm.MakeNear(g);
 		gp.MakeNear(g);
 
-		auto gv = (gp - gm) / (2 * g_derStep);
+		auto gv = (gp - gm) / (2 * derStep);
 
 		// https://www.scss.tcd.ie/~dahyotr/CS7ET01/01112007.pdf
-		auto ga = (gp - (g * 2.0) + gm) / (g_derStep * g_derStep);
+		auto ga = (gp - (g * 2.0) + gm) / (derStep * derStep);
 
 		dump(t, g, gv, ga);
 	}
 
 	{
-		double t = timeTo + g_derStep;
+		double t = timeTo + derStep;
 
 		auto c = At(t);
 		robot->Apply(c);
