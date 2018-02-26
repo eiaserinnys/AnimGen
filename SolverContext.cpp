@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "SolverContext.h"
 
+#include <Utility.h>
 #include <WindowsUtility.h>
 
 #include "ExponentialMap.h"
@@ -8,6 +9,8 @@
 #include "Coefficient.h"
 #include "Variable.h"
 #include "Residual.h"
+
+#include "SolutionSpline.h"
 
 using namespace std;
 using namespace Core;
@@ -33,27 +36,117 @@ public:
 	{
 		solution.reset(ISolutionVector::Create(start, phases));
 
-#if 0
+		auto& testGCSpline = [&](
+			ISolutionVector* sol, 
+			double v, 
+			double time) -> GeneralCoordinate
 		{
-			unique_ptr<ISolutionVector> s2(solution->Clone());
+			// 일반화 좌표 스플라인을 업데이트한다
+			unique_ptr<ISolutionVector> s2(sol->Clone());
 
-			double reserved = s2->GetVariableAt(1);
+			s2->SetVariableAt(1, v);
 
-			double step = 0.000001;
-			for (int i = 0; i < 20; ++i)
-			{ 
-				WindowsUtility::Debug(L"%f", i * step);
+			vector<pair<double, GeneralCoordinate>> gc;
 
-				s2->SetVariableAt(1, reserved - i * step);
+			for (int i = 0; i < s2->GetPhaseCount(); ++i)
+			{
+				double c = s2->GetPhaseTime(i);
+
+				if (i + 1 < s2->GetPhaseCount())
+				{
+					double n = s2->GetPhaseTime(i + 1);
+
+					for (int j = 0; j < 5; ++j)
+					{
+						double f = j / 5.0;
+						double l = c * (1 - f) + n * f;
+
+						gc.push_back(make_pair(l, s2->GeneralCoordinateAt(l)));
+					}
+				}
+			}
+
+			gc.push_back(make_pair(
+				s2->GetLastPhaseTime(),
+				s2->GeneralCoordinateAt(s2->GetLastPhaseTime())));
+
+			SolutionSpline spline[7];
+
+			for (size_t i = 0; i < gc.size(); ++i)
+			{
+				spline[0].Append(gc[i].first, gc[i].second.body);
+				spline[1].Append(gc[i].first, make_pair(Vector3D(gc[i].second.leg[0].len1, 0, 0), gc[i].second.leg[0].rot1));
+				spline[2].Append(gc[i].first, make_pair(Vector3D(gc[i].second.leg[0].len2, 0, 0), gc[i].second.leg[0].rot2));
+				spline[3].Append(gc[i].first, make_pair(Vector3D(0, 0, 0), gc[i].second.leg[0].footRot));
+				spline[4].Append(gc[i].first, make_pair(Vector3D(gc[i].second.leg[1].len1, 0, 0), gc[i].second.leg[1].rot1));
+				spline[5].Append(gc[i].first, make_pair(Vector3D(gc[i].second.leg[1].len2, 0, 0), gc[i].second.leg[1].rot2));
+				spline[6].Append(gc[i].first, make_pair(Vector3D(0, 0, 0), gc[i].second.leg[1].footRot));
+			}
+
+			for (int i = 0; i < COUNT_OF(spline); ++i)
+			{
+				spline[i].Update();
+			}
+
+			GeneralCoordinate acc;
+
+			acc.body = spline[0].curve->AccelerationAt(time);
+			
+			pair<Vector3D, Vector3D> p[] = 
+			{
+				spline[1].curve->AccelerationAt(time), 
+				spline[2].curve->AccelerationAt(time),
+				spline[3].curve->AccelerationAt(time),
+				spline[4].curve->AccelerationAt(time),
+				spline[5].curve->AccelerationAt(time),
+				spline[6].curve->AccelerationAt(time),
+			};
+
+			acc.leg[0].rot1 = p[0].second;
+			acc.leg[0].len1 = p[0].first.x;
+			acc.leg[0].rot2 = p[1].second;
+			acc.leg[0].len2 = p[1].first.x;
+			acc.leg[0].footRot = p[2].second;
+
+			acc.leg[1].rot1 = p[3].second;
+			acc.leg[1].len1 = p[3].first.x;
+			acc.leg[1].rot2 = p[4].second;
+			acc.leg[1].len2 = p[4].first.x;
+			acc.leg[1].footRot = p[5].second;
+
+			return acc;
+		};
+
+		{
+			double step = 0.00001;
+			for (double i = 0.0003; i < 0.002; i += step)
+			{
+				unique_ptr<ISolutionVector> s2(solution->Clone());
 
 				int p = 1;
+				double reserved = s2->GetVariableAt(p) - 0.5;
+				double time = solution->GetPhaseTime(p);
 
-				double pt = s2->GetPhaseTime(p);
+				auto gam = testGCSpline(s2.get(), reserved-i, time);
+				auto ga = testGCSpline(s2.get(), reserved, time);
+				auto gap = testGCSpline(s2.get(), reserved +i, time);
 
-				s2->GeneralCoordinateAt(pt);
+				auto gad = (gap - gam) / (2 * i);
+				auto der = gad * ga;
+
+				WindowsUtility::Debug(L"%.8f\t", i);
+
+				WindowsUtility::Debug(L"%.8f\t", der.leg[0].rot1.z);
+
+				WindowsUtility::Debug(
+					L"\t%+.8f\t%+.8f\t%+.8f",
+					gam.leg[0].rot1.z,
+					ga.leg[0].rot1.z,
+					gap.leg[0].rot1.z);
+
+				WindowsUtility::Debug(L"\n");
 			}
 		}
-#endif
 
 		auto& test = [&](double step, bool highOrder)
 		{

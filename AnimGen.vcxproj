@@ -210,6 +210,7 @@
     <ClInclude Include="RobotIK.h" />
     <ClInclude Include="RobotImplementation.h" />
     <ClInclude Include="SceneDescriptor.h" />
+    <ClInclude Include="SolutionSpline.h" />
     <ClInclude Include="SolutionVector.h" />
     <ClInclude Include="Solver.h" />
     <ClInclude Include="SolverContext.h" />

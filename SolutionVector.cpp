@@ -11,45 +11,12 @@
 
 #include "Robot.h"
 #include "ClampedSplineFixedStep.h"
+#include "SolutionSpline.h"
 
 using namespace std;
 using namespace Core;
 
 const double g_timeStep = 0.5;
-
-//------------------------------------------------------------------------------
-struct SolutionSpline
-{
-	unique_ptr<ISpline> curve;
-	vector<Vector3D> pos;
-	vector<Vector3D> rot;
-
-	SolutionSpline() = default;
-
-	SolutionSpline& operator = (const SolutionSpline& rhs)
-	{
-		pos = rhs.pos;
-		rot = rhs.rot;
-		Update();
-		return *this;
-	}
-
-	void SetValue(int index, int channel, double v)
-	{
-		curve->SetValue(index, channel, v);
-	}
-
-	void Update()
-	{
-		curve.reset(IClampedSplineFixedStep::Create(g_timeStep, pos, rot));
-	}
-
-	void Append(double t, const pair<Vector3D, Vector3D>& p)
-	{
-		pos.push_back(p.first);
-		rot.push_back(p.second);
-	}
-};
 
 //------------------------------------------------------------------------------
 class SolutionVector : public ISolutionVector {
@@ -309,6 +276,9 @@ public:
 
 	// 솔루션 벡터 -> 스플라인
 	SolutionSpline splines[3];
+
+	// 일반화 좌표 샘플링
+	vector<pair<double, GeneralCoordinate>> gcSamples;
 
 	// 내부용 로봇
 	unique_ptr<IRobot> robot;

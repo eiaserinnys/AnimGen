@@ -355,6 +355,9 @@
     <ClInclude Include="SolverHelper.h">
       <Filter>Solver\Utility</Filter>
     </ClInclude>
+    <ClInclude Include="SolutionSpline.h">
+      <Filter>Solver</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Shader\Object.fx">

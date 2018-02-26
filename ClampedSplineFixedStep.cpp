@@ -129,6 +129,24 @@ struct FixedSplineChannel
 		return a + b * x + c[i] * x * x + d * x * x * x;
 	}
 
+	double AccelerationAt(double x_)
+	{
+		int i = (int)(x_ / timeStep);
+
+		if (x_ < 0) { i = 0; }
+		if (x_ >= te) { i = n - 1; }
+
+		auto x = (x_ - i * timeStep);
+
+		double h = timeStep;
+
+		auto a = y[i];
+		auto b = (1.0 / h * (y[i + 1] - y[i]) - h / 3 * (2 * c[i] + c[i + 1]));
+		auto d = 1 / (3 * h) * (c[i + 1] - c[i]);
+
+		return 2 * c[i] + 6 * d * x;
+	}
+
 	void ValidateVelocity()
 	{
 		double h = timeStep;
@@ -296,6 +314,13 @@ public:
 		return make_pair(
 			Vector3D(channel[0]->At(v), channel[1]->At(v), channel[2]->At(v)),
 			Vector3D(channel[3]->At(v), channel[4]->At(v), channel[5]->At(v)));
+	}
+
+	pair<Vector3D, Vector3D> AccelerationAt(double v)
+	{
+		return make_pair(
+			Vector3D(channel[0]->AccelerationAt(v), channel[1]->AccelerationAt(v), channel[2]->AccelerationAt(v)),
+			Vector3D(channel[3]->AccelerationAt(v), channel[4]->AccelerationAt(v), channel[5]->AccelerationAt(v)));
 	}
 
 	double GetMax()
