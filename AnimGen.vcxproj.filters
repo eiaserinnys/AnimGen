@@ -75,6 +75,9 @@
     <Filter Include="Solver\Utility">
       <UniqueIdentifier>{7f06fb03-2694-4d57-abdf-b7312f1f98ce}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Solver\SolutionVector">
+      <UniqueIdentifier>{e1a1d1f3-d08b-4903-8325-561b7b54869b}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="RenderContext.cpp">
@@ -182,11 +185,14 @@
     <ClCompile Include="SolverContext.cpp">
       <Filter>Solver</Filter>
     </ClCompile>
-    <ClCompile Include="SolutionVector.cpp">
-      <Filter>Solver</Filter>
-    </ClCompile>
     <ClCompile Include="SolverHelper.cpp">
       <Filter>Solver\Utility</Filter>
+    </ClCompile>
+    <ClCompile Include="SolutionVector.cpp">
+      <Filter>Solver\SolutionVector</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneralizedAccelerationCalculator.cpp">
+      <Filter>Solver\SolutionVector</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -349,14 +355,17 @@
     <ClInclude Include="SolverContext.h">
       <Filter>Solver</Filter>
     </ClInclude>
-    <ClInclude Include="SolutionVector.h">
-      <Filter>Solver</Filter>
-    </ClInclude>
     <ClInclude Include="SolverHelper.h">
       <Filter>Solver\Utility</Filter>
     </ClInclude>
+    <ClInclude Include="SolutionVector.h">
+      <Filter>Solver\SolutionVector</Filter>
+    </ClInclude>
+    <ClInclude Include="GeneralizedAccelerationCalculator.h">
+      <Filter>Solver\SolutionVector</Filter>
+    </ClInclude>
     <ClInclude Include="SolutionSpline.h">
-      <Filter>Solver</Filter>
+      <Filter>Solver\SolutionVector</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

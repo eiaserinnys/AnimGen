@@ -12,6 +12,11 @@
 using namespace std;
 using namespace Core;
 
+bool operator == (const Vector3D& lhs, const Vector3D& rhs)
+{
+	return lhs.x == rhs.x && lhs.y == rhs.y &&lhs.z == rhs.z;
+}
+
 //--------------------------------------------------------------------------
 void SetWorld(Robot* robot, const string& name, const Matrix4D& m, bool validate)
 {
@@ -162,6 +167,19 @@ GeneralCoordinate::Leg operator / (
 }
 
 //--------------------------------------------------------------------------
+bool operator == (
+	const GeneralCoordinate::Leg& lhs,
+	const GeneralCoordinate::Leg& rhs)
+{
+	return 
+		lhs.rot1 == rhs.rot1 &&
+		lhs.len1 == rhs.len1 &&
+		lhs.rot2 == rhs.rot2 &&
+		lhs.len2 == rhs.len2 &&
+		lhs.footRot == rhs.footRot;
+}
+
+//--------------------------------------------------------------------------
 GeneralCoordinate operator - (const GeneralCoordinate& lhs, const GeneralCoordinate& rhs)
 {
 	GeneralCoordinate ret;
@@ -237,6 +255,16 @@ GeneralCoordinate operator * (double lhs, const GeneralCoordinate& rhs)
 	ret.leg[1] = lhs * rhs.leg[1];
 
 	return ret;
+}
+
+//--------------------------------------------------------------------------
+bool operator == (const GeneralCoordinate& lhs, const GeneralCoordinate& rhs)
+{
+	return 
+		lhs.body.first == rhs.body.first && 
+		lhs.body.second == rhs.body.second &&
+		lhs.leg[0] == rhs.leg[0] &&
+		lhs.leg[1] == rhs.leg[1];
 }
 
 //------------------------------------------------------------------------------

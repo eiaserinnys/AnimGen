@@ -297,9 +297,23 @@ ISolutionVector* ISolutionVector::Create(
 {
 	vector<pair<double, SolutionCoordinate>> coords;
 
+	auto& noise = []()
+	{
+		return (((double)rand() / RAND_MAX) * 2 - 1) * 0.0001;
+	};
+
 	for (int i = 0; i <= phases; ++i)
 	{
-		coords.push_back(make_pair(i * g_timeStep, init));
+		SolutionCoordinate sc = init;
+
+		sc.body.first += Vector3D(noise(), noise(), noise());
+		sc.body.second += Vector3D(noise(), noise(), noise());
+		sc.foot[0].first += Vector3D(noise(), noise(), noise());
+		sc.foot[0].second += Vector3D(noise(), noise(), noise());
+		sc.foot[1].first += Vector3D(noise(), noise(), noise());
+		sc.foot[1].second += Vector3D(noise(), noise(), noise());
+
+		coords.push_back(make_pair(i * g_timeStep, sc));
 	}
 
 	return new SolutionVector(coords);

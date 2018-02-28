@@ -138,6 +138,7 @@
     <ClCompile Include="ClampedSplineFixedStep.cpp" />
     <ClCompile Include="DeferredRendrerer.cpp" />
     <ClCompile Include="DiagnosticRenderer.cpp" />
+    <ClCompile Include="GeneralizedAccelerationCalculator.cpp" />
     <ClCompile Include="Residual.cpp" />
     <ClCompile Include="exp-map.cpp" />
     <ClCompile Include="ExponentialMap.cpp" />
@@ -185,6 +186,7 @@
     <ClInclude Include="DeferredRenderer.h" />
     <ClInclude Include="DiagnosticRenderer.h" />
     <ClInclude Include="DXMathTransform.h" />
+    <ClInclude Include="GeneralizedAccelerationCalculator.h" />
     <ClInclude Include="Residual.h" />
     <ClInclude Include="exp-map.h" />
     <ClInclude Include="ExponentialMap.h" />

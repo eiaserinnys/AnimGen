@@ -10,7 +10,7 @@
 #include "Variable.h"
 #include "Residual.h"
 
-#include "SolutionSpline.h"
+#include "GeneralizedAccelerationCalculator.h"
 
 using namespace std;
 using namespace Core;
@@ -35,198 +35,6 @@ public:
 		, dest(dest)
 	{
 		solution.reset(ISolutionVector::Create(start, phases));
-
-		auto& testGCSpline = [&](
-			ISolutionVector* sol, 
-			double v, 
-			double time) -> GeneralCoordinate
-		{
-			// 일반화 좌표 스플라인을 업데이트한다
-			unique_ptr<ISolutionVector> s2(sol->Clone());
-
-			s2->SetVariableAt(1, v);
-
-			vector<pair<double, GeneralCoordinate>> gc;
-
-			for (int i = 0; i < s2->GetPhaseCount(); ++i)
-			{
-				double c = s2->GetPhaseTime(i);
-
-				if (i + 1 < s2->GetPhaseCount())
-				{
-					double n = s2->GetPhaseTime(i + 1);
-
-					for (int j = 0; j < 5; ++j)
-					{
-						double f = j / 5.0;
-						double l = c * (1 - f) + n * f;
-
-						gc.push_back(make_pair(l, s2->GeneralCoordinateAt(l)));
-					}
-				}
-			}
-
-			gc.push_back(make_pair(
-				s2->GetLastPhaseTime(),
-				s2->GeneralCoordinateAt(s2->GetLastPhaseTime())));
-
-			SolutionSpline spline[7];
-
-			for (size_t i = 0; i < gc.size(); ++i)
-			{
-				spline[0].Append(gc[i].first, gc[i].second.body);
-				spline[1].Append(gc[i].first, make_pair(Vector3D(gc[i].second.leg[0].len1, 0, 0), gc[i].second.leg[0].rot1));
-				spline[2].Append(gc[i].first, make_pair(Vector3D(gc[i].second.leg[0].len2, 0, 0), gc[i].second.leg[0].rot2));
-				spline[3].Append(gc[i].first, make_pair(Vector3D(0, 0, 0), gc[i].second.leg[0].footRot));
-				spline[4].Append(gc[i].first, make_pair(Vector3D(gc[i].second.leg[1].len1, 0, 0), gc[i].second.leg[1].rot1));
-				spline[5].Append(gc[i].first, make_pair(Vector3D(gc[i].second.leg[1].len2, 0, 0), gc[i].second.leg[1].rot2));
-				spline[6].Append(gc[i].first, make_pair(Vector3D(0, 0, 0), gc[i].second.leg[1].footRot));
-			}
-
-			for (int i = 0; i < COUNT_OF(spline); ++i)
-			{
-				spline[i].Update();
-			}
-
-			GeneralCoordinate acc;
-
-			acc.body = spline[0].curve->AccelerationAt(time);
-			
-			pair<Vector3D, Vector3D> p[] = 
-			{
-				spline[1].curve->AccelerationAt(time), 
-				spline[2].curve->AccelerationAt(time),
-				spline[3].curve->AccelerationAt(time),
-				spline[4].curve->AccelerationAt(time),
-				spline[5].curve->AccelerationAt(time),
-				spline[6].curve->AccelerationAt(time),
-			};
-
-			acc.leg[0].rot1 = p[0].second;
-			acc.leg[0].len1 = p[0].first.x;
-			acc.leg[0].rot2 = p[1].second;
-			acc.leg[0].len2 = p[1].first.x;
-			acc.leg[0].footRot = p[2].second;
-
-			acc.leg[1].rot1 = p[3].second;
-			acc.leg[1].len1 = p[3].first.x;
-			acc.leg[1].rot2 = p[4].second;
-			acc.leg[1].len2 = p[4].first.x;
-			acc.leg[1].footRot = p[5].second;
-
-			return acc;
-		};
-
-		{
-			double step = 0.00001;
-			for (double i = 0.0003; i < 0.002; i += step)
-			{
-				unique_ptr<ISolutionVector> s2(solution->Clone());
-
-				int p = 1;
-				double reserved = s2->GetVariableAt(p) - 0.5;
-				double time = solution->GetPhaseTime(p);
-
-				auto gam = testGCSpline(s2.get(), reserved-i, time);
-				auto ga = testGCSpline(s2.get(), reserved, time);
-				auto gap = testGCSpline(s2.get(), reserved +i, time);
-
-				auto gad = (gap - gam) / (2 * i);
-				auto der = gad * ga;
-
-				WindowsUtility::Debug(L"%.8f\t", i);
-
-				WindowsUtility::Debug(L"%.8f\t", der.leg[0].rot1.z);
-
-				WindowsUtility::Debug(
-					L"\t%+.8f\t%+.8f\t%+.8f",
-					gam.leg[0].rot1.z,
-					ga.leg[0].rot1.z,
-					gap.leg[0].rot1.z);
-
-				WindowsUtility::Debug(L"\n");
-			}
-		}
-
-		auto& test = [&](double step, bool highOrder)
-		{
-			unique_ptr<ISolutionVector> s2(solution->Clone());
-			double reserved = s2->GetVariableAt(1) - 0.5;
-			int p = 1;
-			double pt = s2->GetPhaseTime(p);
-			WindowsUtility::Debug(L"%.8f\t%S", step, highOrder ? "H" : "L");
-
-			s2->SetVariableAt(1, reserved - step * 2);
-			GeneralCoordinate gamm = s2->GeneralAccelerationAt(pt, highOrder);
-
-			s2->SetVariableAt(1, reserved - step);
-			GeneralCoordinate gam = s2->GeneralAccelerationAt(pt, highOrder);
-
-			s2->SetVariableAt(1, reserved);
-			GeneralCoordinate gac = s2->GeneralAccelerationAt(pt, highOrder);
-
-			s2->SetVariableAt(1, reserved + step);
-			GeneralCoordinate gap = s2->GeneralAccelerationAt(pt, highOrder);
-
-			s2->SetVariableAt(1, reserved + step * 2);
-			GeneralCoordinate gapp = s2->GeneralAccelerationAt(pt, highOrder);
-
-			double gammAbs = Length(gamm.leg[0].rot1);
-			double gamAbs = Length(gam.leg[0].rot1);
-			double gacAbs = Length(gac.leg[0].rot1);
-			double gapAbs = Length(gap.leg[0].rot1);
-			double gappAbs = Length(gapp.leg[0].rot1);
-
-			double derivative = highOrder ?
-				2 * (-gappAbs + 8 * gapAbs - 8 * gamAbs + gammAbs) / (12 * step) * gacAbs :
-				(gapAbs - gamAbs) / step * gacAbs;
-
-			//WindowsUtility::Debug(L"\tab = %+.8f\t%+.8f\t%+.8f\n", gapAbs, gacAbs, gamAbs);
-
-			//WindowsUtility::Debug(L"\tdelta = %+.8f\n", gapAbs - gamAbs);
-			//WindowsUtility::Debug(L"\tsqr delta = %+.8f\n", gapAbs * gapAbs - gamAbs * gamAbs);
-			//WindowsUtility::Debug(L"\tstep = %+.8f\n", step);
-
-			auto& sqr = [](double v) { return v * v; };
-
-			//auto der2 = (
-			//	- sqr(gappAbs) 
-			//	+ 8 * sqr(gapAbs) 
-			//	- 8 * sqr(gamAbs) 
-			//	+ sqr(gammAbs)
-			//	) / (12 * step);
-
-			// https://coast.nd.edu/jjwteach/www/www/30125/pdfnotes/lecture7_12v09.pdf
-			WindowsUtility::Debug(L"\t%+.8f", derivative);
-
-			if (highOrder)
-			{
-				WindowsUtility::Debug(
-					L"\t%+.8f\t%+.8f\t%+.8f\t%+.8f\t%+.8f",
-					gamm.leg[0].rot1.z,
-					gam.leg[0].rot1.z,
-					gac.leg[0].rot1.z,
-					gap.leg[0].rot1.z,
-					gapp.leg[0].rot1.z);
-			}
-			else
-			{
-				WindowsUtility::Debug(
-					L"\t%+.8f\t%+.8f\t%+.8f",
-					gam.leg[0].rot1.z,
-					gac.leg[0].rot1.z,
-					gap.leg[0].rot1.z);
-			}
-
-			WindowsUtility::Debug(L"\n");
-		};
-
-		double step = 0.00001;
-		for (double i = 0.0003; i < 0.002; i += step)
-		{
-			test(i, false);
-			//test(i, true);
-		}
 
 		int var = solution->VariableCount();
 		int fn = 6 + 12 * solution->GetPhaseCount();
@@ -271,9 +79,9 @@ public:
 
 		residual.Begin();
 
-		error += LoadResidual_DestinationTask(solution.get(), dest, one, writeDebug);
-
 		error += LoadResidual_GeneralAcceleration(solution.get(), one, writeDebug);
+
+		error += LoadResidual_DestinationTask(solution.get(), dest, one, writeDebug);
 
 		residual.End();
 
@@ -285,9 +93,9 @@ public:
 	{
 		jacobian.Begin();
 
-		LoadJacobian_DestinationTask(solution.get(), dest, one);
-
 		LoadJacobian_GeneralAcceleration(solution.get(), one);
+
+		LoadJacobian_DestinationTask(solution.get(), dest, one);
 
 		jacobian.End();
 	}
@@ -454,6 +262,13 @@ public:
 	}
 
 	//------------------------------------------------------------------------------
+	GeneralCoordinate GeneralAccelerationAt(ISolutionVector* sv, int p)
+	{
+		GeneralizedAccelerationCalculator calc(sv, p);
+		return calc.Get();
+	}
+
+	//------------------------------------------------------------------------------
 	void LoadJacobian_GeneralAcceleration(
 		const ISolutionVector* s,
 		const Coefficient& w)
@@ -486,28 +301,38 @@ public:
 				// 원래 값을 보존
 				double reserved = s2->GetVariableAt(varOfs);
 
+				auto ga = GeneralAccelerationAt(s2.get(), p);
+
 				s2->SetVariableAt(varOfs, reserved - step);
-				auto ga0 = s2->GeneralAccelerationAt(s->GetPhaseTime(p), true);
+				auto gam = GeneralAccelerationAt(s2.get(), p);
 
 				s2->SetVariableAt(varOfs, reserved + step);
-				auto ga1 = s2->GeneralAccelerationAt(s->GetPhaseTime(p), true);
-
-				d[0 * coordVar + v] = (SquaredLength(ga1.body.first) - SquaredLength(ga0.body.first)) / (step * 2);
-				d[1 * coordVar + v] = (SquaredLength(ga1.body.second) - SquaredLength(ga0.body.second)) / (step * 2);
-				d[2 * coordVar + v] = (SquaredLength(ga1.leg[0].rot1) - SquaredLength(ga0.leg[0].rot1)) / (step * 2);
-				d[3 * coordVar + v] = (Squared(ga1.leg[0].len1) - Squared(ga0.leg[0].len1)) / (step * 2);
-				d[4 * coordVar + v] = (SquaredLength(ga1.leg[0].rot2) - SquaredLength(ga0.leg[0].rot2)) / (step * 2);
-				d[5 * coordVar + v] = (Squared(ga1.leg[0].len2) - Squared(ga0.leg[0].len2)) / (step * 2);
-				d[6 * coordVar + v] = (SquaredLength(ga1.leg[0].footRot) - SquaredLength(ga0.leg[0].footRot)) / (step * 2);
-				d[7 * coordVar + v] = (SquaredLength(ga1.leg[1].rot1) - SquaredLength(ga0.leg[1].rot1)) / (step * 2);
-				d[8 * coordVar + v] = (Squared(ga1.leg[1].len1) - Squared(ga0.leg[1].len1)) / (step * 2);
-				d[9 * coordVar + v] = (SquaredLength(ga1.leg[1].rot2) - SquaredLength(ga0.leg[1].rot2)) / (step * 2);
-				d[10 * coordVar + v] = (Squared(ga1.leg[1].len2) - Squared(ga0.leg[1].len2)) / (step * 2);
-				d[11 * coordVar + v] = (SquaredLength(ga1.leg[1].footRot) - SquaredLength(ga0.leg[1].footRot)) / (step * 2);
+				auto gap = GeneralAccelerationAt(s2.get(), p);
 
 				// 다시 원복
 				s2->SetVariableAt(varOfs, reserved);
 
+				d[0 * coordVar + v] = SquaredLength((gap.body.first - gam.body.first) * ga.body.first) / (step * 2);
+				d[1 * coordVar + v] = SquaredLength((gap.body.second - gam.body.second) * ga.body.second) / (step * 2);
+				d[2 * coordVar + v] = SquaredLength((gap.leg[0].rot1 - gam.leg[0].rot1) * ga.leg[0].rot1) / (step * 2);
+				d[3 * coordVar + v] = Squared((gap.leg[0].len1 - gam.leg[0].len1) * ga.leg[0].len1) / (step * 2);
+				d[4 * coordVar + v] = SquaredLength((gap.leg[0].rot2 - gam.leg[0].rot2) * ga.leg[0].rot2) / (step * 2);
+				d[5 * coordVar + v] = Squared((gap.leg[0].len2 - gam.leg[0].len2) * ga.leg[0].len2) / (step * 2);
+				d[6 * coordVar + v] = SquaredLength((gap.leg[0].footRot - gam.leg[0].footRot) * ga.leg[0].footRot) / (step * 2);
+				d[7 * coordVar + v] = SquaredLength((gap.leg[1].rot1 - gam.leg[1].rot1) * ga.leg[1].rot1) / (step * 2);
+				d[8 * coordVar + v] = Squared((gap.leg[1].len1 - gam.leg[1].len1) * ga.leg[1].len1) / (step * 2);
+				d[9 * coordVar + v] = SquaredLength((gap.leg[1].rot2 - gam.leg[1].rot2) * ga.leg[1].rot2) / (step * 2);
+				d[10 * coordVar + v] = Squared((gap.leg[1].len2 - gam.leg[1].len2) * ga.leg[1].len2) / (step * 2);
+				d[11 * coordVar + v] = SquaredLength((gap.leg[1].footRot - gam.leg[1].footRot) * ga.leg[1].footRot) / (step * 2);
+			}
+
+			for (int f = 0; f < 12; ++f)
+			{
+				for (int v = 0; v < coordVar; ++v)
+				{
+					WindowsUtility::Debug(L"%e\t", d[f * coordVar + v]);
+				}
+				WindowsUtility::Debug(L"\n");
 			}
 
 			for (int f = 0; f < 12; ++f)
