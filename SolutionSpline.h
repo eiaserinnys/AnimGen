@@ -6,13 +6,16 @@
 //------------------------------------------------------------------------------
 struct SolutionSpline
 {
-	const float g_timeStep = 0.5;
+	double timeStep = 0.5;
 
 	std::unique_ptr<ISpline> curve;
 	std::vector<Core::Vector3D> pos;
 	std::vector<Core::Vector3D> rot;
 
 	SolutionSpline() = default;
+
+	SolutionSpline(double timeStep) : timeStep(timeStep)
+	{}
 
 	SolutionSpline& operator = (const SolutionSpline& rhs)
 	{
@@ -27,9 +30,14 @@ struct SolutionSpline
 		curve->SetValue(index, channel, v);
 	}
 
+	void SetTimestep(double ts)
+	{
+		timeStep = ts;
+	}
+
 	void Update()
 	{
-		curve.reset(IClampedSplineFixedStep::Create(g_timeStep, pos, rot));
+		curve.reset(IClampedSplineFixedStep::Create(timeStep, pos, rot));
 	}
 
 	void Append(double t, const std::pair<Core::Vector3D, Core::Vector3D>& p)

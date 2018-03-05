@@ -321,7 +321,7 @@ public:
 				}
 #endif
 
-				WindowsUtility::Debug(L"gc''\n");
+				//WindowsUtility::Debug(L"gc''\n");
 
 				auto ga = GeneralAccelerationAt(s2.get(), p);
 
@@ -331,11 +331,11 @@ public:
 				s2->SetVariableAt(varOfs, reserved + step);
 				auto gap = GeneralAccelerationAt(s2.get(), p);
 
-				gam.Dump_();
-				ga.Dump_();
-				gap.Dump_();
+				//gam.Dump_();
+				//ga.Dump_();
+				//gap.Dump_();
 
-				WindowsUtility::Debug(L"\n");
+				//WindowsUtility::Debug(L"\n");
 
 				// 다시 원복
 				s2->SetVariableAt(varOfs, reserved);
@@ -354,14 +354,14 @@ public:
 				d[11 * coordVar + v] = SquaredLength((gap.leg[1].footRot - gam.leg[1].footRot) * ga.leg[1].footRot) / (step * 2);
 			}
 
-			//for (int f = 0; f < 12; ++f)
-			//{
-			//	for (int v = 0; v < coordVar; ++v)
-			//	{
-			//		WindowsUtility::Debug(L"%e\t", d[f * coordVar + v]);
-			//	}
-			//	WindowsUtility::Debug(L"\n");
-			//}
+			for (int f = 0; f < 12; ++f)
+			{
+				for (int v = 0; v < coordVar; ++v)
+				{
+					WindowsUtility::Debug(L"%e\t", d[f * coordVar + v]);
+				}
+				WindowsUtility::Debug(L"\n");
+			}
 
 			for (int f = 0; f < 12; ++f)
 			{

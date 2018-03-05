@@ -186,12 +186,14 @@ void RobotIK::SetFootPosition(bool left, const Vector3D& pos_)
 		double d1 = (d * d - r * r + R * R) / (2 * d);
 		double a = 1 / d * std::sqrt((-d + r - R) * (-d - r + R) * (-d + r + R) *(d + r + R));
 
+#if 0
 		if (left)
 		{
 			WindowsUtility::Debug(
 				L"\t\t%f <- %f,%f,%f,%f,%f,%f\n",
 				a, d, d1, (-d + r - R), (-d - r + R), (-d + r + R), (d + r + R));
 		}
+#endif
 
 		// »õ ¹«¸­ À§Ä¡
 		Vector3D kneePos = x * d1 + y * (a / 2) + orgPos[0];
