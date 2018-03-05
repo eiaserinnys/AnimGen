@@ -227,12 +227,16 @@ void RobotIK::SetFootPosition(bool left, const Vector3D& pos_)
 		Vector3D lk = Lerp(midKneePos, kneePos, f);
 
 		{
-			Vector3D x1 = Normalize(Lerp(x, kneePos - orgPos[0], f));
-			Vector3D z1 = Normalize(Lerp(y, Cross(x1, y), f));
-			Vector3D y1 = Normalize(Lerp(z, Cross(z1, x1), f));
+			Vector3D x1 = Normalize(kneePos - orgPos[0]);
+			Vector3D z1 = Normalize(Cross(x1, y));
+			Vector3D y1 = Normalize(Cross(z1, x1));
+
+			Vector3D x2 = Normalize(Lerp(x, x1, f));
+			Vector3D y2 = Normalize(Lerp(y, y1, f));
+			Vector3D z2 = Normalize(Lerp(z, z1, f));
 
 			Matrix4D worldTx = Matrix4D::Identity();
-			FrameHelper::Set(worldTx, x1, y1, z1);
+			FrameHelper::Set(worldTx, x2, y2, z2);
 			FrameHelper::SetTranslation(worldTx, orgPos[0]);
 			robot->bodies[index[0]]->SetWorldTx(worldTx);
 
@@ -245,12 +249,16 @@ void RobotIK::SetFootPosition(bool left, const Vector3D& pos_)
 		}
 
 		{
-			Vector3D x1 = Normalize(Lerp(x, pos - kneePos, f));
-			Vector3D z1 = Normalize(Lerp(y, Cross(x1, y), f));
-			Vector3D y1 = Normalize(Lerp(z, Cross(z1, x1), f));
+			Vector3D x1 = Normalize(pos - kneePos);
+			Vector3D z1 = Normalize(Cross(x1, y));
+			Vector3D y1 = Normalize(Cross(z1, x1));
+
+			Vector3D x2 = Normalize(Lerp(x, x1, f));
+			Vector3D y2 = Normalize(Lerp(y, y1, f));
+			Vector3D z2 = Normalize(Lerp(z, z1, f));
 
 			Matrix4D worldTx = Matrix4D::Identity();
-			FrameHelper::Set(worldTx, x1, y1, z1);
+			FrameHelper::Set(worldTx, x2, y2, z2);
 			FrameHelper::SetTranslation(worldTx, lk);
 			robot->bodies[index[1]]->SetWorldTx(worldTx);
 
