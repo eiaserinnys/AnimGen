@@ -301,6 +301,28 @@ public:
 				// 원래 값을 보존
 				double reserved = s2->GetVariableAt(varOfs);
 
+#if 0 
+				{
+					WindowsUtility::Debug(L"gc\n");
+					s2->SetVariableAt(varOfs, reserved - step);
+					GeneralCoordinate g0 = s2->GeneralCoordinateAt(s2->GetPhaseTime(p));
+
+					s2->SetVariableAt(varOfs, reserved);
+					GeneralCoordinate g1 = s2->GeneralCoordinateAt(s2->GetPhaseTime(p));
+
+					s2->SetVariableAt(varOfs, reserved + step);
+					GeneralCoordinate g2 = s2->GeneralCoordinateAt(s2->GetPhaseTime(p));
+
+					g0.Dump_();
+					g1.Dump_();
+					g2.Dump_();
+
+					int i = 0;
+				}
+#endif
+
+				WindowsUtility::Debug(L"gc''\n");
+
 				auto ga = GeneralAccelerationAt(s2.get(), p);
 
 				s2->SetVariableAt(varOfs, reserved - step);
@@ -308,6 +330,12 @@ public:
 
 				s2->SetVariableAt(varOfs, reserved + step);
 				auto gap = GeneralAccelerationAt(s2.get(), p);
+
+				gam.Dump_();
+				ga.Dump_();
+				gap.Dump_();
+
+				WindowsUtility::Debug(L"\n");
 
 				// 다시 원복
 				s2->SetVariableAt(varOfs, reserved);
@@ -326,14 +354,14 @@ public:
 				d[11 * coordVar + v] = SquaredLength((gap.leg[1].footRot - gam.leg[1].footRot) * ga.leg[1].footRot) / (step * 2);
 			}
 
-			for (int f = 0; f < 12; ++f)
-			{
-				for (int v = 0; v < coordVar; ++v)
-				{
-					WindowsUtility::Debug(L"%e\t", d[f * coordVar + v]);
-				}
-				WindowsUtility::Debug(L"\n");
-			}
+			//for (int f = 0; f < 12; ++f)
+			//{
+			//	for (int v = 0; v < coordVar; ++v)
+			//	{
+			//		WindowsUtility::Debug(L"%e\t", d[f * coordVar + v]);
+			//	}
+			//	WindowsUtility::Debug(L"\n");
+			//}
 
 			for (int f = 0; f < 12; ++f)
 			{

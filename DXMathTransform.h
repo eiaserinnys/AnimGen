@@ -180,5 +180,20 @@ namespace Core
 				(Q2.w * Q1.w) - (Q2.x * Q1.x) - (Q2.y * Q1.y) - (Q2.z * Q1.z)
 			};
 		}
+
+		static inline MatrixT<V, 4, 4> MatrixInverseHomogeneousTransform(
+			const MatrixT<V, 4, 4>& m)
+		{
+			return MatrixT<V, 4, 4>
+			{
+				m.m[0][0], m.m[1][0], m.m[2][0], 0, 
+				m.m[0][1], m.m[1][1], m.m[2][1], 0,
+				m.m[0][2], m.m[1][2], m.m[2][2], 0,
+				-(m.m[3][0] * m.m[0][0] + m.m[3][1] * m.m[0][1] + m.m[3][2] * m.m[0][2]), 
+				-(m.m[3][0] * m.m[1][0] + m.m[3][1] * m.m[1][1] + m.m[3][2] * m.m[1][2]),
+				-(m.m[3][0] * m.m[2][0] + m.m[3][1] * m.m[2][1] + m.m[3][2] * m.m[2][2]),
+				1, 
+			};
+		}
 	};
 }

@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "GeneralizedAccelerationCalculator.h"
 
+#include <WindowsUtility.h>
 #include <Utility.h>
 
 using namespace std;
@@ -55,6 +56,8 @@ double GeneralizedAccelerationCalculator::BuildData(
 	gc.push_back(make_pair(
 		sv->GetPhaseTime(to) - timeOffset,
 		sv->GeneralCoordinateAt(sv->GetPhaseTime(to))));
+
+	gc[5].second.Dump();
 
 	return timeAt - timeOffset;
 }

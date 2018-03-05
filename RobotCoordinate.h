@@ -50,6 +50,8 @@ struct GeneralCoordinate
 	void Clear();
 
 	void Dump() const;
+
+	void Dump_() const;
 };
 
 GeneralCoordinate::Leg operator + (const GeneralCoordinate::Leg& lhs, const GeneralCoordinate::Leg& rhs);

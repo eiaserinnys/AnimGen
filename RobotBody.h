@@ -5,6 +5,8 @@
 
 #include "Mesh.h"
 
+#include "DXMathTransform.h"
+
 struct RobotBody
 {
 	std::string name;
@@ -63,7 +65,7 @@ public:
 	{
 		worldTxValid = true;
 		worldTx = tx;
-		invWorldTx = tx.Inverse();
+		invWorldTx = Core::DXMathTransform<double>::MatrixInverseHomogeneousTransform(tx);
 
 		localTxValid = false;
 

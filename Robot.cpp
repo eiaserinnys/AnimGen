@@ -278,7 +278,7 @@ void Robot::Dump()
 		WindowsUtility::Debug(L"[%S]\n", body->name.c_str());
 
 		WindowsUtility::Debug(
-			L"L(%.8f, %.8f, %.8f, %.8f) "
+			L"K(%.8f, %.8f, %.8f, %.8f) "
 			"(%.8f, %.8f, %.8f, %.8f) "
 			"(%.8f, %.8f, %.8f, %.8f) "
 			"(%.8f, %.8f, %.8f, %.8f)\n",
@@ -316,6 +316,6 @@ IRobot* IRobot::Create()
 //------------------------------------------------------------------------------
 Vector3D IRobot::GetFootDirection(const Vector3D& legDir)
 {
-	return RobotIK::GetFootDirection(legDir);
+	return RobotIK::GetFootDirection(legDir, false);
 }
 

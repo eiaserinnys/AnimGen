@@ -293,6 +293,7 @@ void GeneralCoordinate::Clear()
 //--------------------------------------------------------------------------
 void GeneralCoordinate::Dump() const
 {
+#if 0
 	WindowsUtility::Debug(
 		L"B(%+.3f,%+.3f,%+.3f) (%+.3f,%+.3f,%+.3f) "
 		"LR1(%+.3f,%+.3f,%+.3f) LLen1(%+.3f), "
@@ -309,6 +310,46 @@ void GeneralCoordinate::Dump() const
 		leg[1].rot1.x, leg[1].rot1.y, leg[1].rot1.z, leg[1].len1,
 		leg[1].rot2.x, leg[1].rot2.y, leg[1].rot2.z, leg[1].len2,
 		leg[1].footRot.x, leg[1].footRot.y, leg[1].footRot.z);
+#else
+	{
+		WindowsUtility::Debug(
+			L"%e\t%e\t%e\t"
+			"%e\t%e\t%e\t",
+			body.first.x, body.first.y, body.first.y,
+			body.second.x, body.second.y, body.second.y);
+		WindowsUtility::Debug(
+			L"%e\t%e\t%e\t%e\t",
+			leg[0].rot1.x, leg[0].rot1.y, leg[0].rot1.z, leg[0].len2);
+		WindowsUtility::Debug(
+			L"%e\t%e\t%e\t%e\t",
+			leg[0].rot2.x, leg[0].rot2.y, leg[0].rot2.z, leg[0].len2);
+		WindowsUtility::Debug(
+			L"%e\t%e\t%e\t",
+			leg[0].footRot.x, leg[0].footRot.y, leg[0].footRot.z);
+		WindowsUtility::Debug(
+			L"%e\t%e\t%e\t%e\t",
+			leg[1].rot1.x, leg[1].rot1.y, leg[1].rot1.z, leg[1].len2);
+		WindowsUtility::Debug(
+			L"%e\t%e\t%e\t%e\t",
+			leg[1].rot2.x, leg[1].rot2.y, leg[1].rot2.z, leg[1].len2);
+		WindowsUtility::Debug(
+			L"%e\t%e\t%e\t",
+			leg[1].footRot.x, leg[1].footRot.y, leg[1].footRot.z);
+
+		WindowsUtility::Debug(L"\n");
+	}
+#endif
+}
+
+//--------------------------------------------------------------------------
+void GeneralCoordinate::Dump_() const
+{
+	{
+		WindowsUtility::Debug(
+			L"%e\t%e\t%e\t%e\t",
+			leg[0].rot1.x, leg[0].rot1.y, leg[0].rot1.z, leg[0].len2);
+		WindowsUtility::Debug(L"\n");
+	}
 }
 
 //--------------------------------------------------------------------------

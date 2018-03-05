@@ -39,7 +39,7 @@ const ExpMapType CUTOFF_ANGLE = M_PI;
 
 ExpMapType V3Magnitude(const ExpMapType vec[3])
 {
-    return sqrt(vec[X]*vec[X] + vec[Y]*vec[Y] + vec[Z]*vec[Z]);
+    return std::sqrt(vec[X] * vec[X] + vec[Y] * vec[Y] + vec[Z] * vec[Z]);
 }
 
 void V3Scale(const ExpMapType v1[3], const ExpMapType s1, ExpMapType prod[3])
@@ -88,21 +88,24 @@ int Check_Parameterization(ExpMapType v[3], ExpMapType *theta)
     int     rep = 0;
     *theta = V3Magnitude(v);
 
-    if (*theta > CUTOFF_ANGLE){
-	ExpMapType scl = *theta;
-	if (*theta > 2*M_PI){	/* first get theta into range 0..2PI */
-	    *theta = fmod(*theta, 2*M_PI);
-	    scl = *theta/scl;
-	    V3Scale(v, scl, v);
-	    rep = 1;
-	}
-	if (*theta > CUTOFF_ANGLE){
-	    scl = *theta;
-	    *theta = 2*M_PI - *theta;
-	    scl = 1.0 - 2*M_PI/scl;
-	    V3Scale(v, scl, v);
-	    rep = 1;
-	}
+    if (*theta > CUTOFF_ANGLE)
+	{
+		ExpMapType scl = *theta;
+		if (*theta > 2*M_PI)
+		{	/* first get theta into range 0..2PI */
+			*theta = std::fmod(*theta, 2*M_PI);
+			scl = *theta/scl;
+			V3Scale(v, scl, v);
+			rep = 1;
+		}
+		if (*theta > CUTOFF_ANGLE)
+		{
+			scl = *theta;
+			*theta = 2*M_PI - *theta;
+			scl = 1.0 - 2*M_PI/scl;
+			V3Scale(v, scl, v);
+			rep = 1;
+		}
     }
 
     return rep;
@@ -120,14 +123,13 @@ int EM_To_Q(ExpMapType v[3], Quat q, int reparam)
     int      rep=0;
     ExpMapType   cosp, sinp, theta;
 
-
     if (reparam)
       rep = Check_Parameterization(v, &theta);
     else
       theta = V3Magnitude(v);
     
-    cosp = cos(.5*theta);
-    sinp = sin(.5*theta);
+    cosp = std::cos(.5*theta);
+    sinp = std::sin(.5*theta);
 
     q[W] = cosp;
     if (theta < MIN_ANGLE)
@@ -231,7 +233,7 @@ void Partial_R_Partial_Vi(Quat q, Quat dqdvi, ExpMapType dRdvi[4][4])
 void Partial_Q_Partial_3V(ExpMapType v[3], int i, Quat dqdx)
 {
     ExpMapType   theta = V3Magnitude(v);
-    ExpMapType   cosp = cos(.5*theta), sinp = sin(.5*theta);
+    ExpMapType   cosp = std::cos(.5*theta), sinp = std::sin(.5*theta);
     
     assert(i>=0 && i<3);
 
@@ -325,15 +327,16 @@ int Partial_R_Partial_EM2(ExpMapType r[3], ExpMapType s[3], ExpMapType t[3],
 
     EM2_To_EM3(r, s, t, v);
     rep = EM_To_Q(v, q, 1);
-    if (rep){
-	/* Since 's' and 't' are orthonormal basis vectors, we can
-	 * properly reparameterize 'r' by temporarily considering it a
-	 * regular EM vector in the XY plane. */
-	ExpMapType  tmp[3];
-	ExpMapType theta;
-	tmp[X] = r[X]; tmp[Y] = r[Y]; tmp[Z] = 0;
-	Check_Parameterization(tmp, &theta);
-	r[X] = tmp[X]; r[Y] = tmp[Y];
+    if (rep)
+	{
+		/* Since 's' and 't' are orthonormal basis vectors, we can
+		 * properly reparameterize 'r' by temporarily considering it a
+		 * regular EM vector in the XY plane. */
+		ExpMapType  tmp[3];
+		ExpMapType theta;
+		tmp[X] = r[X]; tmp[Y] = r[Y]; tmp[Z] = 0;
+		Check_Parameterization(tmp, &theta);
+		r[X] = tmp[X]; r[Y] = tmp[Y];
     }
     Partial_Q_Partial_2V(r, s, t, i, dqdvi);
     Partial_R_Partial_Vi(q, dqdvi, dRdvi);
@@ -351,18 +354,20 @@ int Partial_R_Partial_EM2(ExpMapType r[3], ExpMapType s[3], ExpMapType t[3],
 void Vdot(ExpMapType v[3], ExpMapType omega[3], ExpMapType vdot[3])
 {
     ExpMapType    theta = V3Magnitude(v);
-    ExpMapType    cosp = cos(.5*theta), sinp = sin(.5*theta), cotp;
+    ExpMapType    cosp = std::cos(.5*theta), sinp = std::sin(.5*theta), cotp;
     ExpMapType    gamma, eta;
 
-    if (theta < MIN_ANGLE){
-	gamma = (12.0 - theta*theta) / 6.0;
-	eta  = (v[X]*omega[X] + v[Y]*omega[Y] + v[Z]*omega[Z]) *
-	        (60.0 + theta*theta) / 360.0;
+    if (theta < MIN_ANGLE)
+	{
+		gamma = (12.0 - theta*theta) / 6.0;
+		eta  = (v[X]*omega[X] + v[Y]*omega[Y] + v[Z]*omega[Z]) *
+				(60.0 + theta*theta) / 360.0;
     }
-    else {
-	cotp = cosp/sinp;
-	gamma = theta*cotp;
-	eta = (v[X]*omega[X]+v[Y]*omega[Y]+v[Z]*omega[Z])/theta * (cotp - 2.0/theta);
+    else 
+	{
+		cotp = cosp/sinp;
+		gamma = theta*cotp;
+		eta = (v[X]*omega[X]+v[Y]*omega[Y]+v[Z]*omega[Z])/theta * (cotp - 2.0/theta);
     }
     
     vdot[X] = .5*(gamma*omega[X] - eta*v[X] + (omega[Y]*v[Z] - omega[Z]*v[Y]));

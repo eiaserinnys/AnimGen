@@ -1,6 +1,8 @@
 #include "pch.h"
 #include "RobotBody.h"
 
+#include <WindowsUtility.h>
+
 #include "FrameHelper.h"
 #include "DXMathTransform.h"
 #include "ExponentialMap.h"
@@ -26,7 +28,7 @@ void RobotBody::CalculateWorldTransform()
 		localTx * linkTx * parent->WorldTx() :
 		localTx * linkTx;
 
-	invWorldTx = worldTx.Inverse();
+	invWorldTx = DXMathTransform<double>::MatrixInverseHomogeneousTransform(worldTx);
 }
 
 //------------------------------------------------------------------------------
@@ -54,5 +56,5 @@ void RobotBody::CalculateLinkTransform()
 		worldTx * parent->InvWorldTx() :
 		worldTx;
 
-	invLinkTx = linkTx.Inverse();
+	invLinkTx = DXMathTransform<double>::MatrixInverseHomogeneousTransform(linkTx);
 }

@@ -20,7 +20,7 @@ RobotIK::RobotIK(Robot* robot)
 }
 
 //------------------------------------------------------------------------------
-Vector3D RobotIK::GetFootDirection(const Vector3D& legDir_)
+Vector3D RobotIK::GetFootDirection(const Vector3D& legDir_, bool left)
 {
 	Vector3D legDir = Normalize(legDir_);
 
@@ -28,14 +28,17 @@ Vector3D RobotIK::GetFootDirection(const Vector3D& legDir_)
 	// (실제로 IK 처리 시에는 좌표만 주어질 것이므로)
 	double angleZ_R = acos(-legDir.y);
 
-	double angleY_R = abs(angleZ_R) > 0.0001f ? atan2(
-		legDir.z / -sin(angleZ_R),
-		legDir.x / sin(angleZ_R)) : 0;
+	double angleY_R = std::atan2(- legDir.z, legDir.x);
 
 	Vector3D footDir(
-		cos(angleZ_R) * cos(angleY_R),
-		sin(angleZ_R),
-		-cos(angleZ_R) * sin(angleY_R));
+		std::cos(angleZ_R) * std::cos(angleY_R),
+		std::sin(angleZ_R),
+		-std::cos(angleZ_R) * std::sin(angleY_R));
+
+	Vector3D footDir2(
+		- legDir.y * std::cos(angleY_R),
+		std::sin(angleZ_R),
+		legDir.y * std::sin(angleY_R));
 
 	// 다리 방향이 뒤로 향하는 경우는 바깥이 아니라 몸 안 쪽을 보게 한다
 	if (legDir.x < 0 && abs(angleZ_R) > 0.0001f)
@@ -90,7 +93,23 @@ Vector3D RobotIK::GetFootDirection(const Vector3D& legDir_)
 			h2Factor);
 	footDirH = Normalize(footDirH);
 
-	return footDirH;
+	if (angleZ_R < AngleHelperD::DegreeToRadian(5))
+	{
+		// 다리가 아래로 향한 각도가 5도 이내인 경우 그냥 발 앞 방향을 보게 한다
+		// 약간의 움직임으로 발끝이 너무 크게 움직이는 오차를 줄이기 위한 처리
+		double factor = angleZ_R / AngleHelperD::DegreeToRadian(5);
+
+		Vector3D footDirF = Lerp(
+			Vector3D(1, 0, 0),
+			footDirH,
+			factor);
+
+		return Normalize(footDirF);
+	}
+	else
+	{
+		return footDirH;
+	}
 }
 
 //--------------------------------------------------------------------------
@@ -129,7 +148,7 @@ void RobotIK::SetFootPosition(bool left, const Vector3D& pos_)
 	Vector3D xInCom(Dot(comAxis[0], x), Dot(comAxis[1], x), Dot(comAxis[2], x));
 
 	// IK로 발 방향을 구한다 (Y축 방향)
-	auto footInCom = GetFootDirection(xInCom);
+	auto footInCom = GetFootDirection(xInCom, left);
 
 	Vector3D y = comAxis[0] * footInCom.x + comAxis[1] * footInCom.y + comAxis[2] * footInCom.z;
 
@@ -167,12 +186,12 @@ void RobotIK::SetFootPosition(bool left, const Vector3D& pos_)
 		double d1 = (d * d - r * r + R * R) / (2 * d);
 		double a = 1 / d * std::sqrt((-d + r - R) * (-d - r + R) * (-d + r + R) *(d + r + R));
 
-		//if (left)
-		//{
-		//	WindowsUtility::Debug(
-		//		L"\t\t%f <- %f,%f,%f,%f,%f,%f\n",
-		//		a, d, d1, (-d + r - R), (-d - r + R), (-d + r + R), (d + r + R));
-		//}
+		if (left)
+		{
+			WindowsUtility::Debug(
+				L"\t\t%f <- %f,%f,%f,%f,%f,%f\n",
+				a, d, d1, (-d + r - R), (-d - r + R), (-d + r + R), (d + r + R));
+		}
 
 		// 새 무릎 위치
 		Vector3D kneePos = x * d1 + y * (a / 2) + orgPos[0];
