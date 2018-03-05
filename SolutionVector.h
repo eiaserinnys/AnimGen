@@ -33,6 +33,8 @@ public:
 
 	virtual GeneralCoordinate GeneralAccelerationAt(double t, bool highOrder, bool dump = false) const = 0;
 
+	virtual void EnableIKDump(bool enable, bool left) = 0;
+
 	virtual void Dump() = 0;
 
 	virtual ISolutionVector* Clone() const = 0;

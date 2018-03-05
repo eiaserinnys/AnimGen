@@ -17,5 +17,11 @@ struct RobotIK
 
 	static Core::Vector3D GetFootDirection(const Core::Vector3D& legDir_, bool left);
 
+	void EnableIKDump(bool enable, bool left);
+
+	bool IsDumpEnabled(bool left) { return dump[left ? 0 : 1]; }
+
+	bool dump[2] = { false, false };
+
 	Robot* robot;
 };

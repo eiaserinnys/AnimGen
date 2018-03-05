@@ -155,11 +155,28 @@ void RobotIK::SetFootPosition(bool left, const Vector3D& pos_)
 	Vector3D z = Normalize(Cross(x, y));
 	y = Normalize(Cross(z, x));
 
+
 	auto orgLegLen = robot->legLen.x + robot->legLen.y;
-	if (newLegLen > orgLegLen)
+
+	bool stretching = newLegLen > orgLegLen;
+
+	if (IsDumpEnabled(left))
 	{
-		Vector3D kneePos = 
-			orgPos[0] + 
+		WindowsUtility::Debug(stretching ? L"No Bending\n" : L"Bending\n");
+		WindowsUtility::Debug(L"1\t%+.10f\t%+.10f\t%+.10f\n", orgPos[0].x, orgPos[0].y, orgPos[0].z);
+		WindowsUtility::Debug(L"2\t%+.10f\t%+.10f\t%+.10f\n", orgPos[1].x, orgPos[1].y, orgPos[1].z);
+		WindowsUtility::Debug(L"3\t%+.10f\t%+.10f\t%+.10f\n", orgPos[2].x, orgPos[2].y, orgPos[2].z);
+
+		WindowsUtility::Debug(L"X\t%+.10f\t%+.10f\t%+.10f\n", x.x, x.y, x.z);
+		WindowsUtility::Debug(L"Y\t%+.10f\t%+.10f\t%+.10f\n", y.x, y.y, y.z);
+		WindowsUtility::Debug(L"Z\t%+.10f\t%+.10f\t%+.10f\n", z.x, z.y, z.z);
+		WindowsUtility::Debug(L"F\t%+.10f\t%+.10f\t%+.10f\n", footInCom.x, footInCom.y, footInCom.z);
+	}
+
+	if (stretching)
+	{
+		Vector3D kneePos =
+			orgPos[0] +
 			x * newLegLen * (robot->legLen.x / (robot->legLen.x + robot->legLen.y));
 
 		{
@@ -178,6 +195,9 @@ void RobotIK::SetFootPosition(bool left, const Vector3D& pos_)
 	}
 	else
 	{
+		double delta = orgLegLen - newLegLen;
+		double f = Utility::ClampGreaterThanOrEqualTo(delta, 0.01) / 0.01;
+
 		// ±¡»˘ ƒ…¿ÃΩ∫
 		// http://mathworld.wolfram.com/Sphere-SphereIntersection.html
 		double d = newLegLen;
@@ -186,40 +206,60 @@ void RobotIK::SetFootPosition(bool left, const Vector3D& pos_)
 		double d1 = (d * d - r * r + R * R) / (2 * d);
 		double a = 1 / d * std::sqrt((-d + r - R) * (-d - r + R) * (-d + r + R) *(d + r + R));
 
-#if 0
-		if (left)
-		{
-			WindowsUtility::Debug(
-				L"\t\t%f <- %f,%f,%f,%f,%f,%f\n",
-				a, d, d1, (-d + r - R), (-d - r + R), (-d + r + R), (d + r + R));
-		}
-#endif
-
 		// ªı π´∏≠ ¿ßƒ°
 		Vector3D kneePos = x * d1 + y * (a / 2) + orgPos[0];
 
+		if (IsDumpEnabled(left))
 		{
-			Vector3D x1 = Normalize(kneePos - orgPos[0]);
-			Vector3D z1 = Normalize(Cross(x1, y));
-			Vector3D y1 = Normalize(Cross(z1, x1));
+			//WindowsUtility::Debug(
+			//	L"S\t%f\t%f\t%f\t%f\t%f\t%f\t%f\n",
+			//	a, d, d1, (-d + r - R), (-d - r + R), (-d + r + R), (d + r + R));
+
+			WindowsUtility::Debug(
+				L"K\t%+.10f\t%+.10f\t%+.10f\n",
+				kneePos.x, kneePos.y, kneePos.z);
+		}
+
+		Vector3D midKneePos =
+			orgPos[0] +
+			x * newLegLen * (robot->legLen.x / (robot->legLen.x + robot->legLen.y));
+
+		Vector3D lk = Lerp(midKneePos, kneePos, f);
+
+		{
+			Vector3D x1 = Normalize(Lerp(x, kneePos - orgPos[0], f));
+			Vector3D z1 = Normalize(Lerp(y, Cross(x1, y), f));
+			Vector3D y1 = Normalize(Lerp(z, Cross(z1, x1), f));
 
 			Matrix4D worldTx = Matrix4D::Identity();
 			FrameHelper::Set(worldTx, x1, y1, z1);
 			FrameHelper::SetTranslation(worldTx, orgPos[0]);
 			robot->bodies[index[0]]->SetWorldTx(worldTx);
+
+			if (IsDumpEnabled(left))
+			{
+				WindowsUtility::Debug(L"X1\t%+.10f\t%+.10f\t%+.10f\n", x1.x, x1.y, x1.z);
+				WindowsUtility::Debug(L"Y1\t%+.10f\t%+.10f\t%+.10f\n", y1.x, y1.y, y1.z);
+				WindowsUtility::Debug(L"Z1\t%+.10f\t%+.10f\t%+.10f\n", z1.x, z1.y, z1.z);
+			}
 		}
 
 		{
-			Vector3D x1 = Normalize(pos - kneePos);
-			Vector3D z1 = Normalize(Cross(x1, y));
-			Vector3D y1 = Normalize(Cross(z1, x1));
+			Vector3D x1 = Normalize(Lerp(x, pos - kneePos, f));
+			Vector3D z1 = Normalize(Lerp(y, Cross(x1, y), f));
+			Vector3D y1 = Normalize(Lerp(z, Cross(z1, x1), f));
 
 			Matrix4D worldTx = Matrix4D::Identity();
 			FrameHelper::Set(worldTx, x1, y1, z1);
-			FrameHelper::SetTranslation(worldTx, kneePos);
+			FrameHelper::SetTranslation(worldTx, lk);
 			robot->bodies[index[1]]->SetWorldTx(worldTx);
 
-			robot->bodies[index[1]]->LocalTx();
+			if (IsDumpEnabled(left))
+			{
+				WindowsUtility::Debug(L"X2\t%+.10f\t%+.10f\t%+.10f\n", x1.x, x1.y, x1.z);
+				WindowsUtility::Debug(L"Y2\t%+.10f\t%+.10f\t%+.10f\n", y1.x, y1.y, y1.z);
+				WindowsUtility::Debug(L"Z2\t%+.10f\t%+.10f\t%+.10f\n", z1.x, z1.y, z1.z);
+			}
 		}
 	}
 
@@ -228,6 +268,21 @@ void RobotIK::SetFootPosition(bool left, const Vector3D& pos_)
 		FrameHelper::Set(worldTx, y, (Vector3D)-x, z);
 		FrameHelper::SetTranslation(worldTx, pos);
 		robot->bodies[index[2]]->SetWorldTx(worldTx);
+	}
+
+	if (IsDumpEnabled(left))
+	{
+		robot->UpdateWorldTransform();
+
+		auto c = robot->GetLocalRotation("Body");
+		auto l1 = robot->GetLocalRotation(left ? "LLeg1" : "RLeg1");
+		auto l2 = robot->GetLocalRotation(left ? "LLeg2" : "RLeg2");
+		auto f = robot->GetLocalRotation(left ? "LFoot" : "RFoot");
+
+		WindowsUtility::Debug(L"C\t%+.10f\t%+.10f\t%+.10f\n", c.x, c.y, c.z);
+		WindowsUtility::Debug(L"L1\t%+.10f\t%+.10f\t%+.10f\n", l1.x, l1.y, l1.z);
+		WindowsUtility::Debug(L"L2\t%+.10f\t%+.10f\t%+.10f\n", l2.x, l2.y, l2.z);
+		WindowsUtility::Debug(L"F\t%+.10f\t%+.10f\t%+.10f\n", f.x, f.y, f.z);
 	}
 }
 
@@ -246,4 +301,10 @@ void RobotIK::SetFootTransform(
 	int index = robot->GetBoneIndex(left ? "LFoot" : "RFoot");
 
 	robot->bodies[index]->SetWorldTx(m);
+}
+
+//--------------------------------------------------------------------------
+void RobotIK::EnableIKDump(bool enable, bool left)
+{
+	dump[left ? 0 : 1] = enable;
 }

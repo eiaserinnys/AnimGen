@@ -175,12 +175,17 @@ public:
 		return c;
 	}
 
+	void EnableIKDump(bool enable, bool left)
+	{
+		robot->EnableIKDump(enable, left);
+	}
+
 	//--------------------------------------------------------------------------
 	GeneralCoordinate GeneralCoordinateAt(double t, bool dump = false) const
 	{
 		SolutionCoordinate sc = At(t);
 
-		if (dump) { sc.Dump(); }
+		//if (dump) { sc.Dump(); }
 
 		robot->Apply(sc, dump);
 

@@ -32,5 +32,7 @@ public:
 	virtual const Core::Vector4D GetLocalQuaternion(const std::string& name) = 0;
 	virtual const Core::Vector4D GetLocalQuaternionVerify(const std::string& name) = 0;
 
+	virtual void EnableIKDump(bool enable, bool left) = 0;
+
 	static IRobot* Create();
 };

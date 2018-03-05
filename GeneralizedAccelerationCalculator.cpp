@@ -7,10 +7,13 @@
 using namespace std;
 using namespace Core;
 
+static const int g_granulity = 1;
+
 //------------------------------------------------------------------------------
 GeneralizedAccelerationCalculator::GeneralizedAccelerationCalculator(
-	ISolutionVector* sv, 
-	int phaseIndexAt)
+	ISolutionVector* sv,
+	int phaseIndexAt,
+	bool dump)
 {
 	vector<pair<double, GeneralCoordinate>> gc;
 
@@ -20,7 +23,7 @@ GeneralizedAccelerationCalculator::GeneralizedAccelerationCalculator(
 
 	CalculateAcceleration(timeToQuery);
 
-#	if DUMP
+	if (dump)
 	{
 		// ดýวม
 		WindowsUtility::Debug(L"Source\n");
@@ -62,7 +65,6 @@ GeneralizedAccelerationCalculator::GeneralizedAccelerationCalculator(
 			g.Dump();
 		}
 	}
-#	endif
 }
 
 //------------------------------------------------------------------------------
@@ -71,12 +73,12 @@ double GeneralizedAccelerationCalculator::BuildData(
 	ISolutionVector* sv,
 	int phaseIndexAt)
 {
-	int from = Utility::ClampLessThan(phaseIndexAt - 1, 0);
-	int to = Utility::ClampGreaterThanOrEqualTo(phaseIndexAt + 1, sv->GetPhaseCount() - 1);
+	int from = Utility::ClampLessThan(phaseIndexAt - 2, 0);
+	int to = Utility::ClampGreaterThanOrEqualTo(phaseIndexAt + 2, sv->GetPhaseCount() - 1);
 
 	double timeOffset = sv->GetPhaseTime(from);
 
-	int granulity = 5;
+	int granulity = g_granulity;
 
 	for (int i = from; i < to; ++i)
 	{
@@ -122,7 +124,7 @@ void GeneralizedAccelerationCalculator::BuildSpline(
 
 	for (int i = 0; i < COUNT_OF(spline); ++i)
 	{
-		spline[i].SetTimestep(0.1);
+		spline[i].SetTimestep(0.5 / g_granulity);
 		spline[i].Update();
 	}
 }

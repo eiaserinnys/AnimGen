@@ -10,7 +10,7 @@ struct GeneralizedAccelerationCalculator
 	SolutionSpline spline[7];
 	GeneralCoordinate acc;
 
-	GeneralizedAccelerationCalculator(ISolutionVector* sv, int phaseIndexAt);
+	GeneralizedAccelerationCalculator(ISolutionVector* sv, int phaseIndexAt, bool dump);
 
 	double BuildData(
 		std::vector<std::pair<double, GeneralCoordinate>>& gc,

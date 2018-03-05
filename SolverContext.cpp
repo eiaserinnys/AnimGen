@@ -262,9 +262,9 @@ public:
 	}
 
 	//------------------------------------------------------------------------------
-	GeneralCoordinate GeneralAccelerationAt(ISolutionVector* sv, int p)
+	GeneralCoordinate GeneralAccelerationAt(ISolutionVector* sv, int p, bool dump)
 	{
-		GeneralizedAccelerationCalculator calc(sv, p);
+		GeneralizedAccelerationCalculator calc(sv, p, dump);
 		return calc.Get();
 	}
 
@@ -281,8 +281,6 @@ public:
 		{
 			jacobian.NextFunction();
 		}
-
-		WindowsUtility::Debug(L"GeneralAcceleration\n");
 
 		for (size_t p = 1; p < s->GetPhaseCount(); ++p)
 		{
@@ -301,8 +299,13 @@ public:
 				// 원래 값을 보존
 				double reserved = s2->GetVariableAt(varOfs);
 
-#if 0 
+				bool toDump = v == 1;
+				//bool toDump = false;
+
+				if (toDump)
 				{
+					s2->EnableIKDump(true, false);
+
 					WindowsUtility::Debug(L"gc\n");
 					s2->SetVariableAt(varOfs, reserved - step);
 					GeneralCoordinate g0 = s2->GeneralCoordinateAt(s2->GetPhaseTime(p));
@@ -313,32 +316,37 @@ public:
 					s2->SetVariableAt(varOfs, reserved + step);
 					GeneralCoordinate g2 = s2->GeneralCoordinateAt(s2->GetPhaseTime(p));
 
+					s2->SetVariableAt(varOfs, reserved);
+
 					g0.Dump_();
 					g1.Dump_();
 					g2.Dump_();
 
-					int i = 0;
+					s2->EnableIKDump(false, false);
 				}
-#endif
-
-				//WindowsUtility::Debug(L"gc''\n");
-
-				auto ga = GeneralAccelerationAt(s2.get(), p);
 
 				s2->SetVariableAt(varOfs, reserved - step);
-				auto gam = GeneralAccelerationAt(s2.get(), p);
+				auto gam = GeneralAccelerationAt(s2.get(), p, toDump);
+
+				s2->SetVariableAt(varOfs, reserved);
+				auto ga = GeneralAccelerationAt(s2.get(), p, toDump);
 
 				s2->SetVariableAt(varOfs, reserved + step);
-				auto gap = GeneralAccelerationAt(s2.get(), p);
-
-				//gam.Dump_();
-				//ga.Dump_();
-				//gap.Dump_();
-
-				//WindowsUtility::Debug(L"\n");
+				auto gap = GeneralAccelerationAt(s2.get(), p, toDump);
 
 				// 다시 원복
 				s2->SetVariableAt(varOfs, reserved);
+
+				if (toDump)
+				{
+					WindowsUtility::Debug(L"gc''\n");
+
+					gam.Dump_();
+					ga.Dump_();
+					gap.Dump_();
+
+					WindowsUtility::Debug(L"\n");
+				}
 
 				d[0 * coordVar + v] = SquaredLength((gap.body.first - gam.body.first) * ga.body.first) / (step * 2);
 				d[1 * coordVar + v] = SquaredLength((gap.body.second - gam.body.second) * ga.body.second) / (step * 2);

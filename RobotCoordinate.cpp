@@ -347,7 +347,7 @@ void GeneralCoordinate::Dump_() const
 	{
 		WindowsUtility::Debug(
 			L"%e\t%e\t%e\t%e\t",
-			leg[0].rot1.x, leg[0].rot1.y, leg[0].rot1.z, leg[0].len2);
+			leg[1].rot2.x, leg[1].rot2.y, leg[1].rot2.z, leg[1].len2);
 		WindowsUtility::Debug(L"\n");
 	}
 }

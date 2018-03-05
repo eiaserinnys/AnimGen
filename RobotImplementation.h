@@ -55,6 +55,8 @@ public:
 
 	virtual void Apply(const SolutionCoordinate& coord, bool dump = false);
 
+	virtual void EnableIKDump(bool enable, bool left);
+
 	void Dump();
 
 public:
