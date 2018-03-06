@@ -16,12 +16,14 @@ public:
 	void Open(
 		const string& fitDumpName,
 		const string& moveDumpName,
+		const string& jacDumpName,
 		Log* log)
 	{
 		Close();
 
 		if (!fitDumpName.empty()) { fitDump.open(fitDumpName, ios::trunc); }
 		if (!moveDumpName.empty()) { moveDump.open(moveDumpName, ios::trunc); }
+		if (!jacDumpName.empty()) { jacDump.open(jacDumpName, ios::trunc); }
 		this->log = log;
 	}
 
@@ -30,14 +32,16 @@ public:
 	{
 		if (fitDump.is_open()) { fitDump.close(); }
 		if (moveDump.is_open()) { moveDump.close(); }
+		if (jacDump.is_open()) { jacDump.close(); }
 		log = nullptr;
 	}
 
 	//------------------------------------------------------------------------------
 	bool IsOpen(Channel channel)
 	{
-		if (channel == Fit) { return fitDump.is_open(); }
+		if (channel == Residual) { return fitDump.is_open(); }
 		if (channel == Move) { return moveDump.is_open(); }
+		if (channel == Jacobian) { return jacDump.is_open(); }
 		if (channel == Debug) { return true; }
 		if (channel == Console) { return log != nullptr; }
 		return false;
@@ -74,8 +78,9 @@ public:
 			}
 		};
 
-		if (Test(Fit)) { DumpToFile(fitDump); }
+		if (Test(Residual)) { DumpToFile(fitDump); }
 		if (Test(Move)) { DumpToFile(moveDump); }
+		if (Test(Jacobian)) { DumpToFile(jacDump); }
 
 		if (Test(Debug))
 		{
@@ -139,12 +144,17 @@ public:
 private:
 	wofstream fitDump;
 	wofstream moveDump;
+	wofstream jacDump;
 	Log* log;
 };
 
 class SolverLogDummy : public ISolverLog {
 public:
-	void Open(const string& fitDumpName, const string& moveDumpName, Log* log) {}
+	void Open(
+		const string& fitDumpName, 
+		const string& moveDumpName, 
+		const string& jacDumpName,
+		Log* log) {}
 	void Close() {}
 
 	bool IsOpen(Channel channel) { return false; }

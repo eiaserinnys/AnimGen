@@ -98,9 +98,9 @@ public:
 
 		residual.Begin();
 
-		error += LoadResidual_GeneralAcceleration(solution.get(), one, writeDebug);
-
 		error += LoadResidual_DestinationTask(solution.get(), dest, one, writeDebug);
+
+		error += LoadResidual_GeneralAcceleration(solution.get(), one, writeDebug);
 
 		residual.End();
 
@@ -112,11 +112,16 @@ public:
 	{
 		jacobian.Begin();
 
-		LoadJacobian_GeneralAcceleration(solution.get(), one);
-
 		LoadJacobian_DestinationTask(solution.get(), dest, one);
 
+		LoadJacobian_GeneralAcceleration(solution.get(), one);
+
 		jacobian.End();
+
+		if (log != nullptr)
+		{
+			log->WriteLine(ISolverLog::Jacobian);
+		}
 	}
 
 	//------------------------------------------------------------------------------
@@ -146,7 +151,7 @@ public:
 
 			if (log != nullptr && writeDebug)
 			{
-				log->Write(ISolverLog::Fit, L"%f\t%f\t", p, r);
+				log->Write(ISolverLog::Residual, L"%f\t%f\t", p, r);
 			}
 
 			error += e1 + e2;
@@ -172,6 +177,11 @@ public:
 		const SolutionCoordinate& d,
 		const Coefficient& w)
 	{
+		auto coordVar = SolutionCoordinate::VariableCount();
+
+		double* jacobianDump = new double[12 * coordVar]{ 0 };
+		int y = 0;
+
 		const auto& last = s->GetLastPhase();
 
 		unique_ptr<ISolutionVector> s2(s->Clone());
@@ -180,11 +190,23 @@ public:
 
 		int varPivot = (s->GetPhaseCount() - 2) * SolutionCoordinate::VariableCount();
 
+		auto set = [&](double j)
+		{
+			jacobianDump[y * coordVar + varPivot] = j;
+			jacobian.Set(varPivot++, w, j);
+		};
+
+		auto next = [&]()
+		{
+			y++;
+			jacobian.NextFunction();
+		};
+
 		// body pos diff
-		jacobian.Set(varPivot++, w, last.body.first.m[0] - d.body.first.m[0]);
-		jacobian.Set(varPivot++, w, last.body.first.m[1] - d.body.first.m[1]);
-		jacobian.Set(varPivot++, w, last.body.first.m[2] - d.body.first.m[2]);
-		jacobian.NextFunction();
+		set(last.body.first.m[0] - d.body.first.m[0]);
+		set(last.body.first.m[1] - d.body.first.m[1]);
+		set(last.body.first.m[2] - d.body.first.m[2]);
+		next();
 
 		// body rot diff
 		for (int ch = 0; ch < 3; ++ch)
@@ -203,15 +225,15 @@ public:
 
 			s2->SetVariableAt(varPivot, reserved);
 
-			jacobian.Set(varPivot++, w, derivative);
+			set(derivative);
 		}
-		jacobian.NextFunction();
+		next();
 
 		// left foot pos diff
-		jacobian.Set(varPivot++, w, last.foot[0].first.m[0] - d.foot[0].first.m[0]);
-		jacobian.Set(varPivot++, w, last.foot[0].first.m[1] - d.foot[0].first.m[1]);
-		jacobian.Set(varPivot++, w, last.foot[0].first.m[2] - d.foot[0].first.m[2]);
-		jacobian.NextFunction();
+		set(last.foot[0].first.m[0] - d.foot[0].first.m[0]);
+		set(last.foot[0].first.m[1] - d.foot[0].first.m[1]);
+		set(last.foot[0].first.m[2] - d.foot[0].first.m[2]);
+		next();
 
 		// left foot rot diff
 		for (int ch = 0; ch < 3; ++ch)
@@ -230,15 +252,15 @@ public:
 
 			s2->SetVariableAt(varPivot, reserved);
 
-			jacobian.Set(varPivot++, w, derivative);
+			set(derivative);
 		}
-		jacobian.NextFunction();
+		next();
 
 		// right foot pos diff
-		jacobian.Set(varPivot++, w, last.foot[1].first.m[0] - d.foot[1].first.m[0]);
-		jacobian.Set(varPivot++, w, last.foot[1].first.m[1] - d.foot[1].first.m[1]);
-		jacobian.Set(varPivot++, w, last.foot[1].first.m[2] - d.foot[1].first.m[2]);
-		jacobian.NextFunction();
+		set(last.foot[1].first.m[0] - d.foot[1].first.m[0]);
+		set(last.foot[1].first.m[1] - d.foot[1].first.m[1]);
+		set(last.foot[1].first.m[2] - d.foot[1].first.m[2]);
+		next();
 
 		// right foot rot diff
 		for (int ch = 0; ch < 3; ++ch)
@@ -257,9 +279,23 @@ public:
 
 			s2->SetVariableAt(varPivot, reserved);
 
-			jacobian.Set(varPivot++, w, derivative);
+			set(derivative);
 		}
-		jacobian.NextFunction();
+		next();
+
+		if (log != nullptr)
+		{
+			for (int f = 0; f < y; ++f)
+			{
+				for (int v = 0; v < coordVar; ++v)
+				{
+					log->Write(ISolverLog::Jacobian, L"%e\t", jacobianDump[f * coordVar + v]);
+				}
+				log->WriteLine(ISolverLog::Jacobian);
+			}
+		}
+
+		delete[] jacobianDump;
 	}
 
 	//------------------------------------------------------------------------------
@@ -276,7 +312,7 @@ public:
 
 			if (log != nullptr && writeDebug)
 			{
-				log->Write(ISolverLog::Fit, L"%f\t", r);
+				log->Write(ISolverLog::Residual, L"%f\t", r);
 			}
 
 			error += e;
@@ -284,7 +320,9 @@ public:
 
 		for (size_t i = 0; i < s->GetPhaseCount(); ++i)
 		{
-			auto ga = s->GeneralAccelerationAt(s->GetPhaseTime(i), true);
+			//auto ga = s->GeneralAccelerationAt(s->GetPhaseTime(i), true);
+
+			auto ga = GeneralAccelerationAt(s, i, false);
 
 			report(Length(ga.body.first));
 			report(Length(ga.body.second));
@@ -313,7 +351,7 @@ public:
 	}
 
 	//------------------------------------------------------------------------------
-	GeneralCoordinate GeneralAccelerationAt(ISolutionVector* sv, int p, bool dump)
+	GeneralCoordinate GeneralAccelerationAt(const ISolutionVector* sv, int p, bool dump)
 	{
 		GeneralizedAccelerationCalculator calc(sv, p, dump);
 		return calc.Get();
@@ -327,10 +365,12 @@ public:
 		unique_ptr<ISolutionVector> s2(s->Clone());
 		double step = 0.0001;
 
+		auto next = [&] { jacobian.NextFunction(); };
+
 		// 초기는 어쩔 수 없다고 치고
 		for (int i = 0; i < 12; ++i)
 		{
-			jacobian.NextFunction();
+			next();
 		}
 
 		for (size_t p = 1; p < s->GetPhaseCount(); ++p)
@@ -413,15 +453,15 @@ public:
 				d[11 * coordVar + v] = SquaredLength((gap.leg[1].footRot - gam.leg[1].footRot) * ga.leg[1].footRot) / (step * 2);
 			}
 
-			if (false)
+			if (log != nullptr)
 			{ 
 				for (int f = 0; f < 12; ++f)
 				{
 					for (int v = 0; v < coordVar; ++v)
 					{
-						WindowsUtility::Debug(L"%e\t", d[f * coordVar + v]);
+						log->Write(ISolverLog::Jacobian, L"%e\t", d[f * coordVar + v]);
 					}
-					WindowsUtility::Debug(L"\n");
+					log->WriteLine(ISolverLog::Jacobian);
 				}
 			}
 
@@ -433,7 +473,7 @@ public:
 
 					jacobian.Set(varOfs, w, d[f * coordVar + v]);
 				}
-				jacobian.NextFunction();
+				next();
 			}
 
 			delete[] d;

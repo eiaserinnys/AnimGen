@@ -42,7 +42,8 @@ public:
 		dest.foot[0].first += Vector3D(2.5, 0, 0);
 		dest.foot[1].first += Vector3D(2.5, 0, 0);
 
-		solver.reset(ISolver::Create(begin, dest, 8));
+		//solver.reset(ISolver::Create(begin, dest, 8));
+		solver.reset(ISolver::Create(begin, dest, 1));
 	}
 
 	//--------------------------------------------------------------------------
@@ -50,7 +51,11 @@ public:
 	{
 		auto log = ISolverLog::Create();
 
-		log->Open("residual.txt", "move.txt", nullptr);
+		log->Open(
+			"log_residual.txt", 
+			"log_move.txt", 
+			"log_jacobian.txt",
+			nullptr);
 
 		solver->Begin(log, true);
 	}

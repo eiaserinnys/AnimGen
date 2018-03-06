@@ -11,7 +11,7 @@ static const int g_granulity = 1;
 
 //------------------------------------------------------------------------------
 GeneralizedAccelerationCalculator::GeneralizedAccelerationCalculator(
-	ISolutionVector* sv,
+	const ISolutionVector* sv,
 	int phaseIndexAt,
 	bool dump)
 {
@@ -70,7 +70,7 @@ GeneralizedAccelerationCalculator::GeneralizedAccelerationCalculator(
 //------------------------------------------------------------------------------
 double GeneralizedAccelerationCalculator::BuildData(
 	vector<pair<double, GeneralCoordinate>>& gc,
-	ISolutionVector* sv,
+	const ISolutionVector* sv,
 	int phaseIndexAt)
 {
 	int from = Utility::ClampLessThan(phaseIndexAt - 2, 0);

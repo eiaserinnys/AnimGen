@@ -8,15 +8,20 @@ class ISolverLog {
 public:
 	enum Channel
 	{
-		Fit = 0x01,			// to fit log file
-		Move = 0x02,		// to move log file
-		Debug = 0x04,		// to debug dump
-		Console = 0x08,		// to console dump
+		Residual	= 1 << 0,			// to fit log file
+		Move		= 1 << 1,		// to move log file
+		Jacobian	= 1 << 2,		// to move log file
+		Debug		= 1 << 3,		// to debug dump
+		Console		= 1 << 4,		// to console dump
 	};
 
 	virtual ~ISolverLog();
 
-	virtual void Open(const std::string& fitDumpName, const std::string& moveDumpName, Log* log) = 0;
+	virtual void Open(
+		const std::string& fitDumpName, 
+		const std::string& moveDumpName, 
+		const std::string& jacobianDumpName,
+		Log* log) = 0;
 	virtual bool IsOpen(Channel channel) = 0;
 	virtual void Close() = 0;
 
