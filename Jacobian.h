@@ -20,20 +20,19 @@ public:
 
 	void End();
 
-	Eigen::SparseMatrix<double>& RawJ() { return *matJ; }
-	const Eigen::SparseMatrix<double>& RawJ() const { return *matJ; }
+	Eigen::SparseMatrixD& RawJ() { return *matJ; }
+	const Eigen::SparseMatrixD& RawJ() const { return *matJ; }
 
-	Eigen::SparseMatrix<double>& RawJtJ() { return *matJtJ; }
-	const Eigen::SparseMatrix<double>& RawJtJ() const { return *matJtJ; }
+	Eigen::SparseMatrixD& RawJtJ() { return *matJtJ; }
+	const Eigen::SparseMatrixD& RawJtJ() const { return *matJtJ; }
 
 private:
 	void Set(int x, double v);
 
-	typedef Eigen::Triplet<double> Tpd;
-	std::vector<Tpd> tp;
+	std::vector<Eigen::TripletD> tp;
 
-	std::unique_ptr<Eigen::SparseMatrix<double>> matJ;
-	std::unique_ptr<Eigen::SparseMatrix<double>> matJtJ;
+	std::unique_ptr<Eigen::SparseMatrixD> matJ;
+	std::unique_ptr<Eigen::SparseMatrixD> matJtJ;
 
 	int pY;
 	int funCount;

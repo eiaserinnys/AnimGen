@@ -1,11 +1,19 @@
 #pragma once
 
+#include "Solver.h"
+
 class IRobot;
 class LineBuffer;
 
 class IAnimationGeneration {
 public:
 	~IAnimationGeneration() {}
+
+	virtual void Begin() = 0;
+
+	virtual ISolver::Result::Value Step() = 0;
+
+	virtual void End() = 0;
 
 	virtual void UpdateSpline() = 0;
 

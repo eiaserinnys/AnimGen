@@ -15,12 +15,13 @@
 #include "SolverContext.h"
 
 using namespace std;
-using namespace Core;
+//using namespace Core;
 using namespace Eigen;
 
 #define DUMP 0
 
 //------------------------------------------------------------------------------
+// Levenberg-Marquardt Non Linear Optimizer
 class Solver : public ISolver {
 public:
 	double fK, fK1;
@@ -62,7 +63,6 @@ public:
 
 		context->LoadJacobian();
 
-		// Levenberg-Marquardt
 		lambda = InitialLambda(context->Jacobian().RawJtJ());
 	}
 
@@ -87,33 +87,32 @@ public:
 	//------------------------------------------------------------------------------
 	Result::Value SolveStep_()
 	{
-#if 0
 		double error1 = 1e-6;	// 총 에러가 이 수치 이하게 되면 정지
 		double error2 = 1e-6;
 
 		context->Jacobian().RawJtJ() += lambda * (*identity);
 
-		Eigen::Matrix<double, Eigen::Dynamic, 1> g =
+		Matrix<double, Dynamic, 1> g =
 			context->Jacobian().RawJ().transpose() * 
-			context->ErrorFunc().Raw();
+			context->Residual().Raw();
 
-		Eigen::Matrix<double, Eigen::Dynamic, 1> mg = -g;
+		Matrix<double, Dynamic, 1> mg = -g;
 
-		Eigen::SimplicialLLT<Eigen::SparseMatrixD> solver;
+		SimplicialLLT<SparseMatrixD> solver;
 
 		auto& intm = solver.compute(context->Jacobian().RawJtJ());
-		if (intm.info() != Eigen::Success) { return Result::Unsolvable; }
+		if (intm.info() != Success) { return Result::Unsolvable; }
 
-		Eigen::Matrix<double, Eigen::Dynamic, 1> h = intm.solve(mg);
-		if (intm.info() != Eigen::Success) { return Result::Unsolvable; }
+		Matrix<double, Dynamic, 1> h = intm.solve(mg);
+		if (intm.info() != Success) { return Result::Unsolvable; }
 
-		Eigen::Matrix<double, Eigen::Dynamic, 1> prevX = context->Variables().Raw();
+		Matrix<double, Dynamic, 1> prevX = context->Variable().Raw();
 
-		context->Variables().Raw() += h;
+		context->Variable().Raw() += h;
 
-		context->LoadX(LoadFlag::Unload);
+		context->LoadVariable(LoadFlag::Unload);
 
-		fK1 = context->BuildF(true);
+		fK1 = context->LoadResidual(true);
 
 		double actualGain = fK - fK1;
 		double predictedGain = 0.5 * h.transpose() * (lambda * h - g);
@@ -126,7 +125,7 @@ public:
 
 		if (rho >= 0)
 		{
-#if 0
+#if DUMP
 			dump->Write(ISolverDump::Move, L"Accepted");
 			for (size_t i = 0; i < h.rows(); ++i) { dump->Write(ISolverDump::Move, L"\t%f", h(i, 0)); }
 			dump->WriteLine(ISolverDump::Move);
@@ -136,7 +135,7 @@ public:
 			lambda = lambda * factor;
 			nu = 2;
 
-#if 0
+#if DUMP
 			dump->WriteLine(
 				ISolverDump::Console | ISolverDump::Debug,
 				L"lambda=%f nu=%f rho=%f -> Accepted", lambda, nu, rho);
@@ -145,7 +144,7 @@ public:
 			if (abs(fK - fK1) < solvedError * (1 + fK))
 			{
 				// 완전 수렴
-#if 0
+#if DUMP
 				dump->WriteLine(
 					ISolverDump::Console | ISolverDump::Debug,
 					L"Solved\n");
@@ -154,7 +153,7 @@ public:
 			}
 
 			// accept the step
-			context->BuildJacobian();
+			context->LoadJacobian();
 
 			fK = fK1;
 
@@ -162,17 +161,17 @@ public:
 		}
 		else
 		{
-#if 0 
+#if DUMP
 			dump->Write(ISolverDump::Move, L"Rejected");
 			for (size_t i = 0; i < h.rows(); ++i) { dump->Write(ISolverDump::Move, L"\t%f", h(i, 0)); }
 			dump->WriteLine(ISolverDump::Move);
+#endif
 
 			Reject(rho, prevX);
-#endif
 
 			if (!isfinite(lambda) || !isfinite(nu))
 			{
-#if 0 
+#if DUMP
 				dump->WriteLine(
 					ISolverDump::Console | ISolverDump::Debug,
 					L"Unsolvable\n");
@@ -182,41 +181,36 @@ public:
 
 			return Result::StepRejected;
 		}
-#endif
 		return Result::Unsolvable;
 	}
 
 	//------------------------------------------------------------------------------
 	void Reject(
 		double rho,
-		const Eigen::Matrix<double, Eigen::Dynamic, 1>& prevX)
+		const Matrix<double, Dynamic, 1>& prevX)
 	{
-#if 0
-		context->Variables().Raw() = prevX;
+		context->Variable().Raw() = prevX;
 
-		context->LoadX(LoadFlag::Unload);
+		context->LoadVariable(LoadFlag::Unload);
 
-		context->BuildF(false);
+		context->LoadResidual(false);
 
 		lambda = lambda * nu;
+
 		nu = nu * 2;
 
-#if 0
+#if DUMP
 		dump->WriteLine(
 			ISolverDump::Console | ISolverDump::Debug,
 			L"lambda=%f nu=%f rho=%f -> Rejected", lambda, nu, rho);
-#endif
 #endif
 	}
 
 	//------------------------------------------------------------------------------
 	void End()
 	{
-#if 0
 		context->CleanUp();
-
 		identity.reset(nullptr);
-#endif
 	}
 };
 

@@ -2,7 +2,11 @@
 
 #include <Eigen/Sparse>
 
-namespace Eigen { typedef SparseMatrix<double> SparseMatrixD; }
+namespace Eigen 
+{ 
+	typedef SparseMatrix<double> SparseMatrixD; 
+	typedef Triplet<double> TripletD;
+}
 
 //------------------------------------------------------------------------------
 Eigen::SparseMatrix<double>* InitializeSparseIdentity(int t);

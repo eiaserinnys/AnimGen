@@ -6,6 +6,7 @@
 #include "RobotCoordinate.h"
 
 #include "Variable.h"
+#include "Residual.h"
 #include "Jacobian.h"
 
 //------------------------------------------------------------------------------
@@ -16,6 +17,10 @@ public:
 	virtual int VariableCount() const = 0;
 
 	virtual ::Jacobian& Jacobian() = 0;
+
+	virtual ::Residual& Residual() = 0;
+
+	virtual ::Variable& Variable() = 0;
 
 	virtual void LoadVariable(LoadFlag::Value flag) = 0;
 

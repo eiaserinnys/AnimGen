@@ -56,9 +56,9 @@ void Jacobian::Set(int x, double v)
 		assert(pY >= 0 && pY < matJ->rows());
 		assert(x >= 0 && x < matJ->cols());
 
-		WindowsUtility::Debug(L"\tJ(%d,%d)=%f\n", pY, x, v);
+		//WindowsUtility::Debug(L"\tJ(%d,%d)=%f\n", pY, x, v);
 
-		tp.push_back(Tpd(pY, x, v));
+		tp.push_back(TripletD(pY, x, v));
 	}
 }
 
@@ -66,6 +66,7 @@ void Jacobian::Set(int x, double v)
 void Jacobian::NextFunction()
 {
 	pY++;
-	WindowsUtility::Debug(L"J(%d,X)\n", pY);
+
+	//WindowsUtility::Debug(L"J(%d,X)\n", pY);
 }
 

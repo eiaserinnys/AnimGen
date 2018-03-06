@@ -49,9 +49,6 @@ public:
 			20 / 180.0f * (float)M_PI));
 
 		ikPicking.reset(IIKPicking::Create());
-
-		animGen.reset(IAnimationGeneration::Create(global->robot.get()));
-		animGen->UpdateSpline();
 	}
 
 	//--------------------------------------------------------------------------
@@ -101,7 +98,10 @@ public:
 
 		global->robot->Update();
 
-		animGen->Enqueue(global->diagRenderer->Buffer());
+		if (animGen.get() != nullptr)
+		{
+			animGen->Enqueue(global->diagRenderer->Buffer());
+		}
 
 		render->Render(sceneDesc);
 	}
@@ -132,20 +132,50 @@ public:
 	//--------------------------------------------------------------------------
 	virtual void OnKeyDown(WPARAM wParam, LPARAM lParam)
 	{
-		if (wParam == VK_F5)
-		{
-			try
+		switch (wParam) {
+		case VK_F1:
 			{
-				global->Reload();
+				animGen.reset(IAnimationGeneration::Create(global->robot.get()));
+
+				animGen->Begin();
+
+				bool loop = true;
+				do
+				{
+					auto ret = animGen->Step();
+					switch (ret)
+					{
+						case ISolver::Result::Solved:
+						case ISolver::Result::Unsolvable:
+							loop = false;
+							break;
+					}
+				} 
+				while (loop);
+
+				animGen->End();
 			}
-			catch (HRESULT)
+			break;
+
+		case VK_F5:
 			{
-				MessageBox(hWnd, L"Reload Error", L"Reload Error", MB_OK);
+				if (wParam == VK_F5)
+				{
+					try
+					{
+						global->Reload();
+					}
+					catch (HRESULT)
+					{
+						MessageBox(hWnd, L"Reload Error", L"Reload Error", MB_OK);
+					}
+				}
 			}
-		}
-		if (wParam == VK_SPACE)
-		{
+			break;
+
+		case VK_SPACE:
 			advance = !advance;
+			break;
 		}
 	}
 };

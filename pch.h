@@ -1,5 +1,7 @@
 #pragma once
 
+#define _SCL_SECURE_NO_WARNINGS
+
 #define _USE_MATH_DEFINES
 #include <math.h>
 

@@ -22,8 +22,8 @@ public:
 	SolutionCoordinate dest;
 
 	Coefficient one;
-	Variable variables;
-	Residual residual;
+	::Variable variables;
+	::Residual residual;
 	::Jacobian jacobian;
 
 	//------------------------------------------------------------------------------
@@ -49,6 +49,8 @@ public:
 
 	//------------------------------------------------------------------------------
 	::Jacobian& Jacobian() { return jacobian; }
+	::Residual& Residual() { return residual; }
+	::Variable& Variable() { return variables; }
 
 	//------------------------------------------------------------------------------
 	void LoadVariable(LoadFlag::Value flag)
@@ -256,11 +258,6 @@ public:
 		return error;
 	}
 
-	double Squared(double v)
-	{
-		return v * v;
-	}
-
 	//------------------------------------------------------------------------------
 	GeneralCoordinate GeneralAccelerationAt(ISolutionVector* sv, int p, bool dump)
 	{
@@ -299,8 +296,8 @@ public:
 				// 원래 값을 보존
 				double reserved = s2->GetVariableAt(varOfs);
 
-				bool toDump = v == 1;
-				//bool toDump = false;
+				//bool toDump = v == 1;
+				bool toDump = false;
 
 				if (toDump)
 				{
@@ -351,24 +348,27 @@ public:
 				d[0 * coordVar + v] = SquaredLength((gap.body.first - gam.body.first) * ga.body.first) / (step * 2);
 				d[1 * coordVar + v] = SquaredLength((gap.body.second - gam.body.second) * ga.body.second) / (step * 2);
 				d[2 * coordVar + v] = SquaredLength((gap.leg[0].rot1 - gam.leg[0].rot1) * ga.leg[0].rot1) / (step * 2);
-				d[3 * coordVar + v] = Squared((gap.leg[0].len1 - gam.leg[0].len1) * ga.leg[0].len1) / (step * 2);
+				d[3 * coordVar + v] = Square((gap.leg[0].len1 - gam.leg[0].len1) * ga.leg[0].len1) / (step * 2);
 				d[4 * coordVar + v] = SquaredLength((gap.leg[0].rot2 - gam.leg[0].rot2) * ga.leg[0].rot2) / (step * 2);
-				d[5 * coordVar + v] = Squared((gap.leg[0].len2 - gam.leg[0].len2) * ga.leg[0].len2) / (step * 2);
+				d[5 * coordVar + v] = Square((gap.leg[0].len2 - gam.leg[0].len2) * ga.leg[0].len2) / (step * 2);
 				d[6 * coordVar + v] = SquaredLength((gap.leg[0].footRot - gam.leg[0].footRot) * ga.leg[0].footRot) / (step * 2);
 				d[7 * coordVar + v] = SquaredLength((gap.leg[1].rot1 - gam.leg[1].rot1) * ga.leg[1].rot1) / (step * 2);
-				d[8 * coordVar + v] = Squared((gap.leg[1].len1 - gam.leg[1].len1) * ga.leg[1].len1) / (step * 2);
+				d[8 * coordVar + v] = Square((gap.leg[1].len1 - gam.leg[1].len1) * ga.leg[1].len1) / (step * 2);
 				d[9 * coordVar + v] = SquaredLength((gap.leg[1].rot2 - gam.leg[1].rot2) * ga.leg[1].rot2) / (step * 2);
-				d[10 * coordVar + v] = Squared((gap.leg[1].len2 - gam.leg[1].len2) * ga.leg[1].len2) / (step * 2);
+				d[10 * coordVar + v] = Square((gap.leg[1].len2 - gam.leg[1].len2) * ga.leg[1].len2) / (step * 2);
 				d[11 * coordVar + v] = SquaredLength((gap.leg[1].footRot - gam.leg[1].footRot) * ga.leg[1].footRot) / (step * 2);
 			}
 
-			for (int f = 0; f < 12; ++f)
-			{
-				for (int v = 0; v < coordVar; ++v)
+			if (false)
+			{ 
+				for (int f = 0; f < 12; ++f)
 				{
-					WindowsUtility::Debug(L"%e\t", d[f * coordVar + v]);
+					for (int v = 0; v < coordVar; ++v)
+					{
+						WindowsUtility::Debug(L"%e\t", d[f * coordVar + v]);
+					}
+					WindowsUtility::Debug(L"\n");
 				}
-				WindowsUtility::Debug(L"\n");
 			}
 
 			for (int f = 0; f < 12; ++f)
