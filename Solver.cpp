@@ -13,12 +13,13 @@
 
 #include "SolverHelper.h"
 #include "SolverContext.h"
+#include "SolverLog.h"
 
 using namespace std;
 //using namespace Core;
 using namespace Eigen;
 
-#define DUMP 0
+#define DUMP 1
 
 //------------------------------------------------------------------------------
 // Levenberg-Marquardt Non Linear Optimizer
@@ -32,6 +33,9 @@ public:
 
 	unique_ptr<SparseMatrixD> identity;
 
+	ISolverLog* log = nullptr;
+	bool ownLog = false;
+
 public:
 	Solver(
 		const SolutionCoordinate& start,
@@ -41,9 +45,35 @@ public:
 		context.reset(ISolverContext::Create(start, dest, phases));
 	}
 
-	//------------------------------------------------------------------------------
-	void Begin()
+	~Solver()
 	{
+		End();
+	}
+
+	//------------------------------------------------------------------------------
+	template <typename... Arguments>
+	void Write(const Arguments&... args)
+	{ if (log != nullptr) { log->Write(args...); } }
+
+	template <typename... Arguments>
+	void WriteLine(const Arguments&... args)
+	{ if (log != nullptr) { log->WriteLine(args...); } }
+
+	virtual ISolutionVector* Solution()
+	{
+		return context->Solution();
+	}
+
+	//------------------------------------------------------------------------------
+	void Begin(ISolverLog* log, bool ownLog)
+	{
+		End();
+
+		context->SetLog(log);
+
+		this->log = log;
+		this->ownLog = ownLog;
+
 		nu = 2;
 
 		identity.reset(InitializeSparseIdentity(context->VariableCount()));
@@ -53,17 +83,37 @@ public:
 		// 이제 풀자
 		fK = context->LoadResidual(true);
 
-#	if DUMP
-		dump->WriteLine(
-			ISolverDump::Console | ISolverDump::Debug,
+#		if DUMP
+		WriteLine(
+			ISolverLog::Console | ISolverLog::Debug,
 			L" -> Initial");
-#	endif
+#		endif
 
 		fK1 = fK;
 
 		context->LoadJacobian();
 
 		lambda = InitialLambda(context->Jacobian().RawJtJ());
+
+		DumpSolution();
+	}
+
+	//------------------------------------------------------------------------------
+	void DumpSolution()
+	{
+		auto sol = context->Solution();
+		for (int i = 0; i < sol->GetPhaseCount(); ++i)
+		{
+			auto& phase = sol->GetPhase(i);
+
+			WriteLine(
+				ISolverLog::Console | ISolverLog::Debug,
+				L"%02d - (%.3f,%.3f,%.3f)\t",
+				i,
+				phase.body.first.x,
+				phase.body.first.y,
+				phase.body.first.z);
+		}
 	}
 
 	//------------------------------------------------------------------------------
@@ -125,30 +175,32 @@ public:
 
 		if (rho >= 0)
 		{
-#if DUMP
-			dump->Write(ISolverDump::Move, L"Accepted");
-			for (size_t i = 0; i < h.rows(); ++i) { dump->Write(ISolverDump::Move, L"\t%f", h(i, 0)); }
-			dump->WriteLine(ISolverDump::Move);
-#endif
-
 			auto factor = max(1 / 3.0, 1 - pow(2 * rho - 1, 3));
 			lambda = lambda * factor;
 			nu = 2;
 
-#if DUMP
-			dump->WriteLine(
-				ISolverDump::Console | ISolverDump::Debug,
-				L"lambda=%f nu=%f rho=%f -> Accepted", lambda, nu, rho);
-#endif
+#			if DUMP
+			{
+				WriteLine(
+					ISolverLog::Console | ISolverLog::Debug,
+					L"lambda=%f nu=%f rho=%f -> Accepted", lambda, nu, rho);
+
+				DumpSolution();
+
+				Write(ISolverLog::Move, L"Accepted");
+				for (size_t i = 0; i < h.rows(); ++i) { Write(ISolverLog::Move, L"\t%f", h(i, 0)); }
+				WriteLine(ISolverLog::Move);
+			}
+#			endif
 
 			if (abs(fK - fK1) < solvedError * (1 + fK))
 			{
 				// 완전 수렴
-#if DUMP
-				dump->WriteLine(
-					ISolverDump::Console | ISolverDump::Debug,
+#				if DUMP
+				WriteLine(
+					ISolverLog::Console | ISolverLog::Debug,
 					L"Solved\n");
-#endif
+#				endif
 				return Result::Solved;
 			}
 
@@ -161,34 +213,20 @@ public:
 		}
 		else
 		{
-#if DUMP
-			dump->Write(ISolverDump::Move, L"Rejected");
-			for (size_t i = 0; i < h.rows(); ++i) { dump->Write(ISolverDump::Move, L"\t%f", h(i, 0)); }
-			dump->WriteLine(ISolverDump::Move);
-#endif
-
-			Reject(rho, prevX);
-
-			if (!isfinite(lambda) || !isfinite(nu))
-			{
-#if DUMP
-				dump->WriteLine(
-					ISolverDump::Console | ISolverDump::Debug,
-					L"Unsolvable\n");
-#endif
-				return Result::Unsolvable;
-			}
-
-			return Result::StepRejected;
+			return Reject(rho, h, prevX);
 		}
 		return Result::Unsolvable;
 	}
 
 	//------------------------------------------------------------------------------
-	void Reject(
+	Result::Value Reject(
 		double rho,
+		Matrix<double, Dynamic, 1>& h, 
 		const Matrix<double, Dynamic, 1>& prevX)
 	{
+		auto oldLambda = lambda;
+		auto oldNu = nu;
+
 		context->Variable().Raw() = prevX;
 
 		context->LoadVariable(LoadFlag::Unload);
@@ -199,11 +237,28 @@ public:
 
 		nu = nu * 2;
 
-#if DUMP
-		dump->WriteLine(
-			ISolverDump::Console | ISolverDump::Debug,
-			L"lambda=%f nu=%f rho=%f -> Rejected", lambda, nu, rho);
-#endif
+		if (!isfinite(lambda) || !isfinite(nu))
+		{
+#			if DUMP
+			log->WriteLine(
+				ISolverLog::Console | ISolverLog::Debug,
+				L"Unsolvable\n");
+#			endif
+			return Result::Unsolvable;
+		}
+		else
+		{
+#			if DUMP
+			log->WriteLine(
+				ISolverLog::Console | ISolverLog::Debug,
+				L"lambda=%f nu=%f rho=%f -> Rejected", oldLambda, oldNu, rho);
+
+			Write(ISolverLog::Move, L"Rejected");
+			for (size_t i = 0; i < h.rows(); ++i) { Write(ISolverLog::Move, L"\t%f", h(i, 0)); }
+			WriteLine(ISolverLog::Move);
+#			endif
+			return Result::StepRejected;
+		}
 	}
 
 	//------------------------------------------------------------------------------
@@ -211,6 +266,12 @@ public:
 	{
 		context->CleanUp();
 		identity.reset(nullptr);
+
+		if (ownLog)
+		{
+			delete log;
+		}
+		log = nullptr;
 	}
 };
 

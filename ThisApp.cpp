@@ -31,7 +31,9 @@ public:
 
 	unique_ptr<IEulerControl> arcBall;
 	unique_ptr<IIKPicking> ikPicking;
+
 	unique_ptr<IAnimationGeneration> animGen;
+	bool solving = false;
 
 	bool init = false;
 
@@ -100,6 +102,21 @@ public:
 
 		if (animGen.get() != nullptr)
 		{
+			if (solving)
+			{
+				auto ret = animGen->Step();
+				switch (ret)
+				{
+				case ISolver::Result::Solved:
+				case ISolver::Result::Unsolvable:
+					animGen->End();
+					solving = false;
+					break;
+				}
+
+				animGen->UpdateSpline();
+			}
+
 			animGen->Enqueue(global->diagRenderer->Buffer());
 		}
 
@@ -139,21 +156,7 @@ public:
 
 				animGen->Begin();
 
-				bool loop = true;
-				do
-				{
-					auto ret = animGen->Step();
-					switch (ret)
-					{
-						case ISolver::Result::Solved:
-						case ISolver::Result::Unsolvable:
-							loop = false;
-							break;
-					}
-				} 
-				while (loop);
-
-				animGen->End();
+				solving = true;
 			}
 			break;
 

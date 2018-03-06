@@ -10,6 +10,8 @@
 #include "Variable.h"
 #include "Residual.h"
 
+#include "SolverLog.h"
+
 #include "GeneralizedAccelerationCalculator.h"
 
 using namespace std;
@@ -25,6 +27,8 @@ public:
 	::Variable variables;
 	::Residual residual;
 	::Jacobian jacobian;
+
+	ISolverLog* log = nullptr;
 
 	//------------------------------------------------------------------------------
 	SolverContext(
@@ -45,12 +49,20 @@ public:
 	}
 
 	//------------------------------------------------------------------------------
+	void SetLog(ISolverLog* log) { this->log = log; }
+
+	//------------------------------------------------------------------------------
 	int VariableCount() const { return solution->VariableCount(); }
 
 	//------------------------------------------------------------------------------
 	::Jacobian& Jacobian() { return jacobian; }
 	::Residual& Residual() { return residual; }
 	::Variable& Variable() { return variables; }
+
+	ISolutionVector* Solution()
+	{
+		return solution.get();
+	}
 
 	//------------------------------------------------------------------------------
 	void LoadVariable(LoadFlag::Value flag)
@@ -127,6 +139,13 @@ public:
 
 		error += residual.Set(Distance(last.foot[1].first, d.foot[1].first), w);
 		error += setRot(last.foot[1].second, d.foot[1].second);
+
+		if (log != nullptr && writeDebug)
+		{
+			log->WriteLine(
+				ISolverLog::Console | ISolverLog::Debug,
+				L"Residual Task = %.5f", error);
+		}
 
 		return error;
 	}
@@ -253,6 +272,13 @@ public:
 			error += residual.Set(Length(ga.leg[1].rot2), w);
 			error += residual.Set((ga.leg[1].len2), w);
 			error += residual.Set(Length(ga.leg[1].footRot), w);
+		}
+
+		if (log != nullptr && writeDebug)
+		{
+			log->WriteLine(
+				ISolverLog::Console | ISolverLog::Debug,
+				L"Residual Accl = %.5f", error);
 		}
 
 		return error;

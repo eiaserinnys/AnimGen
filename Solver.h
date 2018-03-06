@@ -1,12 +1,14 @@
 #pragma once
 
 struct SolutionCoordinate;
+class ISolutionVector;
+class ISolverLog;
 
 class ISolver {
 public:
 	virtual ~ISolver() = 0;
 
-	virtual void Begin() = 0;
+	virtual void Begin(ISolverLog* log, bool ownLog) = 0;
 
 	struct Result
 	{
@@ -22,6 +24,8 @@ public:
 	virtual Result::Value SolveStep() = 0;
 
 	virtual void End() = 0;
+
+	virtual ISolutionVector* Solution() = 0;
 
 	static ISolver* Create(
 		const SolutionCoordinate& start,

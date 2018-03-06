@@ -139,6 +139,7 @@
     <ClCompile Include="DeferredRendrerer.cpp" />
     <ClCompile Include="DiagnosticRenderer.cpp" />
     <ClCompile Include="GeneralizedAccelerationCalculator.cpp" />
+    <ClCompile Include="Log.cpp" />
     <ClCompile Include="Residual.cpp" />
     <ClCompile Include="exp-map.cpp" />
     <ClCompile Include="ExponentialMap.cpp" />
@@ -169,6 +170,7 @@
     <ClCompile Include="Solver.cpp" />
     <ClCompile Include="SolverContext.cpp" />
     <ClCompile Include="SolverHelper.cpp" />
+    <ClCompile Include="SolverLog.cpp" />
     <ClCompile Include="Spline.cpp" />
     <ClCompile Include="SplineDiagnostic.cpp" />
     <ClCompile Include="ThisApp.cpp" />
@@ -187,6 +189,7 @@
     <ClInclude Include="DiagnosticRenderer.h" />
     <ClInclude Include="DXMathTransform.h" />
     <ClInclude Include="GeneralizedAccelerationCalculator.h" />
+    <ClInclude Include="Log.h" />
     <ClInclude Include="Residual.h" />
     <ClInclude Include="exp-map.h" />
     <ClInclude Include="ExponentialMap.h" />
@@ -217,6 +220,7 @@
     <ClInclude Include="Solver.h" />
     <ClInclude Include="SolverContext.h" />
     <ClInclude Include="SolverHelper.h" />
+    <ClInclude Include="SolverLog.h" />
     <ClInclude Include="Spline.h" />
     <ClInclude Include="SplineDiagnostic.h" />
     <ClInclude Include="ThisApp.h" />

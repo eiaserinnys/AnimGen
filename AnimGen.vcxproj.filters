@@ -78,6 +78,9 @@
     <Filter Include="Solver\SolutionVector">
       <UniqueIdentifier>{e1a1d1f3-d08b-4903-8325-561b7b54869b}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Solver\Component">
+      <UniqueIdentifier>{99c6b9d2-99b6-48b1-bf3c-c48c9351cdf9}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="RenderContext.cpp">
@@ -173,15 +176,6 @@
     <ClCompile Include="Spline.cpp">
       <Filter>Mathematics\Spline</Filter>
     </ClCompile>
-    <ClCompile Include="Variable.cpp">
-      <Filter>Solver\Utility</Filter>
-    </ClCompile>
-    <ClCompile Include="Jacobian.cpp">
-      <Filter>Solver\Utility</Filter>
-    </ClCompile>
-    <ClCompile Include="Residual.cpp">
-      <Filter>Solver\Utility</Filter>
-    </ClCompile>
     <ClCompile Include="SolverContext.cpp">
       <Filter>Solver</Filter>
     </ClCompile>
@@ -193,6 +187,21 @@
     </ClCompile>
     <ClCompile Include="GeneralizedAccelerationCalculator.cpp">
       <Filter>Solver\SolutionVector</Filter>
+    </ClCompile>
+    <ClCompile Include="Residual.cpp">
+      <Filter>Solver\Component</Filter>
+    </ClCompile>
+    <ClCompile Include="Jacobian.cpp">
+      <Filter>Solver\Component</Filter>
+    </ClCompile>
+    <ClCompile Include="Variable.cpp">
+      <Filter>Solver\Component</Filter>
+    </ClCompile>
+    <ClCompile Include="SolverLog.cpp">
+      <Filter>Solver\Utility</Filter>
+    </ClCompile>
+    <ClCompile Include="Log.cpp">
+      <Filter>Solver\Utility</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -340,18 +349,6 @@
     <ClInclude Include="ClampedSplineFixedStep.h">
       <Filter>Mathematics\Spline</Filter>
     </ClInclude>
-    <ClInclude Include="Jacobian.h">
-      <Filter>Solver\Utility</Filter>
-    </ClInclude>
-    <ClInclude Include="Variable.h">
-      <Filter>Solver\Utility</Filter>
-    </ClInclude>
-    <ClInclude Include="Coefficient.h">
-      <Filter>Solver\Utility</Filter>
-    </ClInclude>
-    <ClInclude Include="Residual.h">
-      <Filter>Solver\Utility</Filter>
-    </ClInclude>
     <ClInclude Include="SolverContext.h">
       <Filter>Solver</Filter>
     </ClInclude>
@@ -366,6 +363,24 @@
     </ClInclude>
     <ClInclude Include="SolutionSpline.h">
       <Filter>Solver\SolutionVector</Filter>
+    </ClInclude>
+    <ClInclude Include="Coefficient.h">
+      <Filter>Solver\Component</Filter>
+    </ClInclude>
+    <ClInclude Include="Residual.h">
+      <Filter>Solver\Component</Filter>
+    </ClInclude>
+    <ClInclude Include="Jacobian.h">
+      <Filter>Solver\Component</Filter>
+    </ClInclude>
+    <ClInclude Include="Variable.h">
+      <Filter>Solver\Component</Filter>
+    </ClInclude>
+    <ClInclude Include="SolverLog.h">
+      <Filter>Solver\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="Log.h">
+      <Filter>Solver\Utility</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

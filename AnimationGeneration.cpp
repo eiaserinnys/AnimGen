@@ -6,6 +6,7 @@
 #include "Robot.h"
 #include "SolutionVector.h"
 #include "Solver.h"
+#include "SolverLog.h"
 
 #include "SplineDiagnostic.h"
 #include "LineBuffer.h"
@@ -23,6 +24,14 @@ public:
 
 	unique_ptr<ISolver> solver;
 
+	struct Diagnostic
+	{
+		SplineDiagnostic body;
+		SplineDiagnostic foot[2];
+	};
+
+	Diagnostic splines;
+
 	//--------------------------------------------------------------------------
 	AnimationGeneration(IRobot* robot) : robot(robot)
 	{
@@ -33,15 +42,13 @@ public:
 		dest.foot[0].first += Vector3D(2.5, 0, 0);
 		dest.foot[1].first += Vector3D(2.5, 0, 0);
 
-		sol.reset(ISolutionVector::Create(begin, 8));
-
 		solver.reset(ISolver::Create(begin, dest, 8));
 	}
 
 	//--------------------------------------------------------------------------
 	void Begin()
 	{
-		solver->Begin();
+		solver->Begin(ISolverLog::Create(), true);
 	}
 
 	//--------------------------------------------------------------------------
@@ -60,6 +67,8 @@ public:
 	void UpdateSpline()
 	{
 		const int m = 20;
+
+		auto sol = solver->Solution();
 
 		splines.body.Sample(sol->GetCurve(0), m);
 		splines.foot[0].Sample(sol->GetCurve(1), m);
@@ -81,6 +90,8 @@ public:
 			lastTime = curTime;
 		}
 
+		auto sol = solver->Solution();
+
 		double t = sol->GetLastPhaseTime();
 		int total = (int)(t * 1000);
 
@@ -94,6 +105,8 @@ public:
 	{
 		auto t = CurrentTime();
 
+		auto sol = solver->Solution();
+
 		splines.body.Enqueue(sol->GetCurve(0), buffer, t);
 		splines.foot[0].Enqueue(sol->GetCurve(1), buffer, t);
 		splines.foot[1].Enqueue(sol->GetCurve(2), buffer, t);
@@ -102,17 +115,6 @@ public:
 
 		//robot->Apply(coord);
 	}
-
-	//--------------------------------------------------------------------------
-	unique_ptr<ISolutionVector> sol;
-
-	struct Diagnostic
-	{
-		SplineDiagnostic body;
-		SplineDiagnostic foot[2];
-	};
-
-	Diagnostic splines;
 };
 
 //------------------------------------------------------------------------------
