@@ -84,6 +84,11 @@ public:
 		}
 
 		variables.End();
+
+		if (flag == LoadFlag::Unload)
+		{
+			solution->UpdateSpline();
+		}
 	}
 
 	//------------------------------------------------------------------------------
@@ -125,20 +130,31 @@ public:
 
 		const auto& last = s->GetLastPhase();
 
-		auto& setRot = [&](const Vector3D& dest, const Vector3D& cur) -> double
+		auto& report = [&](
+			const pair<Vector3D, Vector3D>& lhs, 
+			const pair<Vector3D, Vector3D>& rhs)
 		{
-			auto nearRot = ExponentialMap::GetNearRotation(dest, cur);
-			return residual.Set(Distance(dest, nearRot), w);
+			double p, r;
+			double e1, e2;
+			
+			p = Distance(lhs.first, rhs.first);
+			e1 = residual.Set(p, w);
+
+			auto nearRot = ExponentialMap::GetNearRotation(lhs.second, rhs.second);
+			r = Distance(lhs.second, nearRot);
+			e2 = residual.Set(r, w);
+
+			if (log != nullptr && writeDebug)
+			{
+				log->Write(ISolverLog::Fit, L"%f\t%f\t", p, r);
+			}
+
+			error += e1 + e2;
 		};
 
-		error += residual.Set(Distance(last.body.first, d.body.first), w);
-		error += setRot(last.body.second, d.body.second);
-
-		error += residual.Set(Distance(last.foot[0].first, d.foot[0].first), w);
-		error += setRot(last.foot[0].second, d.foot[0].second);
-
-		error += residual.Set(Distance(last.foot[1].first, d.foot[1].first), w);
-		error += setRot(last.foot[1].second, d.foot[1].second);
+		report(last.body, d.body);
+		report(last.foot[0], d.foot[0]);
+		report(last.foot[1], d.foot[1]);
 
 		if (log != nullptr && writeDebug)
 		{
@@ -254,24 +270,36 @@ public:
 	{
 		double error = 0;
 
+		auto& report = [&](double r)
+		{
+			auto e = residual.Set(r, w);
+
+			if (log != nullptr && writeDebug)
+			{
+				log->Write(ISolverLog::Fit, L"%f\t", r);
+			}
+
+			error += e;
+		};
+
 		for (size_t i = 0; i < s->GetPhaseCount(); ++i)
 		{
 			auto ga = s->GeneralAccelerationAt(s->GetPhaseTime(i), true);
 
-			error += residual.Set(Length(ga.body.first), w);
-			error += residual.Set(Length(ga.body.second), w);
+			report(Length(ga.body.first));
+			report(Length(ga.body.second));
 
-			error += residual.Set(Length(ga.leg[0].rot1), w);
-			error += residual.Set((ga.leg[0].len1), w);
-			error += residual.Set(Length(ga.leg[0].rot2), w);
-			error += residual.Set((ga.leg[0].len2), w);
-			error += residual.Set(Length(ga.leg[0].footRot), w);
+			report(Length(ga.leg[0].rot1));
+			report(ga.leg[0].len1);
+			report(Length(ga.leg[0].rot2));
+			report(ga.leg[0].len2);
+			report(Length(ga.leg[0].footRot));
 
-			error += residual.Set(Length(ga.leg[1].rot1), w);
-			error += residual.Set((ga.leg[1].len1), w);
-			error += residual.Set(Length(ga.leg[1].rot2), w);
-			error += residual.Set((ga.leg[1].len2), w);
-			error += residual.Set(Length(ga.leg[1].footRot), w);
+			report(Length(ga.leg[1].rot1));
+			report(ga.leg[1].len1);
+			report(Length(ga.leg[1].rot2));
+			report(ga.leg[1].len2);
+			report(Length(ga.leg[1].footRot));
 		}
 
 		if (log != nullptr && writeDebug)

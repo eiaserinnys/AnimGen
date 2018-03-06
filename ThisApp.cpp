@@ -100,23 +100,30 @@ public:
 
 		global->robot->Update();
 
-		if (animGen.get() != nullptr)
+		if (solving)
 		{
-			if (solving)
+			if (animGen.get() == nullptr)
 			{
-				auto ret = animGen->Step();
-				switch (ret)
-				{
-				case ISolver::Result::Solved:
-				case ISolver::Result::Unsolvable:
-					animGen->End();
-					solving = false;
-					break;
-				}
+				animGen.reset(IAnimationGeneration::Create(global->robot.get()));
 
-				animGen->UpdateSpline();
+				animGen->Begin();
 			}
 
+			auto ret = animGen->Step();
+			switch (ret)
+			{
+			case ISolver::Result::Solved:
+			case ISolver::Result::Unsolvable:
+				animGen->End();
+				solving = false;
+				break;
+			}
+
+			animGen->UpdateSpline();
+		}
+
+		if (animGen.get() != nullptr)
+		{
 			animGen->Enqueue(global->diagRenderer->Buffer());
 		}
 
@@ -152,10 +159,6 @@ public:
 		switch (wParam) {
 		case VK_F1:
 			{
-				animGen.reset(IAnimationGeneration::Create(global->robot.get()));
-
-				animGen->Begin();
-
 				solving = true;
 			}
 			break;

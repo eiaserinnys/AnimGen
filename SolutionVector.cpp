@@ -27,10 +27,21 @@ public:
 	{
 		robot.reset(IRobot::Create());
 
+		UpdateSpline();
+	}
+
+	//--------------------------------------------------------------------------
+	void UpdateSpline()
+	{
+		for (int i = 0; i < COUNT_OF(splines); ++i)
+		{
+			splines[i].Clear();
+		}
+
 		for (auto it = coords.begin(); it != coords.end(); ++it)
 		{
 			auto coord = it->second;
-			
+
 			splines[0].Append(it->first, coord.body);
 			splines[1].Append(it->first, coord.foot[0]);
 			splines[2].Append(it->first, coord.foot[1]);

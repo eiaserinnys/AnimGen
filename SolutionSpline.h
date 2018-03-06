@@ -35,9 +35,16 @@ struct SolutionSpline
 		timeStep = ts;
 	}
 
+	void Clear()
+	{
+		curve.reset(nullptr);
+		pos.clear();
+		rot.clear();
+	}
+
 	void Update()
 	{
-		curve.reset(IClampedSplineFixedStep::Create(timeStep, pos, rot));
+ 		curve.reset(IClampedSplineFixedStep::Create(timeStep, pos, rot));
 	}
 
 	void Append(double t, const std::pair<Core::Vector3D, Core::Vector3D>& p)

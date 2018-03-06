@@ -7,6 +7,11 @@ using namespace std;
 
 class SolverLog : public ISolverLog {
 public:
+	~SolverLog()
+	{
+		Close();
+	}
+
 	//------------------------------------------------------------------------------
 	void Open(
 		const string& fitDumpName,

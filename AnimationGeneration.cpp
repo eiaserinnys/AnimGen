@@ -48,7 +48,11 @@ public:
 	//--------------------------------------------------------------------------
 	void Begin()
 	{
-		solver->Begin(ISolverLog::Create(), true);
+		auto log = ISolverLog::Create();
+
+		log->Open("residual.txt", "move.txt", nullptr);
+
+		solver->Begin(log, true);
 	}
 
 	//--------------------------------------------------------------------------

@@ -85,7 +85,7 @@ public:
 
 #		if DUMP
 		WriteLine(
-			ISolverLog::Console | ISolverLog::Debug,
+			ISolverLog::Console | ISolverLog::Debug | ISolverLog::Fit,
 			L" -> Initial");
 #		endif
 
@@ -187,9 +187,9 @@ public:
 
 				DumpSolution();
 
-				Write(ISolverLog::Move, L"Accepted");
+				Write(ISolverLog::Move | ISolverLog::Fit, L"Accepted");
 				for (size_t i = 0; i < h.rows(); ++i) { Write(ISolverLog::Move, L"\t%f", h(i, 0)); }
-				WriteLine(ISolverLog::Move);
+				WriteLine(ISolverLog::Move | ISolverLog::Fit);
 			}
 #			endif
 
@@ -253,9 +253,9 @@ public:
 				ISolverLog::Console | ISolverLog::Debug,
 				L"lambda=%f nu=%f rho=%f -> Rejected", oldLambda, oldNu, rho);
 
-			Write(ISolverLog::Move, L"Rejected");
+			Write(ISolverLog::Move | ISolverLog::Fit, L"Rejected");
 			for (size_t i = 0; i < h.rows(); ++i) { Write(ISolverLog::Move, L"\t%f", h(i, 0)); }
-			WriteLine(ISolverLog::Move);
+			WriteLine(ISolverLog::Move | ISolverLog::Fit);
 #			endif
 			return Result::StepRejected;
 		}

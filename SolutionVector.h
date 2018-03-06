@@ -41,6 +41,8 @@ public:
 
 	static double Timestep();
 
+	virtual void UpdateSpline() = 0;
+
 	static ISolutionVector* Create(const SolutionCoordinate& init, int phases);
 
 	static ISolutionVector* BuildTest(const SolutionCoordinate& init);
