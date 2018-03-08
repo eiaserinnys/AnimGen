@@ -45,7 +45,7 @@ public:
 		//return ExponentialMap::FromQuaternion(q);
 	}
 
-	pair<Vector3D, Vector3D> At(double v)
+	PositionRotation At(double v)
 	{
 		int i = (int) v;
 		double f = v - i;
@@ -87,9 +87,11 @@ public:
 		auto r2 = e[2];
 		auto dr2 = SphericalTangent(e[1], e[3]);
 
-		return make_pair(
+		return PositionRotation
+		{
 			Vector3D(um.x * p1 + um.y * p2 + um.z * dp1 + um.w * dp2),
-			Vector3D(um.x * r1 + um.y * r2 + um.z * dr1 + um.w * dr2));
+			Vector3D(um.x * r1 + um.y * r2 + um.z * dr1 + um.w * dr2)
+		};
 	}
 
 	Vector3D P(int i) const

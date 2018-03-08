@@ -35,7 +35,7 @@ void Robot::Update()
 {
 	UpdateWorldTransform();
 
-	gc = coord.ToGeneralCoordinate(this);
+	gc = coord.ToGeneralizedCoordinate(this);
 	coord.SetTransform(this, gc, true);
 
 	auto sc = coord.ToSolutionCoordinate(this);
@@ -241,7 +241,7 @@ void Robot::Apply(const SolutionCoordinate& sc, bool dump)
 		auto sc_ = coord.ToSolutionCoordinate(this);
 		coord.SetTransform(this, sc_, true);
 
-		gc = coord.ToGeneralCoordinate(this);
+		gc = coord.ToGeneralizedCoordinate(this);
 		if (!coord.SetTransform(this, gc, true))
 		{
 			if (IsDebuggerPresent())
@@ -253,7 +253,7 @@ void Robot::Apply(const SolutionCoordinate& sc, bool dump)
 	}
 #	else
 	{
-		gc = coord.ToGeneralCoordinate(this);
+		gc = coord.ToGeneralizedCoordinate(this);
 
 		// 에러가 누적되지 않도록 한다
 		gc.body = sc.body;

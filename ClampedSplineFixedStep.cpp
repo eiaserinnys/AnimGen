@@ -309,18 +309,22 @@ public:
 		if (solver.info() != Success) { throw runtime_error("SimplicialLLT::compute() failed"); }
 	}
 
-	pair<Vector3D, Vector3D> At(double v)
+	PositionRotation At(double v)
 	{
-		return make_pair(
+		return PositionRotation
+		{
 			Vector3D(channel[0]->At(v), channel[1]->At(v), channel[2]->At(v)),
-			Vector3D(channel[3]->At(v), channel[4]->At(v), channel[5]->At(v)));
+			Vector3D(channel[3]->At(v), channel[4]->At(v), channel[5]->At(v))
+		};
 	}
 
-	pair<Vector3D, Vector3D> AccelerationAt(double v)
+	PositionRotation AccelerationAt(double v)
 	{
-		return make_pair(
+		return PositionRotation
+		{
 			Vector3D(channel[0]->AccelerationAt(v), channel[1]->AccelerationAt(v), channel[2]->AccelerationAt(v)),
-			Vector3D(channel[3]->AccelerationAt(v), channel[4]->AccelerationAt(v), channel[5]->AccelerationAt(v)));
+			Vector3D(channel[3]->AccelerationAt(v), channel[4]->AccelerationAt(v), channel[5]->AccelerationAt(v))
+		};
 	}
 
 	double GetMax()
@@ -402,18 +406,18 @@ void TestCurve()
 			//WindowsUtility::Debug(
 			//	L"(%f)(%f,%f,%f,%f,%f,%f)(%f,%f,%f,%f,%f,%f)\n",
 			//	t,
-			//	av.first.x, av.first.y, av.first.z,
-			//	av.second.x, av.second.y, av.second.z,
-			//	bv.first.x, bv.first.y, bv.first.z,
-			//	bv.second.x, bv.second.y, bv.second.z);
+			//	av.position.x, av.position.y, av.position.z,
+			//	av.rotation.x, av.rotation.y, av.rotation.z,
+			//	bv.position.x, bv.position.y, bv.position.z,
+			//	bv.rotation.x, bv.rotation.y, bv.rotation.z);
 
-			//assert(av.first.x == bv.first.x);
-			//assert(av.first.y == bv.first.y);
-			//assert(av.first.z == bv.first.z);
+			//assert(av.position.x == bv.position.x);
+			//assert(av.position.y == bv.position.y);
+			//assert(av.position.z == bv.position.z);
 
-			//assert(av.second.x == bv.second.x);
-			//assert(av.second.y == bv.second.y);
-			//assert(av.second.z == bv.second.z);
+			//assert(av.rotation.x == bv.rotation.x);
+			//assert(av.rotation.y == bv.rotation.y);
+			//assert(av.rotation.z == bv.rotation.z);
 		}
 
 		int ei = i / 6;
@@ -429,18 +433,18 @@ void TestCurve()
 			//WindowsUtility::Debug(
 			//	L"(%f)(%f,%f,%f,%f,%f,%f)(%f,%f,%f,%f,%f,%f)\n",
 			//	t,
-			//	av.first.x, av.first.y, av.first.z,
-			//	av.second.x, av.second.y, av.second.z,
-			//	bv.first.x, bv.first.y, bv.first.z,
-			//	bv.second.x, bv.second.y, bv.second.z);
+			//	av.position.x, av.position.y, av.position.z,
+			//	av.rotation.x, av.rotation.y, av.rotation.z,
+			//	bv.position.x, bv.position.y, bv.position.z,
+			//	bv.rotation.x, bv.rotation.y, bv.rotation.z);
 
-			assert(av.first.x == bv.first.x);
-			assert(av.first.y == bv.first.y);
-			assert(av.first.z == bv.first.z);
+			assert(av.position.x == bv.position.x);
+			assert(av.position.y == bv.position.y);
+			assert(av.position.z == bv.position.z);
 
-			assert(av.second.x == bv.second.x);
-			assert(av.second.y == bv.second.y);
-			assert(av.second.z == bv.second.z);
+			assert(av.rotation.x == bv.rotation.x);
+			assert(av.rotation.y == bv.rotation.y);
+			assert(av.rotation.z == bv.rotation.z);
 		}
 
 		//WindowsUtility::Debug(L"\n");

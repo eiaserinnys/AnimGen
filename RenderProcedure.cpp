@@ -88,8 +88,8 @@ public:
 				XMFLOAT2(50, y += 15),
 				Utility::FormatW(
 					L"BP(%.4f,%.4f,%.4f) BP(%.4f,%.4f,%.4f)",
-					gc.body.first.x, gc.body.first.y, gc.body.first.y,
-					gc.body.second.x, gc.body.second.y, gc.body.second.z),
+					gc.body.position.x, gc.body.position.y, gc.body.position.y,
+					gc.body.rotation.x, gc.body.rotation.y, gc.body.rotation.z),
 				XMFLOAT4(1, 1, 1, 1)));
 
 		context->textRenderer->Enqueue(

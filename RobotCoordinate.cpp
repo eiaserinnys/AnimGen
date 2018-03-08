@@ -71,13 +71,13 @@ bool SetLocal(Robot* robot, const string& name, const Matrix4D& m, bool validate
 
 //--------------------------------------------------------------------------
 // 일단 몸, 다리, 발만 계산한다
-GeneralCoordinate 
-	RobotCoordinate::ToGeneralCoordinate(Robot* robot) const
+GeneralizedCoordinate 
+	RobotCoordinate::ToGeneralizedCoordinate(Robot* robot) const
 {
-	GeneralCoordinate coord;
+	GeneralizedCoordinate coord;
 
-	coord.body.first = robot->GetWorldPosition("Body");
-	coord.body.second = robot->GetLocalRotation("Body");
+	coord.body.position = robot->GetWorldPosition("Body");
+	coord.body.rotation = robot->GetLocalRotation("Body");
 
 	{
 		coord.leg[0].rot1 = robot->GetLocalRotation("LLeg1");
@@ -125,14 +125,14 @@ GeneralCoordinate
 //--------------------------------------------------------------------------
 bool RobotCoordinate::SetTransform(
 	Robot* robot,
-	const GeneralCoordinate& coord, 
+	const GeneralizedCoordinate& coord, 
 	bool validate) const
 {
 	bool result = true;
 
 	{
-		auto bodyM = ExponentialMap::ToMatrix(coord.body.second);
-		FrameHelper::SetTranslation(bodyM, coord.body.first);
+		auto bodyM = ExponentialMap::ToMatrix(coord.body.rotation);
+		FrameHelper::SetTranslation(bodyM, coord.body.position);
 		SetWorld(robot, "Body", bodyM, validate);
 	}
 
@@ -171,14 +171,14 @@ SolutionCoordinate RobotCoordinate::ToSolutionCoordinate(Robot* robot) const
 {
 	SolutionCoordinate coord;
 
-	coord.body.first = robot->GetWorldPosition("Body");
-	coord.body.second = robot->GetLocalRotation("Body");
+	coord.body.position = robot->GetWorldPosition("Body");
+	coord.body.rotation = robot->GetLocalRotation("Body");
 
-	coord.foot[0].first = robot->GetWorldPosition("LFoot");
-	coord.foot[0].second = ExponentialMap::FromMatrix(robot->GetWorldTransform("LFoot"));
+	coord.foot[0].position = robot->GetWorldPosition("LFoot");
+	coord.foot[0].rotation = ExponentialMap::FromMatrix(robot->GetWorldTransform("LFoot"));
 
-	coord.foot[1].first = robot->GetWorldPosition("RFoot");
-	coord.foot[1].second = ExponentialMap::FromMatrix(robot->GetWorldTransform("RFoot"));
+	coord.foot[1].position = robot->GetWorldPosition("RFoot");
+	coord.foot[1].rotation = ExponentialMap::FromMatrix(robot->GetWorldTransform("RFoot"));
 
 	return coord;
 }
@@ -214,13 +214,13 @@ void RobotCoordinate::SetTransform(
 		retry = false;
 
 		{
-			auto bodyM = ExponentialMap::ToMatrix(coord.body.second);
-			FrameHelper::SetTranslation(bodyM, coord.body.first);
+			auto bodyM = ExponentialMap::ToMatrix(coord.body.rotation);
+			FrameHelper::SetTranslation(bodyM, coord.body.position);
 			SetWorld(robot, "Body", bodyM, false);
 		}
 
-		robot->SetFootTransform(true, coord.foot[0].first, coord.foot[0].second);
-		robot->SetFootTransform(false, coord.foot[1].first, coord.foot[1].second);
+		robot->SetFootTransform(true, coord.foot[0].position, coord.foot[0].rotation);
+		robot->SetFootTransform(false, coord.foot[1].position, coord.foot[1].rotation);
 
 		if (validate)
 		{
@@ -291,10 +291,10 @@ void SolutionCoordinate::Dump() const
 		L"B(%.10f,%.10f,%.10f), (%.10f,%.10f,%.10f) "
 		"LF(%.10f,%.10f,%.10f), (%.10f,%.10f,%.10f) "
 		"RF(%.10f,%.10f,%.10f), (%.10f,%.10f,%.10f)\n",
-		body.first.x, body.first.y, body.first.z,
-		body.second.x, body.second.y, body.second.z,
-		foot[0].first.x, foot[0].first.y, foot[0].first.z,
-		foot[0].second.x, foot[0].second.y, foot[0].second.z,
-		foot[1].first.x, foot[1].first.y, foot[1].first.z,
-		foot[1].second.x, foot[1].second.y, foot[1].second.z);
+		body.position.x, body.position.y, body.position.z,
+		body.rotation.x, body.rotation.y, body.rotation.z,
+		foot[0].position.x, foot[0].position.y, foot[0].position.z,
+		foot[0].rotation.x, foot[0].rotation.y, foot[0].rotation.z,
+		foot[1].position.x, foot[1].position.y, foot[1].position.z,
+		foot[1].rotation.x, foot[1].rotation.y, foot[1].rotation.z);
 }

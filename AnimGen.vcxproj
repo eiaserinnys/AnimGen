@@ -141,6 +141,7 @@
     <ClCompile Include="GeneralizedAccelerationCalculator.cpp" />
     <ClCompile Include="GeneralizedCoordinate.cpp" />
     <ClCompile Include="Log.cpp" />
+    <ClCompile Include="PositionRotation.cpp" />
     <ClCompile Include="Residual.cpp" />
     <ClCompile Include="exp-map.cpp" />
     <ClCompile Include="ExponentialMap.cpp" />
@@ -193,6 +194,7 @@
     <ClInclude Include="GeneralizedAccelerationCalculator.h" />
     <ClInclude Include="GeneralizedCoordinate.h" />
     <ClInclude Include="Log.h" />
+    <ClInclude Include="PositionRotation.h" />
     <ClInclude Include="Residual.h" />
     <ClInclude Include="exp-map.h" />
     <ClInclude Include="ExponentialMap.h" />

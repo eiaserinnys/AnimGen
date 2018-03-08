@@ -16,7 +16,7 @@ static bool operator == (const Vector3D& lhs, const Vector3D& rhs)
 }
 
 //--------------------------------------------------------------------------
-void GeneralCoordinate::Leg::FillZero()
+void GeneralizedCoordinate::Leg::FillZero()
 {
 	rot1.FillZero();
 	len1 = 0;
@@ -28,7 +28,7 @@ void GeneralCoordinate::Leg::FillZero()
 }
 
 //--------------------------------------------------------------------------
-double GeneralCoordinate::Leg::SquaredLength() const
+double GeneralizedCoordinate::Leg::SquaredLength() const
 {
 	return
 		Core::SquaredLength(rot1) +
@@ -39,11 +39,11 @@ double GeneralCoordinate::Leg::SquaredLength() const
 }
 
 //--------------------------------------------------------------------------
-GeneralCoordinate::Leg operator + (
-	const GeneralCoordinate::Leg& lhs,
-	const GeneralCoordinate::Leg& rhs)
+GeneralizedCoordinate::Leg operator + (
+	const GeneralizedCoordinate::Leg& lhs,
+	const GeneralizedCoordinate::Leg& rhs)
 {
-	GeneralCoordinate::Leg ret;
+	GeneralizedCoordinate::Leg ret;
 
 	ret.rot1 = lhs.rot1 + rhs.rot1;
 	ret.len1 = lhs.len1 + rhs.len1;
@@ -55,11 +55,11 @@ GeneralCoordinate::Leg operator + (
 }
 
 //--------------------------------------------------------------------------
-GeneralCoordinate::Leg operator - (
-	const GeneralCoordinate::Leg& lhs,
-	const GeneralCoordinate::Leg& rhs)
+GeneralizedCoordinate::Leg operator - (
+	const GeneralizedCoordinate::Leg& lhs,
+	const GeneralizedCoordinate::Leg& rhs)
 {
-	GeneralCoordinate::Leg ret;
+	GeneralizedCoordinate::Leg ret;
 
 	ret.rot1 = lhs.rot1 - rhs.rot1;
 	ret.len1 = lhs.len1 - rhs.len1;
@@ -71,11 +71,11 @@ GeneralCoordinate::Leg operator - (
 }
 
 //--------------------------------------------------------------------------
-GeneralCoordinate::Leg operator * (
-	const GeneralCoordinate::Leg& lhs,
+GeneralizedCoordinate::Leg operator * (
+	const GeneralizedCoordinate::Leg& lhs,
 	double rhs)
 {
-	GeneralCoordinate::Leg ret;
+	GeneralizedCoordinate::Leg ret;
 
 	ret.rot1 = lhs.rot1 * rhs;
 	ret.len1 = lhs.len1 * rhs;
@@ -87,11 +87,11 @@ GeneralCoordinate::Leg operator * (
 }
 
 //--------------------------------------------------------------------------
-GeneralCoordinate::Leg operator * (
+GeneralizedCoordinate::Leg operator * (
 	double lhs,
-	const GeneralCoordinate::Leg& rhs)
+	const GeneralizedCoordinate::Leg& rhs)
 {
-	GeneralCoordinate::Leg ret;
+	GeneralizedCoordinate::Leg ret;
 
 	ret.rot1 = lhs * rhs.rot1;
 	ret.len1 = lhs * rhs.len1;
@@ -103,11 +103,11 @@ GeneralCoordinate::Leg operator * (
 }
 
 //--------------------------------------------------------------------------
-GeneralCoordinate::Leg operator * (
-	const GeneralCoordinate::Leg& lhs,
-	const GeneralCoordinate::Leg& rhs)
+GeneralizedCoordinate::Leg operator * (
+	const GeneralizedCoordinate::Leg& lhs,
+	const GeneralizedCoordinate::Leg& rhs)
 {
-	GeneralCoordinate::Leg ret;
+	GeneralizedCoordinate::Leg ret;
 
 	ret.rot1 = lhs.rot1 * rhs.rot1;
 	ret.len1 = lhs.len1 * rhs.len1;
@@ -119,11 +119,11 @@ GeneralCoordinate::Leg operator * (
 }
 
 //--------------------------------------------------------------------------
-GeneralCoordinate::Leg operator / (
-	const GeneralCoordinate::Leg& lhs,
+GeneralizedCoordinate::Leg operator / (
+	const GeneralizedCoordinate::Leg& lhs,
 	double rhs)
 {
-	GeneralCoordinate::Leg ret;
+	GeneralizedCoordinate::Leg ret;
 
 	ret.rot1 = lhs.rot1 / rhs;
 	ret.len1 = lhs.len1 / rhs;
@@ -136,8 +136,8 @@ GeneralCoordinate::Leg operator / (
 
 //--------------------------------------------------------------------------
 bool operator == (
-	const GeneralCoordinate::Leg& lhs,
-	const GeneralCoordinate::Leg& rhs)
+	const GeneralizedCoordinate::Leg& lhs,
+	const GeneralizedCoordinate::Leg& rhs)
 {
 	return
 		lhs.rot1 == rhs.rot1 &&
@@ -148,12 +148,12 @@ bool operator == (
 }
 
 //--------------------------------------------------------------------------
-GeneralCoordinate operator - (const GeneralCoordinate& lhs, const GeneralCoordinate& rhs)
+GeneralizedCoordinate operator - (const GeneralizedCoordinate& lhs, const GeneralizedCoordinate& rhs)
 {
-	GeneralCoordinate ret;
+	GeneralizedCoordinate ret;
 
-	ret.body.first = lhs.body.first - rhs.body.first;
-	ret.body.second = lhs.body.second - rhs.body.second;
+	ret.body.position = lhs.body.position - rhs.body.position;
+	ret.body.rotation = lhs.body.rotation - rhs.body.rotation;
 	ret.leg[0] = lhs.leg[0] - rhs.leg[0];
 	ret.leg[1] = lhs.leg[1] - rhs.leg[1];
 
@@ -161,12 +161,12 @@ GeneralCoordinate operator - (const GeneralCoordinate& lhs, const GeneralCoordin
 }
 
 //--------------------------------------------------------------------------
-GeneralCoordinate operator + (const GeneralCoordinate& lhs, const GeneralCoordinate& rhs)
+GeneralizedCoordinate operator + (const GeneralizedCoordinate& lhs, const GeneralizedCoordinate& rhs)
 {
-	GeneralCoordinate ret;
+	GeneralizedCoordinate ret;
 
-	ret.body.first = lhs.body.first + rhs.body.first;
-	ret.body.second = lhs.body.second + rhs.body.second;
+	ret.body.position = lhs.body.position + rhs.body.position;
+	ret.body.rotation = lhs.body.rotation + rhs.body.rotation;
 	ret.leg[0] = lhs.leg[0] + rhs.leg[0];
 	ret.leg[1] = lhs.leg[1] + rhs.leg[1];
 
@@ -174,12 +174,12 @@ GeneralCoordinate operator + (const GeneralCoordinate& lhs, const GeneralCoordin
 }
 
 //--------------------------------------------------------------------------
-GeneralCoordinate operator / (const GeneralCoordinate& lhs, double rhs)
+GeneralizedCoordinate operator / (const GeneralizedCoordinate& lhs, double rhs)
 {
-	GeneralCoordinate ret;
+	GeneralizedCoordinate ret;
 
-	ret.body.first = lhs.body.first / rhs;
-	ret.body.second = lhs.body.second / rhs;
+	ret.body.position = lhs.body.position / rhs;
+	ret.body.rotation = lhs.body.rotation / rhs;
 	ret.leg[0] = lhs.leg[0] / rhs;
 	ret.leg[1] = lhs.leg[1] / rhs;
 
@@ -187,12 +187,12 @@ GeneralCoordinate operator / (const GeneralCoordinate& lhs, double rhs)
 }
 
 //--------------------------------------------------------------------------
-GeneralCoordinate operator * (const GeneralCoordinate& lhs, double rhs)
+GeneralizedCoordinate operator * (const GeneralizedCoordinate& lhs, double rhs)
 {
-	GeneralCoordinate ret;
+	GeneralizedCoordinate ret;
 
-	ret.body.first = lhs.body.first * rhs;
-	ret.body.second = lhs.body.second * rhs;
+	ret.body.position = lhs.body.position * rhs;
+	ret.body.rotation = lhs.body.rotation * rhs;
 	ret.leg[0] = lhs.leg[0] * rhs;
 	ret.leg[1] = lhs.leg[1] * rhs;
 
@@ -200,12 +200,12 @@ GeneralCoordinate operator * (const GeneralCoordinate& lhs, double rhs)
 }
 
 //--------------------------------------------------------------------------
-GeneralCoordinate operator * (const GeneralCoordinate& lhs, const GeneralCoordinate& rhs)
+GeneralizedCoordinate operator * (const GeneralizedCoordinate& lhs, const GeneralizedCoordinate& rhs)
 {
-	GeneralCoordinate ret;
+	GeneralizedCoordinate ret;
 
-	ret.body.first = lhs.body.first * rhs.body.first;
-	ret.body.second = lhs.body.second * rhs.body.second;
+	ret.body.position = lhs.body.position * rhs.body.position;
+	ret.body.rotation = lhs.body.rotation * rhs.body.rotation;
 	ret.leg[0] = lhs.leg[0] * rhs.leg[0];
 	ret.leg[1] = lhs.leg[1] * rhs.leg[1];
 
@@ -213,12 +213,12 @@ GeneralCoordinate operator * (const GeneralCoordinate& lhs, const GeneralCoordin
 }
 
 //--------------------------------------------------------------------------
-GeneralCoordinate operator * (double lhs, const GeneralCoordinate& rhs)
+GeneralizedCoordinate operator * (double lhs, const GeneralizedCoordinate& rhs)
 {
-	GeneralCoordinate ret;
+	GeneralizedCoordinate ret;
 
-	ret.body.first = lhs * rhs.body.first;
-	ret.body.second = lhs * rhs.body.second;
+	ret.body.position = lhs * rhs.body.position;
+	ret.body.rotation = lhs * rhs.body.rotation;
 	ret.leg[0] = lhs * rhs.leg[0];
 	ret.leg[1] = lhs * rhs.leg[1];
 
@@ -226,19 +226,19 @@ GeneralCoordinate operator * (double lhs, const GeneralCoordinate& rhs)
 }
 
 //--------------------------------------------------------------------------
-bool operator == (const GeneralCoordinate& lhs, const GeneralCoordinate& rhs)
+bool operator == (const GeneralizedCoordinate& lhs, const GeneralizedCoordinate& rhs)
 {
 	return
-		lhs.body.first == rhs.body.first &&
-		lhs.body.second == rhs.body.second &&
+		lhs.body.position == rhs.body.position &&
+		lhs.body.rotation == rhs.body.rotation &&
 		lhs.leg[0] == rhs.leg[0] &&
 		lhs.leg[1] == rhs.leg[1];
 }
 
 //------------------------------------------------------------------------------
-void GeneralCoordinate::MakeNear(const GeneralCoordinate& pivot)
+void GeneralizedCoordinate::MakeNear(const GeneralizedCoordinate& pivot)
 {
-	ExponentialMap::MakeNearRotation(pivot.body.second, body.second);
+	ExponentialMap::MakeNearRotation(pivot.body.rotation, body.rotation);
 
 	for (int i = 0; i < COUNT_OF(leg); ++i)
 	{
@@ -249,17 +249,17 @@ void GeneralCoordinate::MakeNear(const GeneralCoordinate& pivot)
 }
 
 //--------------------------------------------------------------------------
-void GeneralCoordinate::Clear()
+void GeneralizedCoordinate::Clear()
 {
-	body.first.FillZero();
-	body.second.FillZero();
+	body.position.FillZero();
+	body.rotation.FillZero();
 
 	leg[0].FillZero();
 	leg[1].FillZero();
 }
 
 //--------------------------------------------------------------------------
-void GeneralCoordinate::Dump() const
+void GeneralizedCoordinate::Dump() const
 {
 #if 0
 	WindowsUtility::Debug(
@@ -270,8 +270,8 @@ void GeneralCoordinate::Dump() const
 		"RR1(%+.3f,%+.3f,%+.3f) RLen1(%+.3f) "
 		"RR2(%+.3f,%+.3f,%+.3f) RLen2(%+.3f) "
 		"RFR(%+.3f,%+.3f,%+.3f)\n",
-		body.first.x, body.first.y, body.first.z,
-		body.second.x, body.second.y, body.second.z,
+		body.position.x, body.position.y, body.position.z,
+		body.rotation.x, body.rotation.y, body.rotation.z,
 		leg[0].rot1.x, leg[0].rot1.y, leg[0].rot1.z, leg[0].len1,
 		leg[0].rot2.x, leg[0].rot2.y, leg[0].rot2.z, leg[0].len2,
 		leg[0].footRot.x, leg[0].footRot.y, leg[0].footRot.z,
@@ -283,8 +283,8 @@ void GeneralCoordinate::Dump() const
 		WindowsUtility::Debug(
 			L"%e\t%e\t%e\t"
 			"%e\t%e\t%e\t",
-			body.first.x, body.first.y, body.first.y,
-			body.second.x, body.second.y, body.second.y);
+			body.position.x, body.position.y, body.position.y,
+			body.rotation.x, body.rotation.y, body.rotation.y);
 		WindowsUtility::Debug(
 			L"%e\t%e\t%e\t%e\t",
 			leg[0].rot1.x, leg[0].rot1.y, leg[0].rot1.z, leg[0].len2);
@@ -310,7 +310,7 @@ void GeneralCoordinate::Dump() const
 }
 
 //--------------------------------------------------------------------------
-void GeneralCoordinate::Dump_() const
+void GeneralizedCoordinate::Dump_() const
 {
 	{
 		WindowsUtility::Debug(
@@ -321,11 +321,11 @@ void GeneralCoordinate::Dump_() const
 }
 
 //--------------------------------------------------------------------------
-double GeneralCoordinate::SquaredLength() const
+double GeneralizedCoordinate::SquaredLength() const
 {
 	return
-		Core::SquaredLength(body.first) +
-		Core::SquaredLength(body.second)
+		Core::SquaredLength(body.position) +
+		Core::SquaredLength(body.rotation)
 		+
 		leg[0].SquaredLength() +
 		leg[1].SquaredLength();

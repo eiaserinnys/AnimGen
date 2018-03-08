@@ -1,8 +1,9 @@
 #pragma once
 
 #include "Vector.h"
+#include "PositionRotation.h"
 
-struct GeneralCoordinate
+struct GeneralizedCoordinate
 {
 	struct Leg
 	{
@@ -19,13 +20,13 @@ struct GeneralCoordinate
 		double SquaredLength() const;
 	};
 
-	std::pair<Core::Vector3D, Core::Vector3D> body;
+	PositionRotation body;
 
 	Leg leg[2];
 
 	double SquaredLength() const;
 
-	void MakeNear(const GeneralCoordinate& pivot);
+	void MakeNear(const GeneralizedCoordinate& pivot);
 
 	void Clear();
 
@@ -34,19 +35,19 @@ struct GeneralCoordinate
 	void Dump_() const;
 };
 
-GeneralCoordinate::Leg operator + (const GeneralCoordinate::Leg& lhs, const GeneralCoordinate::Leg& rhs);
-GeneralCoordinate::Leg operator - (const GeneralCoordinate::Leg& lhs, const GeneralCoordinate::Leg& rhs);
-GeneralCoordinate::Leg operator * (double lhs, const GeneralCoordinate::Leg& rhs);
-GeneralCoordinate::Leg operator * (const GeneralCoordinate::Leg& lhs, double rhs);
-GeneralCoordinate::Leg operator * (const GeneralCoordinate::Leg& lhs, const GeneralCoordinate::Leg& rhs);
-GeneralCoordinate::Leg operator / (const GeneralCoordinate::Leg& lhs, double rhs);
-bool operator == (const GeneralCoordinate::Leg& lhs, const GeneralCoordinate::Leg& rhs);
+GeneralizedCoordinate::Leg operator + (const GeneralizedCoordinate::Leg& lhs, const GeneralizedCoordinate::Leg& rhs);
+GeneralizedCoordinate::Leg operator - (const GeneralizedCoordinate::Leg& lhs, const GeneralizedCoordinate::Leg& rhs);
+GeneralizedCoordinate::Leg operator * (double lhs, const GeneralizedCoordinate::Leg& rhs);
+GeneralizedCoordinate::Leg operator * (const GeneralizedCoordinate::Leg& lhs, double rhs);
+GeneralizedCoordinate::Leg operator * (const GeneralizedCoordinate::Leg& lhs, const GeneralizedCoordinate::Leg& rhs);
+GeneralizedCoordinate::Leg operator / (const GeneralizedCoordinate::Leg& lhs, double rhs);
+bool operator == (const GeneralizedCoordinate::Leg& lhs, const GeneralizedCoordinate::Leg& rhs);
 
-GeneralCoordinate operator + (const GeneralCoordinate& lhs, const GeneralCoordinate& rhs);
-GeneralCoordinate operator - (const GeneralCoordinate& lhs, const GeneralCoordinate& rhs);
-GeneralCoordinate operator * (double lhs, const GeneralCoordinate& rhs);
-GeneralCoordinate operator * (const GeneralCoordinate& lhs, double rhs);
-GeneralCoordinate operator * (const GeneralCoordinate& lhs, const GeneralCoordinate& rhs);
-GeneralCoordinate operator / (const GeneralCoordinate& lhs, double rhs);
+GeneralizedCoordinate operator + (const GeneralizedCoordinate& lhs, const GeneralizedCoordinate& rhs);
+GeneralizedCoordinate operator - (const GeneralizedCoordinate& lhs, const GeneralizedCoordinate& rhs);
+GeneralizedCoordinate operator * (double lhs, const GeneralizedCoordinate& rhs);
+GeneralizedCoordinate operator * (const GeneralizedCoordinate& lhs, double rhs);
+GeneralizedCoordinate operator * (const GeneralizedCoordinate& lhs, const GeneralizedCoordinate& rhs);
+GeneralizedCoordinate operator / (const GeneralizedCoordinate& lhs, double rhs);
 
-bool operator == (const GeneralCoordinate& lhs, const GeneralCoordinate& rhs);
+bool operator == (const GeneralizedCoordinate& lhs, const GeneralizedCoordinate& rhs);

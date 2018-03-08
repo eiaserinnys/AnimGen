@@ -2,6 +2,7 @@
 #include "AnimationGeneration.h"
 
 #include <timeapi.h>
+#include <Utility.h>
 
 #include "Robot.h"
 #include "SolutionVector.h"
@@ -26,8 +27,7 @@ public:
 
 	struct Diagnostic
 	{
-		SplineDiagnostic body;
-		SplineDiagnostic foot[2];
+		SplineDiagnostic joint[3];
 	};
 
 	Diagnostic splines;
@@ -38,9 +38,11 @@ public:
 		SolutionCoordinate begin = robot->CurrentSC();
 		
 		SolutionCoordinate dest = begin;
-		dest.body.first += Vector3D(2.5, 0, 0);
-		dest.foot[0].first += Vector3D(2.5, 0, 0);
-		dest.foot[1].first += Vector3D(2.5, 0, 0);
+
+		for (int i = 0; i < COUNT_OF(dest.joint); ++i)
+		{
+			dest.joint[i].position += Vector3D(2.5, 0, 0);
+		}
 
 		solver.reset(ISolver::Create(begin, dest, 2));
 		//solver.reset(ISolver::Create(begin, dest, 1));
@@ -78,10 +80,10 @@ public:
 		const int m = 20;
 
 		auto sol = solver->Solution();
-
-		splines.body.Sample(sol->GetCurve(0), m);
-		splines.foot[0].Sample(sol->GetCurve(1), m);
-		splines.foot[1].Sample(sol->GetCurve(2), m);
+		for (int i = 0; i < sol->GetSplineCount(); ++i)
+		{
+			splines.joint[i].Sample(sol->GetSpline(i), m);
+		}
 	}
 
 	//--------------------------------------------------------------------------
@@ -115,10 +117,10 @@ public:
 		auto t = CurrentTime();
 
 		auto sol = solver->Solution();
-
-		splines.body.Enqueue(sol->GetCurve(0), buffer, t);
-		splines.foot[0].Enqueue(sol->GetCurve(1), buffer, t);
-		splines.foot[1].Enqueue(sol->GetCurve(2), buffer, t);
+		for (int i = 0; i < sol->GetSplineCount(); ++i)
+		{
+			splines.joint[i].Enqueue(sol->GetSpline(i), buffer, t);
+		}
 
 		auto coord = sol->At(t);
 

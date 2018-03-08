@@ -1,17 +1,41 @@
 #include "pch.h"
 #include "SolutionCoordinate.h"
 
+#include <Utility.h>
+
+//------------------------------------------------------------------------------
+SolutionCoordinate::SolutionCoordinate()
+{
+}
+
+//------------------------------------------------------------------------------
+SolutionCoordinate::SolutionCoordinate(const SolutionCoordinate& rhs)
+{
+	operator = (rhs);
+}
+
+//------------------------------------------------------------------------------
+SolutionCoordinate& SolutionCoordinate::operator = (const SolutionCoordinate& rhs)
+{
+	for (int i = 0; i < COUNT_OF(joint); ++i)
+	{
+		joint[i] = rhs.joint[i];
+	}
+
+	return *this;
+}
+
 //------------------------------------------------------------------------------
 double& SolutionCoordinate::At(int i)
 {
 	if (0 <= i && i < VariableCount())
 	{
-		if (i < 3) { return body.first.m[i]; }
-		if (i < 6) { return body.second.m[i - 3]; }
-		if (i < 9) { return foot[0].first.m[i - 6]; }
-		if (i < 12) { return foot[0].second.m[i - 9]; }
-		if (i < 15) { return foot[1].first.m[i - 12]; }
-		if (i < 18) { return foot[1].second.m[i - 15]; }
+		int ind = i / 6;
+		int ofs = i % 6;
+
+		return ofs < 3 ? 
+			joint[ind].position.m[ofs] : 
+			joint[ind].rotation.m[ofs - 3];
 	}
 	throw std::invalid_argument("out of range");
 }
@@ -23,9 +47,5 @@ const double& SolutionCoordinate::At(int i) const
 //------------------------------------------------------------------------------
 int SolutionCoordinate::VariableCount()
 {
-	return
-		// body
-		3 + 3 +
-		// foot
-		(3 + 3) * 2;
+	return 3 * 2 * COUNT_OF(joint);
 }

@@ -121,7 +121,13 @@ public:
 	}
 
 	//--------------------------------------------------------------------------
-	ISpline* GetCurve(int i)
+	virtual int GetSplineCount() const
+	{
+		return COUNT_OF(splines);
+	}
+
+	//--------------------------------------------------------------------------
+	ISpline* GetSpline(int i)
 	{
 		if (0 <= i && i < COUNT_OF(splines))
 		{
@@ -192,7 +198,7 @@ public:
 	}
 
 	//--------------------------------------------------------------------------
-	GeneralCoordinate GeneralCoordinateAt(double t, bool dump = false) const
+	GeneralizedCoordinate GeneralizedCoordinateAt(double t, bool dump = false) const
 	{
 		SolutionCoordinate sc = At(t);
 
@@ -204,7 +210,7 @@ public:
 	}
 
 	//--------------------------------------------------------------------------
-	GeneralCoordinate GeneralAccelerationAt(double t, bool highOrder, bool dump) const
+	GeneralizedCoordinate GeneralAccelerationAt(double t, bool highOrder, bool dump) const
 	{
 		const double derStep = 0.001;
 
@@ -219,7 +225,7 @@ public:
 				At(t + derStep * 2),
 			};
 
-			GeneralCoordinate gc[5];
+			GeneralizedCoordinate gc[5];
 
 			for (int i = 0; i < COUNT_OF(gc); ++i)
 			{
@@ -251,11 +257,11 @@ public:
 		}
 		else
 		{
-			GeneralCoordinate gc[3] =
+			GeneralizedCoordinate gc[3] =
 			{
-				GeneralCoordinateAt(t - derStep),
-				GeneralCoordinateAt(t),
-				GeneralCoordinateAt(t + derStep),
+				GeneralizedCoordinateAt(t - derStep),
+				GeneralizedCoordinateAt(t),
+				GeneralizedCoordinateAt(t + derStep),
 			};
 
 			if (dump)
@@ -294,7 +300,7 @@ public:
 	SolutionSpline splines[3];
 
 	// ÀÏ¹ÝÈ­ ÁÂÇ¥ »ùÇÃ¸µ
-	vector<pair<double, GeneralCoordinate>> gcSamples;
+	vector<pair<double, GeneralizedCoordinate>> gcSamples;
 
 	// ³»ºÎ¿ë ·Îº¿
 	unique_ptr<IRobot> robot;
@@ -324,12 +330,12 @@ ISolutionVector* ISolutionVector::Create(
 	{
 		SolutionCoordinate sc = init;
 
-		sc.body.first += Vector3D(noise(), noise(), noise());
-		sc.body.second += Vector3D(noise(), noise(), noise());
-		sc.foot[0].first += Vector3D(noise(), noise(), noise());
-		sc.foot[0].second += Vector3D(noise(), noise(), noise());
-		sc.foot[1].first += Vector3D(noise(), noise(), noise());
-		sc.foot[1].second += Vector3D(noise(), noise(), noise());
+		sc.body.position += Vector3D(noise(), noise(), noise());
+		sc.body.rotation += Vector3D(noise(), noise(), noise());
+		sc.foot[0].position += Vector3D(noise(), noise(), noise());
+		sc.foot[0].rotation += Vector3D(noise(), noise(), noise());
+		sc.foot[1].position += Vector3D(noise(), noise(), noise());
+		sc.foot[1].rotation += Vector3D(noise(), noise(), noise());
 
 		coords.push_back(make_pair(i * g_timeStep, sc));
 	}
@@ -361,13 +367,13 @@ ISolutionVector* ISolutionVector::BuildTest(const SolutionCoordinate& init)
 		auto moveF = Lerp(Vector3D(0, 0, 0), deltaF, factor).Evaluate();
 		auto moveF2 = Lerp(Vector3D(0, 0.5, 0), deltaF2, factor).Evaluate();
 
-		nc.body.first += move + Vector3D(0, d, 0);
-		nc.foot[0].first += moveF;
-		nc.foot[1].first += moveF2;
+		nc.body.position += move + Vector3D(0, d, 0);
+		nc.foot[0].position += moveF;
+		nc.foot[1].position += moveF2;
 
 		auto m = DXMathTransform<double>::RotationY(-M_PI / 2 * i / phases);
 		auto rot = ExponentialMap::FromMatrix(m);
-		nc.body.second = rot;
+		nc.body.rotation = rot;
 
 		coords.push_back(make_pair(i * g_timeStep, nc));
 	}
@@ -395,9 +401,9 @@ void SolutionVector::Dump()
 
 	auto& dump = [&f](
 		double t,
-		const GeneralCoordinate& g,
-		const GeneralCoordinate& gv,
-		const GeneralCoordinate& ga)
+		const GeneralizedCoordinate& g,
+		const GeneralizedCoordinate& gv,
+		const GeneralizedCoordinate& ga)
 	{
 		fprintf(f,
 			"%f\t"
@@ -407,13 +413,13 @@ void SolutionVector::Dump()
 			"%f\t%f\t%f\t"		"%f\t%f\t%f\t"		"%f\t%f\t%f\t"
 			"\n",
 			t,
-			g.body.first.x, g.body.first.y, g.body.first.z,
-			gv.body.first.x, gv.body.first.y, gv.body.first.z,
-			ga.body.first.x, ga.body.first.y, ga.body.first.z,
+			g.body.position.x, g.body.position.y, g.body.position.z,
+			gv.body.position.x, gv.body.position.y, gv.body.position.z,
+			ga.body.position.x, ga.body.position.y, ga.body.position.z,
 
-			g.body.second.x, g.body.second.y, g.body.second.z,
-			gv.body.second.x, gv.body.second.y, gv.body.second.z,
-			ga.body.second.x, ga.body.second.y, ga.body.second.z,
+			g.body.rotation.x, g.body.rotation.y, g.body.rotation.z,
+			gv.body.rotation.x, gv.body.rotation.y, gv.body.rotation.z,
+			ga.body.rotation.x, ga.body.rotation.y, ga.body.rotation.z,
 
 			g.leg[0].rot1.x, g.leg[0].rot1.y, g.leg[0].rot1.z,
 			gv.leg[0].rot1.x, gv.leg[0].rot1.y, gv.leg[0].rot1.z,
@@ -428,7 +434,7 @@ void SolutionVector::Dump()
 	double timeFrom = 0;
 	double timeTo = splines[0].curve->GetMax();
 
-	GeneralCoordinate zero;
+	GeneralizedCoordinate zero;
 	zero.Clear();
 
 	const double derStep = 0.001;

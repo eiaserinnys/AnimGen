@@ -183,10 +183,10 @@ namespace Core
 	{
 		MatrixT<V, M, N> mResult;
 		// Cache the invariants in registers
-		float x = M1.m[0][0];
-		float y = M1.m[0][1];
-		float z = M1.m[0][2];
-		float w = M1.m[0][3];
+		V x = M1.m[0][0];
+		V y = M1.m[0][1];
+		V z = M1.m[0][2];
+		V w = M1.m[0][3];
 		// Perform the operation on the first row
 		mResult.m[0][0] = (M2.m[0][0] * x) + (M2.m[1][0] * y) + (M2.m[2][0] * z) + (M2.m[3][0] * w);
 		mResult.m[0][1] = (M2.m[0][1] * x) + (M2.m[1][1] * y) + (M2.m[2][1] * z) + (M2.m[3][1] * w);

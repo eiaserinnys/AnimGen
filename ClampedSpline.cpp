@@ -202,9 +202,10 @@ public:
 		rot[2].reset(new SplineChannel(t, r, 2));
 	}
 
-	pair<Vector3D, Vector3D> At(double v)
+	PositionRotation At(double v)
 	{
-		return make_pair(
+		return PositionRotation
+		{
 			Vector3D(
 				pos[0]->At(v),
 				pos[1]->At(v),
@@ -213,7 +214,7 @@ public:
 				rot[0]->At(v),
 				rot[1]->At(v),
 				rot[2]->At(v))
-		);
+		};
 	}
 
 	double GetMax()

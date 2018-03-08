@@ -112,9 +112,9 @@ public:
 				ISolverLog::Console | ISolverLog::Debug,
 				L"%02d - (%.3f,%.3f,%.3f)\t",
 				i,
-				phase.body.first.x,
-				phase.body.first.y,
-				phase.body.first.z);
+				phase.body.position.x,
+				phase.body.position.y,
+				phase.body.position.z);
 		}
 	}
 

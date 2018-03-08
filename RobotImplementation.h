@@ -52,7 +52,7 @@ public:
 
 	const Core::Vector4D GetLocalQuaternionVerify(const std::string& name);
 
-	virtual const GeneralCoordinate& Current() const { return gc; }
+	virtual const GeneralizedCoordinate& Current() const { return gc; }
 	virtual const SolutionCoordinate CurrentSC() const;
 
 	virtual void Apply(const SolutionCoordinate& coord, bool dump = false);
@@ -67,7 +67,7 @@ public:
 	std::map<std::string, int> nameToIndex;
 
 	RobotCoordinate coord;
-	GeneralCoordinate gc;
+	GeneralizedCoordinate gc;
 
 	RobotIK ik;
 

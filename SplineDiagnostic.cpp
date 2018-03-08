@@ -38,9 +38,9 @@ void SplineDiagnostic::Sample(ISpline* spline, int g)
 		{
 			auto ret = spline->At(i);
 
-			Vector4D q = ExponentialMap::ToQuaternion(ret.second);
+			Vector4D q = ExponentialMap::ToQuaternion(ret.rotation);
 			Matrix4D m = DXMathTransform<double>::MatrixRotationQuaternion(q);
-			FrameHelper::SetTranslation(m, ret.first);
+			FrameHelper::SetTranslation(m, ret.position);
 
 			tx.push_back(ToXMMATRIX(m));
 		}
@@ -52,7 +52,7 @@ void SplineDiagnostic::Sample(ISpline* spline, int g)
 		for (int i = 0; i <= m* g; ++i)
 		{
 			auto ret = spline->At((double)i / g);
-			auto p = ret.first;
+			auto p = ret.position;
 			sampled.push_back(XMFLOAT3(p.x, p.y, p.z));
 		}
 	}
@@ -73,8 +73,8 @@ void SplineDiagnostic::Enqueue(
 		auto ret = spline->At(t);
 
 		auto m = DXMathTransform<double>::MatrixRotationQuaternion(
-			ExponentialMap::ToQuaternion(ret.second));
-		FrameHelper::SetTranslation(m, ret.first);
+			ExponentialMap::ToQuaternion(ret.rotation));
+		FrameHelper::SetTranslation(m, ret.position);
 
 		XMMATRIX xm;
 		for (int i = 0; i < 4; ++i)

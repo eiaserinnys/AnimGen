@@ -212,6 +212,9 @@
     <ClCompile Include="SolutionCoordinate.cpp">
       <Filter>Solver\Solution</Filter>
     </ClCompile>
+    <ClCompile Include="PositionRotation.cpp">
+      <Filter>Mathematics\Spline</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="RenderContext.h">
@@ -396,6 +399,9 @@
     </ClInclude>
     <ClInclude Include="SolutionCoordinate.h">
       <Filter>Solver\Solution</Filter>
+    </ClInclude>
+    <ClInclude Include="PositionRotation.h">
+      <Filter>Mathematics\Spline</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

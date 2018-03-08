@@ -79,12 +79,12 @@ public:
 		for (size_t i = 1; i < nodeCount; i++)
 		{
 			auto& sc = solution->GetPhase(i);
-			variables.Load(sc.body.first, flag);
-			variables.Load(sc.body.second, flag);
-			variables.Load(sc.foot[0].first, flag);
-			variables.Load(sc.foot[0].second, flag);
-			variables.Load(sc.foot[1].first, flag);
-			variables.Load(sc.foot[1].second, flag);
+			variables.Load(sc.body.position, flag);
+			variables.Load(sc.body.rotation, flag);
+			variables.Load(sc.foot[0].position, flag);
+			variables.Load(sc.foot[0].rotation, flag);
+			variables.Load(sc.foot[1].position, flag);
+			variables.Load(sc.foot[1].rotation, flag);
 		}
 
 		variables.End();
@@ -140,17 +140,17 @@ public:
 		const auto& last = s->GetLastPhase();
 
 		auto& report = [&](
-			const pair<Vector3D, Vector3D>& lhs, 
-			const pair<Vector3D, Vector3D>& rhs)
+			const PositionRotation& lhs, 
+			const PositionRotation& rhs)
 		{
 			double p, r;
 			double e1, e2;
 			
-			p = Distance(lhs.first, rhs.first);
+			p = Distance(lhs.position, rhs.position);
 			e1 = residual.Set(p, w);
 
-			auto nearRot = ExponentialMap::GetNearRotation(lhs.second, rhs.second);
-			r = Distance(lhs.second, nearRot);
+			auto nearRot = ExponentialMap::GetNearRotation(lhs.rotation, rhs.rotation);
+			r = Distance(lhs.rotation, nearRot);
 			e2 = residual.Set(r, w);
 
 			if (log != nullptr && writeDebug)
@@ -206,86 +206,35 @@ public:
 			jacobian.NextFunction();
 		};
 
-		// body pos diff
-		set(last.body.first.m[0] - d.body.first.m[0]);
-		set(last.body.first.m[1] - d.body.first.m[1]);
-		set(last.body.first.m[2] - d.body.first.m[2]);
-		next();
-
-		// body rot diff
-		for (int ch = 0; ch < 3; ++ch)
+		for (int i = 0; i < SolutionCoordinate::Joint::Count; ++i)
 		{
-			double reserved = s2->GetVariableAt(varPivot);
+			// body pos diff
+			set(last.joint[i].position.m[0] - d.joint[i].position.m[0]);
+			set(last.joint[i].position.m[1] - d.joint[i].position.m[1]);
+			set(last.joint[i].position.m[2] - d.joint[i].position.m[2]);
+			next();
 
-			s2->SetVariableAt(varPivot, reserved - step);
-			auto rotm = ExponentialMap::GetNearRotation(dest.body.second, last2.body.second);
+			// body rot diff
+			for (int ch = 0; ch < 3; ++ch)
+			{
+				double reserved = s2->GetVariableAt(varPivot);
 
-			s2->SetVariableAt(varPivot, reserved + step);
-			auto rotp = ExponentialMap::GetNearRotation(dest.body.second, last2.body.second);
+				s2->SetVariableAt(varPivot, reserved - step);
+				auto rotm = ExponentialMap::GetNearRotation(dest.joint[i].rotation, last2.joint[i].rotation);
 
-			double errorm = 0.5 * SquaredDistance(dest.body.second, rotm);
-			double errorp = 0.5 * SquaredDistance(dest.body.second, rotp);
-			double derivative = (errorp - errorm) / (2 * step);
+				s2->SetVariableAt(varPivot, reserved + step);
+				auto rotp = ExponentialMap::GetNearRotation(dest.joint[i].rotation, last2.joint[i].rotation);
 
-			s2->SetVariableAt(varPivot, reserved);
+				double errorm = 0.5 * SquaredDistance(dest.joint[i].rotation, rotm);
+				double errorp = 0.5 * SquaredDistance(dest.joint[i].rotation, rotp);
+				double derivative = (errorp - errorm) / (2 * step);
 
-			set(derivative);
+				s2->SetVariableAt(varPivot, reserved);
+
+				set(derivative);
+			}
+			next();
 		}
-		next();
-
-		// left foot pos diff
-		set(last.foot[0].first.m[0] - d.foot[0].first.m[0]);
-		set(last.foot[0].first.m[1] - d.foot[0].first.m[1]);
-		set(last.foot[0].first.m[2] - d.foot[0].first.m[2]);
-		next();
-
-		// left foot rot diff
-		for (int ch = 0; ch < 3; ++ch)
-		{
-			double reserved = s2->GetVariableAt(varPivot);
-
-			s2->SetVariableAt(varPivot, reserved - step);
-			auto rotm = ExponentialMap::GetNearRotation(dest.foot[0].second, last2.foot[0].second);
-
-			s2->SetVariableAt(varPivot, reserved + step);
-			auto rotp = ExponentialMap::GetNearRotation(dest.foot[0].second, last2.foot[0].second);
-
-			double errorm = 0.5 * SquaredDistance(dest.foot[0].second, rotm);
-			double errorp = 0.5 * SquaredDistance(dest.foot[0].second, rotp);
-			double derivative = (errorp - errorm) / (2 * step);
-
-			s2->SetVariableAt(varPivot, reserved);
-
-			set(derivative);
-		}
-		next();
-
-		// right foot pos diff
-		set(last.foot[1].first.m[0] - d.foot[1].first.m[0]);
-		set(last.foot[1].first.m[1] - d.foot[1].first.m[1]);
-		set(last.foot[1].first.m[2] - d.foot[1].first.m[2]);
-		next();
-
-		// right foot rot diff
-		for (int ch = 0; ch < 3; ++ch)
-		{
-			double reserved = s2->GetVariableAt(varPivot);
-
-			s2->SetVariableAt(varPivot, reserved - step);
-			auto rotm = ExponentialMap::GetNearRotation(dest.foot[1].second, last2.foot[1].second);
-
-			s2->SetVariableAt(varPivot, reserved + step);
-			auto rotp = ExponentialMap::GetNearRotation(dest.foot[1].second, last2.foot[1].second);
-
-			double errorm = 0.5 * SquaredDistance(dest.foot[1].second, rotm);
-			double errorp = 0.5 * SquaredDistance(dest.foot[1].second, rotp);
-			double derivative = (errorp - errorm) / (2 * step);
-
-			s2->SetVariableAt(varPivot, reserved);
-
-			set(derivative);
-		}
-		next();
 
 		if (log != nullptr)
 		{
@@ -322,14 +271,14 @@ public:
 			error += e;
 		};
 
-		for (size_t i = 0; i < s->GetPhaseCount(); ++i)
+		for (int i = 0; i < s->GetPhaseCount(); ++i)
 		{
 			//auto ga = s->GeneralAccelerationAt(s->GetPhaseTime(i), true);
 
 			auto ga = GeneralAccelerationAt(s, i, false);
 
-			report(Length(ga.body.first));
-			report(Length(ga.body.second));
+			report(Length(ga.body.position));
+			report(Length(ga.body.rotation));
 
 			report(Length(ga.leg[0].rot1));
 			report(ga.leg[0].len1);
@@ -355,7 +304,7 @@ public:
 	}
 
 	//------------------------------------------------------------------------------
-	GeneralCoordinate GeneralAccelerationAt(const ISolutionVector* sv, int p, bool dump)
+	GeneralizedCoordinate GeneralAccelerationAt(const ISolutionVector* sv, int p, bool dump)
 	{
 		GeneralizedAccelerationCalculator calc(sv, p, dump);
 		return calc.Get();
@@ -389,7 +338,7 @@ public:
 			{
 				auto& curCoord = s2->GetPhase(p);
 
-				auto varOfs = (p - 1) * coordVar + v;
+				int varOfs = (p - 1) * coordVar + v;
 
 				// 원래 값을 보존
 				double reserved = s2->GetVariableAt(varOfs);
@@ -403,13 +352,13 @@ public:
 
 					WindowsUtility::Debug(L"gc\n");
 					s2->SetVariableAt(varOfs, reserved - step);
-					GeneralCoordinate g0 = s2->GeneralCoordinateAt(s2->GetPhaseTime(p));
+					GeneralizedCoordinate g0 = s2->GeneralizedCoordinateAt(s2->GetPhaseTime(p));
 
 					s2->SetVariableAt(varOfs, reserved);
-					GeneralCoordinate g1 = s2->GeneralCoordinateAt(s2->GetPhaseTime(p));
+					GeneralizedCoordinate g1 = s2->GeneralizedCoordinateAt(s2->GetPhaseTime(p));
 
 					s2->SetVariableAt(varOfs, reserved + step);
-					GeneralCoordinate g2 = s2->GeneralCoordinateAt(s2->GetPhaseTime(p));
+					GeneralizedCoordinate g2 = s2->GeneralizedCoordinateAt(s2->GetPhaseTime(p));
 
 					s2->SetVariableAt(varOfs, reserved);
 
@@ -443,8 +392,8 @@ public:
 					WindowsUtility::Debug(L"\n");
 				}
 
-				d[0 * coordVar + v] = SquaredLength((gap.body.first - gam.body.first) * ga.body.first) / (step * 2);
-				d[1 * coordVar + v] = SquaredLength((gap.body.second - gam.body.second) * ga.body.second) / (step * 2);
+				d[0 * coordVar + v] = SquaredLength((gap.body.position - gam.body.position) * ga.body.position) / (step * 2);
+				d[1 * coordVar + v] = SquaredLength((gap.body.rotation - gam.body.rotation) * ga.body.rotation) / (step * 2);
 				d[2 * coordVar + v] = SquaredLength((gap.leg[0].rot1 - gam.leg[0].rot1) * ga.leg[0].rot1) / (step * 2);
 				d[3 * coordVar + v] = Square((gap.leg[0].len1 - gam.leg[0].len1) * ga.leg[0].len1) / (step * 2);
 				d[4 * coordVar + v] = SquaredLength((gap.leg[0].rot2 - gam.leg[0].rot2) * ga.leg[0].rot2) / (step * 2);

@@ -2,6 +2,7 @@
 
 #include <memory>
 #include "ClampedSplineFixedStep.h"
+#include "PositionRotation.h"
 
 //------------------------------------------------------------------------------
 struct SolutionSpline
@@ -42,14 +43,19 @@ struct SolutionSpline
 		rot.clear();
 	}
 
+	PositionRotation At(double t) const
+	{
+		return curve->At(t);
+	}
+
 	void Update()
 	{
  		curve.reset(IClampedSplineFixedStep::Create(timeStep, pos, rot));
 	}
 
-	void Append(double t, const std::pair<Core::Vector3D, Core::Vector3D>& p)
+	void Append(double t, const PositionRotation& p)
 	{
-		pos.push_back(p.first);
-		rot.push_back(p.second);
+		pos.push_back(p.position);
+		rot.push_back(p.rotation);
 	}
 };
