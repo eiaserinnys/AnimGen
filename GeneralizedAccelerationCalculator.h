@@ -2,7 +2,8 @@
 
 #include "SolutionVector.h"
 #include "SolutionSpline.h"
-#include "RobotCoordinate.h"
+
+#include "GeneralizedCoordinate.h"
 
 //------------------------------------------------------------------------------
 struct GeneralizedAccelerationCalculator

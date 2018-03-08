@@ -11,6 +11,8 @@
 #include "Residual.h"
 #include "Jacobian.h"
 
+#include "SolutionCoordinate.h"
+
 #include "SolverHelper.h"
 #include "SolverContext.h"
 #include "SolverLog.h"

@@ -75,11 +75,14 @@
     <Filter Include="Solver\Utility">
       <UniqueIdentifier>{7f06fb03-2694-4d57-abdf-b7312f1f98ce}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Solver\SolutionVector">
-      <UniqueIdentifier>{e1a1d1f3-d08b-4903-8325-561b7b54869b}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Solver\Component">
       <UniqueIdentifier>{99c6b9d2-99b6-48b1-bf3c-c48c9351cdf9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Solver\GeneralizedCoordinate">
+      <UniqueIdentifier>{599544a2-9e4e-4843-94b1-bdf6f66b1a01}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Solver\Solution">
+      <UniqueIdentifier>{e1a1d1f3-d08b-4903-8325-561b7b54869b}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -183,10 +186,7 @@
       <Filter>Solver\Utility</Filter>
     </ClCompile>
     <ClCompile Include="SolutionVector.cpp">
-      <Filter>Solver\SolutionVector</Filter>
-    </ClCompile>
-    <ClCompile Include="GeneralizedAccelerationCalculator.cpp">
-      <Filter>Solver\SolutionVector</Filter>
+      <Filter>Solver\Solution</Filter>
     </ClCompile>
     <ClCompile Include="Residual.cpp">
       <Filter>Solver\Component</Filter>
@@ -202,6 +202,15 @@
     </ClCompile>
     <ClCompile Include="Log.cpp">
       <Filter>Solver\Utility</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneralizedAccelerationCalculator.cpp">
+      <Filter>Solver\GeneralizedCoordinate</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneralizedCoordinate.cpp">
+      <Filter>Solver\GeneralizedCoordinate</Filter>
+    </ClCompile>
+    <ClCompile Include="SolutionCoordinate.cpp">
+      <Filter>Solver\Solution</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -356,13 +365,10 @@
       <Filter>Solver\Utility</Filter>
     </ClInclude>
     <ClInclude Include="SolutionVector.h">
-      <Filter>Solver\SolutionVector</Filter>
-    </ClInclude>
-    <ClInclude Include="GeneralizedAccelerationCalculator.h">
-      <Filter>Solver\SolutionVector</Filter>
+      <Filter>Solver\Solution</Filter>
     </ClInclude>
     <ClInclude Include="SolutionSpline.h">
-      <Filter>Solver\SolutionVector</Filter>
+      <Filter>Solver\Solution</Filter>
     </ClInclude>
     <ClInclude Include="Coefficient.h">
       <Filter>Solver\Component</Filter>
@@ -381,6 +387,15 @@
     </ClInclude>
     <ClInclude Include="Log.h">
       <Filter>Solver\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="GeneralizedAccelerationCalculator.h">
+      <Filter>Solver\GeneralizedCoordinate</Filter>
+    </ClInclude>
+    <ClInclude Include="GeneralizedCoordinate.h">
+      <Filter>Solver\GeneralizedCoordinate</Filter>
+    </ClInclude>
+    <ClInclude Include="SolutionCoordinate.h">
+      <Filter>Solver\Solution</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

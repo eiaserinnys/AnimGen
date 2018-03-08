@@ -13,6 +13,7 @@
 #include "SolverLog.h"
 
 #include "GeneralizedAccelerationCalculator.h"
+#include "SolutionCoordinate.h"
 
 using namespace std;
 using namespace Core;
@@ -24,6 +25,8 @@ public:
 	SolutionCoordinate dest;
 
 	Coefficient one;
+	Coefficient task;
+
 	::Variable variables;
 	::Residual residual;
 	::Jacobian jacobian;
@@ -36,6 +39,7 @@ public:
 		const SolutionCoordinate& dest,
 		int phases)
 		: one(1)
+		, task(100)
 		, dest(dest)
 	{
 		solution.reset(ISolutionVector::Create(start, phases));
@@ -98,7 +102,7 @@ public:
 
 		residual.Begin();
 
-		error += LoadResidual_DestinationTask(solution.get(), dest, one, writeDebug);
+		error += LoadResidual_DestinationTask(solution.get(), dest, task, writeDebug);
 
 		error += LoadResidual_GeneralAcceleration(solution.get(), one, writeDebug);
 
@@ -112,7 +116,7 @@ public:
 	{
 		jacobian.Begin();
 
-		LoadJacobian_DestinationTask(solution.get(), dest, one);
+		LoadJacobian_DestinationTask(solution.get(), dest, task);
 
 		LoadJacobian_GeneralAcceleration(solution.get(), one);
 

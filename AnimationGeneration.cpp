@@ -42,8 +42,8 @@ public:
 		dest.foot[0].first += Vector3D(2.5, 0, 0);
 		dest.foot[1].first += Vector3D(2.5, 0, 0);
 
-		//solver.reset(ISolver::Create(begin, dest, 8));
-		solver.reset(ISolver::Create(begin, dest, 1));
+		solver.reset(ISolver::Create(begin, dest, 2));
+		//solver.reset(ISolver::Create(begin, dest, 1));
 	}
 
 	//--------------------------------------------------------------------------

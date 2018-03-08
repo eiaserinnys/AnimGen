@@ -14,6 +14,8 @@
 #include "RobotBody.h"
 #include "RobotCoordinate.h"
 
+#include "GeneralizedCoordinate.h"
+
 class Robot : public MeshT<IRobot> {
 public:
 	Robot();

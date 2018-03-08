@@ -139,6 +139,7 @@
     <ClCompile Include="DeferredRendrerer.cpp" />
     <ClCompile Include="DiagnosticRenderer.cpp" />
     <ClCompile Include="GeneralizedAccelerationCalculator.cpp" />
+    <ClCompile Include="GeneralizedCoordinate.cpp" />
     <ClCompile Include="Log.cpp" />
     <ClCompile Include="Residual.cpp" />
     <ClCompile Include="exp-map.cpp" />
@@ -166,6 +167,7 @@
     <ClCompile Include="RobotCoordinate.cpp" />
     <ClCompile Include="RobotIK.cpp" />
     <ClCompile Include="SceneDescriptor.cpp" />
+    <ClCompile Include="SolutionCoordinate.cpp" />
     <ClCompile Include="SolutionVector.cpp" />
     <ClCompile Include="Solver.cpp" />
     <ClCompile Include="SolverContext.cpp" />
@@ -189,6 +191,7 @@
     <ClInclude Include="DiagnosticRenderer.h" />
     <ClInclude Include="DXMathTransform.h" />
     <ClInclude Include="GeneralizedAccelerationCalculator.h" />
+    <ClInclude Include="GeneralizedCoordinate.h" />
     <ClInclude Include="Log.h" />
     <ClInclude Include="Residual.h" />
     <ClInclude Include="exp-map.h" />
@@ -215,6 +218,7 @@
     <ClInclude Include="RobotIK.h" />
     <ClInclude Include="RobotImplementation.h" />
     <ClInclude Include="SceneDescriptor.h" />
+    <ClInclude Include="SolutionCoordinate.h" />
     <ClInclude Include="SolutionSpline.h" />
     <ClInclude Include="SolutionVector.h" />
     <ClInclude Include="Solver.h" />

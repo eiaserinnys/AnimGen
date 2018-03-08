@@ -1,6 +1,7 @@
 #pragma once
 
-#include "RobotCoordinate.h"
+#include "GeneralizedCoordinate.h"
+#include "SolutionCoordinate.h"
 
 class ISpline;
 

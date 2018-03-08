@@ -3,7 +3,6 @@
 #include <memory>
 
 #include "SolutionVector.h"
-#include "RobotCoordinate.h"
 
 #include "Variable.h"
 #include "Residual.h"

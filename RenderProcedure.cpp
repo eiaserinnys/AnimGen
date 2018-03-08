@@ -5,6 +5,8 @@
 #include <DirectXTex.h>
 #include "Vector.h"
 
+#include "GeneralizedCoordinate.h"
+
 #include "RenderProcedure.h"
 
 using namespace std;

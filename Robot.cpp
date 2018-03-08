@@ -12,6 +12,8 @@
 #include "Matrix.h"
 #include "ExponentialMap.h"
 
+#include "SolutionCoordinate.h"
+
 #include "RobotImplementation.h"
 #include "RobotBuilder.h"
 

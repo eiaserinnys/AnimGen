@@ -313,6 +313,8 @@ ISolutionVector* ISolutionVector::Create(
 {
 	vector<pair<double, SolutionCoordinate>> coords;
 
+	srand(0);
+
 	auto& noise = []()
 	{
 		return (((double)rand() / RAND_MAX) * 2 - 1) * 0.0001;
