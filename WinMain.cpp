@@ -14,6 +14,7 @@ static unique_ptr<IThisApp> thisApp;
 
 extern void TestVector();
 extern void TestCurve();
+extern void TestDamage();
 
 //------------------------------------------------------------------------------
 INT WINAPI wWinMain(
@@ -27,6 +28,7 @@ INT WINAPI wWinMain(
 
 	TestVector();
 	TestCurve();
+	TestDamage();
 	//return 0;
 
 	auto ret = WindowsUtility::RegisterAndCreateOverlappedWindow(

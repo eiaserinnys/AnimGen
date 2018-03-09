@@ -176,6 +176,7 @@
     <ClCompile Include="SolverLog.cpp" />
     <ClCompile Include="Spline.cpp" />
     <ClCompile Include="SplineDiagnostic.cpp" />
+    <ClCompile Include="TestDamage.cpp" />
     <ClCompile Include="ThisApp.cpp" />
     <ClCompile Include="UIRenderer.cpp" />
     <ClCompile Include="Variable.cpp" />

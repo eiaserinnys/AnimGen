@@ -215,6 +215,9 @@
     <ClCompile Include="PositionRotation.cpp">
       <Filter>Mathematics\Spline</Filter>
     </ClCompile>
+    <ClCompile Include="TestDamage.cpp">
+      <Filter>ThisApp</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="RenderContext.h">
