@@ -628,6 +628,13 @@ void FilterArmors()
 }
 
 //------------------------------------------------------------------------------
+template <class T>
+inline void hash_combine(std::size_t & s, const T & v)
+{
+	std::hash<T> h;
+	s ^= h(v) + 0x9e3779b9 + (s << 6) + (s >> 2);
+}
+
 struct Combination
 {
 	int* skills;
@@ -701,11 +708,6 @@ struct Combination
 list<Combination*> g_all;
 
 //------------------------------------------------------------------------------
-void PopulateArmors(GeneralizedArmor** selected, int channel)
-{
-}
-
-//------------------------------------------------------------------------------
 void PopulateArmors()
 {
 	// 초기 리스트를 만든다
@@ -732,6 +734,7 @@ void PopulateArmors()
 
 		auto& gs = *g_generalized[(Armor::PartType) channel];
 
+		// 모든 조합 x 조합의 페어를 일단 생성
 		for (auto it = all.begin(); it != all.end(); ++it)
 		{
 			for (int i = 0; i < gs.size(); ++i)
@@ -743,6 +746,8 @@ void PopulateArmors()
 			}
 		}
 
+		// 생성된 페어를 평가한다
+		int rejected = 0;
 		for (auto it = next.begin(); it != next.end(); )
 		{
 			auto toEvaluate = *it;
@@ -764,6 +769,7 @@ void PopulateArmors()
 
 			if (bad)
 			{
+				++rejected;
 				delete toEvaluate;
 				it = next.erase(it);
 			}
@@ -798,7 +804,7 @@ void PopulateArmors()
 
 		all.swap(next);
 
-		WindowsUtility::Debug(L"%d---------------------------------------\n", all.size());
+		WindowsUtility::Debug(L"%d,%d---------------------------------------\n", all.size(), rejected);
 	}
 }
 
