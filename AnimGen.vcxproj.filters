@@ -221,7 +221,7 @@
     <ClCompile Include="TestDamage.cpp">
       <Filter>ThisApp\MHW</Filter>
     </ClCompile>
-    <ClCompile Include="GeneralizedArmor.cpp">
+    <ClCompile Include="GeneralizedCombination.cpp">
       <Filter>ThisApp\MHW</Filter>
     </ClCompile>
   </ItemGroup>
@@ -412,9 +412,6 @@
     <ClInclude Include="PositionRotation.h">
       <Filter>Mathematics\Spline</Filter>
     </ClInclude>
-    <ClInclude Include="GeneralizedArmor.h">
-      <Filter>ThisApp\MHW</Filter>
-    </ClInclude>
     <ClInclude Include="Armor.h">
       <Filter>ThisApp\MHW</Filter>
     </ClInclude>
@@ -422,6 +419,9 @@
       <Filter>ThisApp\MHW</Filter>
     </ClInclude>
     <ClInclude Include="Skill.h">
+      <Filter>ThisApp\MHW</Filter>
+    </ClInclude>
+    <ClInclude Include="GeneralizedCombination.h">
       <Filter>ThisApp\MHW</Filter>
     </ClInclude>
   </ItemGroup>

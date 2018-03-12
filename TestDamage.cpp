@@ -11,7 +11,7 @@
 #include "Skill.h"
 #include "Decorator.h"
 #include "Armor.h"
-#include "GeneralizedArmor.h"
+#include "GeneralizedCombination.h"
 
 using namespace std;
 //using namespace Core;
@@ -25,6 +25,8 @@ static map<Armor::PartType, vector<Armor*>*> g_armors;
 static map<Armor::PartType, vector<GeneralizedArmor*>*> g_generalized;
 
 std::vector<Decorator*> g_decorators;
+
+std::vector<Decorator*> g_skillToDecorator;
 
 Core::Vector2D WeaponValue() { return Core::Vector2D(204, 270); }
 double WeaponMultipler() { return 1.2; }
@@ -436,24 +438,36 @@ void FilterArmors()
 
 			bool bad = false;
 
-			for (int k = 0; k < g_generalized[(Armor::PartType) i]->size(); ++k)
+			for (int k = j + 1; k < g_generalized[(Armor::PartType) i]->size(); )
 			{
-				if (j == k) { continue; }
-
 				auto* rhs = (*g_generalized[(Armor::PartType) i])[k];
 
 				if (*cur <= *rhs)
 				{
-#if 0
 					WindowsUtility::Debug(L"Dropping '");
 					cur->DumpSimple();
 					WindowsUtility::Debug(L"' for '");
 					rhs->DumpSimple();
 					WindowsUtility::Debug(L"'.\n");
-#endif
 
 					bad = true;
 					break;
+				}
+				else if (*rhs <= *cur)
+				{
+					WindowsUtility::Debug(L"Dropping '");
+					rhs->DumpSimple();
+					WindowsUtility::Debug(L"' for '");
+					cur->DumpSimple();
+					WindowsUtility::Debug(L"'.\n");
+
+					g_generalized[(Armor::PartType) i]->erase(
+						g_generalized[(Armor::PartType) i]->begin() + k);
+					delete rhs;
+				}
+				else
+				{
+					k++;
 				}
 			}
 
@@ -484,91 +498,13 @@ void FilterArmors()
 	WindowsUtility::Debug(L"Total Combination = %d\n", total);
 }
 
-//------------------------------------------------------------------------------
-template <class T>
-inline void hash_combine(std::size_t & s, const T & v)
-{
-	std::hash<T> h;
-	s ^= h(v) + 0x9e3779b9 + (s << 6) + (s >> 2);
-}
-
-struct Combination
-{
-	int* skills;
-	int skillCount;
-	GeneralizedArmor* source[5];
-
-	Combination(int skillCount)
-		: skillCount(skillCount)
-	{
-		skills = new int[skillCount] { 0 };
-
-		memset(source, 0, sizeof(GeneralizedArmor*) * COUNT_OF(source));
-	}
-
-	~Combination()
-	{
-		delete[] skills;
-	}
-
-	Combination& operator = (Combination& rhs)
-	{
-		delete[] skills;
-
-		skillCount = rhs.skillCount;
-		skills = new int[skillCount];
-
-		memcpy(skills, rhs.skills, sizeof(int) * skillCount);
-
-		memcpy(source, rhs.source, sizeof(GeneralizedArmor*) * COUNT_OF(source));
-
-		return *this;
-	}
-
-	bool operator == (const Combination& rhs)
-	{
-		for (int i = 0; i < skillCount; ++i)
-		{
-			if (skills[i] != rhs.skills[i])
-			{
-				return false;
-			}
-		}
-
-		return true;
-	}
-
-	bool operator <= (const Combination& rhs)
-	{
-		for (int i = 0; i < skillCount; ++i)
-		{
-			if (skills[i] > rhs.skills[i])
-			{
-				return false;
-			}
-		}
-
-		return true;
-	}
-
-	void Combine(GeneralizedArmor* armor, int channel)
-	{
-		source[channel] = armor;
-
-		for (int i = 0; i < skillCount; ++i)
-		{
-			skills[i] += armor->skills[i];
-		}
-	}
-};
-
-list<Combination*> g_all;
+list<GeneralizedCombination*> g_all;
 
 //------------------------------------------------------------------------------
 void PopulateArmors()
 {
 	// 초기 리스트를 만든다
-	list<Combination*> all;
+	list<GeneralizedCombination*> all;
 
 	{
 		int channel = 0;
@@ -576,8 +512,8 @@ void PopulateArmors()
 
 		for (int i = 0; i < gs.size(); ++i)
 		{
-			auto newComb = new Combination(COUNT_OF(g_skills));
-			newComb->Combine(gs[i], channel);
+			auto newComb = new GeneralizedCombination(COUNT_OF(g_skills));
+			newComb->Combine(*gs[i]);
 			all.push_back(newComb);
 		}
 
@@ -587,7 +523,7 @@ void PopulateArmors()
 	// 다음 채널을 추가해서 늘린다
 	for (int channel = 1; channel < Armor::Count; ++channel)
 	{
-		list<Combination*> next;
+		list<GeneralizedCombination*> next;
 
 		auto& gs = *g_generalized[(Armor::PartType) channel];
 
@@ -596,9 +532,9 @@ void PopulateArmors()
 		{
 			for (int i = 0; i < gs.size(); ++i)
 			{
-				auto newComb = new Combination(COUNT_OF(g_skills));
+				auto newComb = new GeneralizedCombination(COUNT_OF(g_skills));
 				*newComb = **it;
-				newComb->Combine(gs[i], channel);
+				newComb->Combine(*gs[i]);
 				next.push_back(newComb);
 			}
 		}
@@ -614,13 +550,39 @@ void PopulateArmors()
 			auto jt = it;
 			jt++;
 
-			for (; jt != next.end(); ++jt)
+			for (; jt != next.end();)
 			{
 				auto target = *jt;
 				if (*toEvaluate <= *target)
 				{
+#if 0
+					WindowsUtility::Debug(L"Dropping '");
+					toEvaluate->DumpSimple();
+					WindowsUtility::Debug(L"' for '");
+					target->DumpSimple();
+					WindowsUtility::Debug(L"'.\n");
+#endif
+
 					bad = true;
 					break;
+				}
+				else if (*target <= *toEvaluate)
+				{
+#if 0
+					WindowsUtility::Debug(L"Dropping '");
+					target->DumpSimple();
+					WindowsUtility::Debug(L"' for '");
+					toEvaluate->DumpSimple();
+					WindowsUtility::Debug(L"'.\n");
+#endif
+
+					++rejected;
+					delete target;
+					jt = next.erase(jt);
+				}
+				else
+				{
+					jt++;
 				}
 			}
 
@@ -632,24 +594,6 @@ void PopulateArmors()
 			}
 			else
 			{
-#if 1
-				for (int i = 0; i < COUNT_OF(g_skills); ++i)
-				{
-					if (toEvaluate->skills[i] > 0)
-					{
-						WindowsUtility::Debug(
-							L"%d\t",
-							toEvaluate->skills[i]);
-					}
-					else
-					{
-						WindowsUtility::Debug(L"\t");
-					}
-				}
-
-				WindowsUtility::Debug(L"\n");
-#endif
-
 				it++;
 			}
 		}
@@ -661,8 +605,71 @@ void PopulateArmors()
 
 		all.swap(next);
 
-		WindowsUtility::Debug(L"%d,%d---------------------------------------\n", all.size(), rejected);
+		WindowsUtility::Debug(L"%d (%d)---------------------------------------\n", all.size(), rejected);
 	}
+
+	for (auto it = all.begin(); it != all.end(); ++it)
+	{
+		(*it)->Dump();
+	}
+
+#if 0
+	list<GeneralizedCombination*> skillOnly;
+	list<GeneralizedCombination*> slotOnly;
+
+	for (auto it = all.begin(); it != all.end(); ++it)
+	{
+		{
+			auto s = new GeneralizedCombination(**it);
+
+			memset(s->skills, 0, sizeof(int) * s->skillCount);
+
+			bool duplicated = false;
+			for (auto sit = slotOnly.begin(); sit != slotOnly.end(); ++sit)
+			{
+				if (**sit == *s)
+				{
+					duplicated = true;
+					delete s;
+					break;
+				}
+			}
+
+			if (!duplicated) { slotOnly.push_back(s); }
+		}
+
+		{
+			auto s = new GeneralizedCombination(**it);
+
+			memset(s->slots, 0, sizeof(int) * COUNT_OF(s->slots));
+
+			bool duplicated = false;
+			for (auto sit = skillOnly.begin(); sit != skillOnly.end(); ++sit)
+			{
+				if (**sit == *s)
+				{
+					duplicated = true;
+					delete s;
+					break;
+				}
+			}
+
+			if (!duplicated) { skillOnly.push_back(s); }
+		}
+	}
+
+	for (auto it = skillOnly.begin(); it != skillOnly.end(); ++it)
+	{
+		auto s = *it;
+		s->Dump();
+	}
+
+	for (auto it = slotOnly.begin(); it != slotOnly.end(); ++it)
+	{
+		auto s = *it;
+		s->Dump();
+	}
+#endif
 }
 
 //------------------------------------------------------------------------------
@@ -670,6 +677,20 @@ void TestDamage()
 {
 	LoadArmors();
 	LoadDecorators();
+
+	g_skillToDecorator.resize(COUNT_OF(g_skills), nullptr);
+
+	for (int i = 0; i < COUNT_OF(g_skills); ++i)
+	{
+		for (int j = 0; j < g_decorators.size(); ++j)
+		{
+			if (g_decorators[j]->skill == g_skills[i])
+			{
+				g_skillToDecorator[i] = g_decorators[j];
+				break;
+			}
+		}
+	}
 	
 	FilterArmors();
 
