@@ -32,7 +32,10 @@ Core::Vector2D WeaponValue() { return Core::Vector2D(204, 270); }
 double WeaponMultipler() { return 1.2; }
 double WeaponCritical() { return 0.15; }
 double BaseCriticalDamageRate() { return 1.25; }
-double MotionValue() { return 0.11; }
+double MotionValue(int chargeLevel) 
+{ 
+	return chargeLevel >= 3 ? 0.12 : 0.11; 
+}
 
 double PhysicalDefense() { return 0.45; }
 double ElementalDefense() { return 0.2; }
@@ -94,7 +97,7 @@ double ExploitWeakness(int level)
 }
 
 //------------------------------------------------------------------------------
-double FireDragonsGambit() { return 0.1; }
+double FireDragonsGambit() { return 0.35; }
 
 //------------------------------------------------------------------------------
 struct Desc
@@ -105,6 +108,8 @@ struct Desc
 	double superCritical;
 	double exploitWeakness;
 	double fireDragonGambit;
+	double arrowUpgrade;
+	int chargeLevel;
 };
 
 //------------------------------------------------------------------------------
@@ -120,12 +125,17 @@ void Calculate(const Desc& desc)
 		rawDamage +
 		Core::Vector2D(
 			desc.attackBonus.first, 
-			desc.elementalBonus.first);
+			desc.elementalBonus.first / 10);
+
+	if (rawDamageWithBonus.y >= rawDamage.y * 1.3)
+	{
+		rawDamageWithBonus.y = rawDamage.y * 1.3;
+	}
 
 	// 기본 대미지 * 강격병 * 거리 크리티컬
 	Core::Vector2D modifiedBaseDamage(
-		rawDamageWithBonus.x * 1.5 * 1.5,
-		rawDamageWithBonus.y * 1.5 * 1.5 * (1 + desc.elementalBonus.second));
+		rawDamageWithBonus.x * (1 + desc.arrowUpgrade) * 1.5 * 1.5,
+		rawDamageWithBonus.y * (1 + desc.elementalBonus.second));
 
 	// 회심률
 	auto criticalProbability =
@@ -147,40 +157,81 @@ void Calculate(const Desc& desc)
 		desc.fireDragonGambit;
 
 	// 기대 대미지
+	//Core::Vector2D expectedDamage(
+	//	modifiedBaseDamage.x * criticalProbability * physicalCriticalRate +
+	//	modifiedBaseDamage.x * (1 - criticalProbability),
+	//	modifiedBaseDamage.y * criticalProbability * elementalCriticalRate +
+	//	modifiedBaseDamage.y * (1 - criticalProbability)
+	//);
+	Core::Vector2D expectedDamage(
+		modifiedBaseDamage.x, 
+		modifiedBaseDamage.y);
+
 	Core::Vector2D criticalExpectedDamage(
-		modifiedBaseDamage.x * criticalProbability * physicalCriticalRate +
-		modifiedBaseDamage.x * (1 - criticalProbability),
-		modifiedBaseDamage.y * criticalProbability * elementalCriticalRate +
-		modifiedBaseDamage.y * (1 - criticalProbability)
-	);
+		modifiedBaseDamage.x * physicalCriticalRate,
+		modifiedBaseDamage.y * elementalCriticalRate);
 
 	// 모션 적용
-	Core::Vector2D motionDamage = criticalExpectedDamage * MotionValue();
+	Core::Vector2D motionDamage =
+		expectedDamage *
+		Core::Vector2D(MotionValue(desc.chargeLevel), 1);
+	Core::Vector2D criticalMotionDamage =
+		criticalExpectedDamage * 
+		Core::Vector2D(MotionValue(desc.chargeLevel), 1);
 
 	// 방어력 적용
-	Core::Vector2D finalDamage =
+	Core::Vector2D appliedDamage =
 		motionDamage *
 		Core::Vector2D(PhysicalDefense(), ElementalDefense());
+	Core::Vector2D criticalAppliedDamage =
+		criticalMotionDamage *
+		Core::Vector2D(PhysicalDefense(), ElementalDefense());
+
+	// 최종 기대 대미지
+	Core::Vector2D finalExpectedDamage =
+		Core::Vector2D(
+			int(appliedDamage.x) * (1 - criticalProbability) +
+			int(criticalAppliedDamage.x) * criticalProbability,
+			int(appliedDamage.y) * (1 - criticalProbability) +
+			int(criticalAppliedDamage.y) * criticalProbability);
 
 	fprintf(
 		file,
 		"%.3f\t%.3f\t"
 		"%.3f\t%.3f\t"
+
 		"%.3f\t%.3f\t%.3f\t"
+
 		"%.3f\t%.3f\t"
 		"%.3f\t%.3f\t"
+
+		"%.3f\t%.3f\t"
+		"%.3f\t%.3f\t"
+
+		"%.3f\t%.3f\t"
+		"%.3f\t%.3f\t"
+
 		"%.3f\t%.3f\t"
 		"%.3f\t"
-		"%d"
+
 		"\n",
 		rawDamageWithBonus.x, rawDamageWithBonus.y,
 		modifiedBaseDamage.x, modifiedBaseDamage.y,
-		criticalProbability, physicalCriticalRate, elementalCriticalRate,
+
+		criticalProbability,
+		physicalCriticalRate, elementalCriticalRate, 
+
+		expectedDamage.x, expectedDamage.y,
 		criticalExpectedDamage.x, criticalExpectedDamage.y,
+
 		motionDamage.x, motionDamage.y,
-		finalDamage.x, finalDamage.y,
-		finalDamage.x + finalDamage.y, 
-		(int) (finalDamage.x + finalDamage.y));
+		criticalMotionDamage.x, criticalMotionDamage.y,
+
+		appliedDamage.x, appliedDamage.y,
+		criticalAppliedDamage.x, criticalAppliedDamage.y,
+
+		finalExpectedDamage.x, finalExpectedDamage.y,
+		finalExpectedDamage.x + finalExpectedDamage.y);
 }
 
 //------------------------------------------------------------------------------
@@ -501,11 +552,76 @@ void FilterArmors()
 list<GeneralizedCombination*> g_all;
 
 //------------------------------------------------------------------------------
+int RejectWorseCombinations(list<GeneralizedCombination*>& next, bool dump)
+{
+	// 생성된 페어를 평가한다
+	int rejected = 0;
+	for (auto it = next.begin(); it != next.end(); )
+	{
+		auto toEvaluate = *it;
+
+		bool bad = false;
+
+		auto jt = it;
+		jt++;
+
+		for (; jt != next.end();)
+		{
+			auto target = *jt;
+			if (*toEvaluate <= *target)
+			{
+				if (dump)
+				{
+					WindowsUtility::Debug(L"Dropping '");
+					toEvaluate->DumpSimple();
+					WindowsUtility::Debug(L"' for '");
+					target->DumpSimple();
+					WindowsUtility::Debug(L"'.\n");
+				}
+
+				bad = true;
+				break;
+			}
+			else if (*target <= *toEvaluate)
+			{
+				if (dump)
+				{
+					WindowsUtility::Debug(L"Dropping '");
+					target->DumpSimple();
+					WindowsUtility::Debug(L"' for '");
+					toEvaluate->DumpSimple();
+					WindowsUtility::Debug(L"'.\n");
+				}
+
+				++rejected;
+				delete target;
+				jt = next.erase(jt);
+			}
+			else
+			{
+				jt++;
+			}
+		}
+
+		if (bad)
+		{
+			++rejected;
+			delete toEvaluate;
+			it = next.erase(it);
+		}
+		else
+		{
+			it++;
+		}
+	}
+
+	return rejected;
+}
+
+//------------------------------------------------------------------------------
 void PopulateArmors()
 {
 	// 초기 리스트를 만든다
-	list<GeneralizedCombination*> all;
-
 	{
 		int channel = 0;
 		auto& gs = *g_generalized[(Armor::PartType) channel];
@@ -514,10 +630,10 @@ void PopulateArmors()
 		{
 			auto newComb = new GeneralizedCombination(COUNT_OF(g_skills));
 			newComb->Combine(*gs[i]);
-			all.push_back(newComb);
+			g_all.push_back(newComb);
 		}
 
-		WindowsUtility::Debug(L"%d\n", all.size());
+		WindowsUtility::Debug(L"%d\n", g_all.size());
 	}
 
 	// 다음 채널을 추가해서 늘린다
@@ -528,7 +644,7 @@ void PopulateArmors()
 		auto& gs = *g_generalized[(Armor::PartType) channel];
 
 		// 모든 조합 x 조합의 페어를 일단 생성
-		for (auto it = all.begin(); it != all.end(); ++it)
+		for (auto it = g_all.begin(); it != g_all.end(); ++it)
 		{
 			for (int i = 0; i < gs.size(); ++i)
 			{
@@ -539,137 +655,117 @@ void PopulateArmors()
 			}
 		}
 
-		// 생성된 페어를 평가한다
-		int rejected = 0;
-		for (auto it = next.begin(); it != next.end(); )
-		{
-			auto toEvaluate = *it;
+		int rejected = RejectWorseCombinations(next, false);
 
-			bool bad = false;
-
-			auto jt = it;
-			jt++;
-
-			for (; jt != next.end();)
-			{
-				auto target = *jt;
-				if (*toEvaluate <= *target)
-				{
-#if 0
-					WindowsUtility::Debug(L"Dropping '");
-					toEvaluate->DumpSimple();
-					WindowsUtility::Debug(L"' for '");
-					target->DumpSimple();
-					WindowsUtility::Debug(L"'.\n");
-#endif
-
-					bad = true;
-					break;
-				}
-				else if (*target <= *toEvaluate)
-				{
-#if 0
-					WindowsUtility::Debug(L"Dropping '");
-					target->DumpSimple();
-					WindowsUtility::Debug(L"' for '");
-					toEvaluate->DumpSimple();
-					WindowsUtility::Debug(L"'.\n");
-#endif
-
-					++rejected;
-					delete target;
-					jt = next.erase(jt);
-				}
-				else
-				{
-					jt++;
-				}
-			}
-
-			if (bad)
-			{
-				++rejected;
-				delete toEvaluate;
-				it = next.erase(it);
-			}
-			else
-			{
-				it++;
-			}
-		}
-
-		for (auto it = all.begin(); it != all.end(); ++it)
+		for (auto it = g_all.begin(); it != g_all.end(); ++it)
 		{
 			delete *it;
 		}
 
-		all.swap(next);
+		g_all.swap(next);
 
-		WindowsUtility::Debug(L"%d (%d)---------------------------------------\n", all.size(), rejected);
+		WindowsUtility::Debug(L"%d (%d)---------------------------------------\n", g_all.size(), rejected);
 	}
+}
 
-	for (auto it = all.begin(); it != all.end(); ++it)
+//------------------------------------------------------------------------------
+void PopulateDecorators()
+{
+	// 작은 소켓부터 채워가며 리스트를 구축해보자
+	// 소켓 크기에 대해서 순회하는 것에 주의
+	for (int socket = 2; socket >= 0; --socket)
 	{
-		(*it)->Dump();
-	}
+		int newComb;
 
-#if 0
-	list<GeneralizedCombination*> skillOnly;
-	list<GeneralizedCombination*> slotOnly;
-
-	for (auto it = all.begin(); it != all.end(); ++it)
-	{
+		do
 		{
-			auto s = new GeneralizedCombination(**it);
+			list<GeneralizedCombination*> next;
 
-			memset(s->skills, 0, sizeof(int) * s->skillCount);
+			newComb = 0;
+			int rejected0 = 0, rejected1 = 0;
 
-			bool duplicated = false;
-			for (auto sit = slotOnly.begin(); sit != slotOnly.end(); ++sit)
+			auto& AddIfBetter = [&](GeneralizedCombination* newCom) -> bool
 			{
-				if (**sit == *s)
+				bool worse = false;
+
+				for (auto jt = next.begin(); jt != next.end(); ++jt)
 				{
-					duplicated = true;
-					delete s;
-					break;
+					if (*newCom <= **jt)
+					{
+						worse = true;
+						break;
+					}
+				}
+
+				if (!worse)
+				{
+					next.push_back(newCom);
+					return true;
+				}
+				else
+				{
+					delete newCom;
+					rejected0++;
+					return false;
+				}
+			};
+
+			for (int d = 0; d < g_decorators.size(); ++d)
+			{
+				auto dec = g_decorators[d];
+				if (dec->slotSize <= socket + 1)
+				{
+					for (auto it = g_all.begin(); it != g_all.end(); ++it)
+					{
+						auto cur = *it;
+
+						auto nextCom = new GeneralizedCombination(*cur);
+
+						if (cur->slots[socket] > 0)
+						{
+							if (nextCom->skills[dec->skillIndex] + 1 <= g_skillMaxLevel[dec->skillIndex])
+							{
+								nextCom->skills[dec->skillIndex]++;
+								nextCom->slots[socket]--;
+
+								if (AddIfBetter(nextCom))
+								{
+									newComb++;
+								}
+							}
+						}
+						else
+						{
+							AddIfBetter(nextCom);
+						}
+					}
 				}
 			}
 
-			if (!duplicated) { slotOnly.push_back(s); }
-		}
+			// 중복된 페어를 제거한다
+			rejected1 = RejectWorseCombinations(next, false);
 
-		{
-			auto s = new GeneralizedCombination(**it);
-
-			memset(s->slots, 0, sizeof(int) * COUNT_OF(s->slots));
-
-			bool duplicated = false;
-			for (auto sit = skillOnly.begin(); sit != skillOnly.end(); ++sit)
+			for (auto it = g_all.begin(); it != g_all.end(); ++it)
 			{
-				if (**sit == *s)
-				{
-					duplicated = true;
-					delete s;
-					break;
-				}
+				delete *it;
 			}
 
-			if (!duplicated) { skillOnly.push_back(s); }
+			g_all.swap(next);
+
+			WindowsUtility::Debug(
+				L"Filling socket with size %d = %d (%d,%d)-----------\n",
+				socket + 1,
+				g_all.size(),
+				rejected0, 
+				rejected1);
+
+		} while (newComb > 0);
+
+		for (auto it = g_all.begin(); it != g_all.end(); ++it)
+		{
+			//(*it)->Dump();
 		}
 	}
-
-	for (auto it = skillOnly.begin(); it != skillOnly.end(); ++it)
-	{
-		auto s = *it;
-		s->Dump();
-	}
-
-	for (auto it = slotOnly.begin(); it != slotOnly.end(); ++it)
-	{
-		auto s = *it;
-		s->Dump();
-	}
-#endif
 }
 
 //------------------------------------------------------------------------------
@@ -696,10 +792,69 @@ void TestDamage()
 
 	PopulateArmors();
 
+	// 무기 1슬롯을 더 뚫는다
+	for (auto it = g_all.begin(); it != g_all.end(); ++it)
+	{
+		auto comb = *it;
+		comb->slots[0]++;
+	}
+
+	PopulateDecorators();
+
 	fopen_s(&file, "log_damage.txt", "w");
 
 	Desc desc;
 
+	for (auto it = g_all.begin(); it != g_all.end(); ++it)
+	{
+		auto comb = *it;
+
+		//0L"공격",
+		//1L"간파",
+		//2L"슈퍼 회심",
+		//3L"약점 특효",
+		//4L"번개속성 공격 강화",
+		//5L"화룡의 비기",
+		//6L"통상탄/통상화살 강화",
+		//7L"산탄/강사 강화",
+		//8L"활 모으기 단계 해제",
+		//9L"체술",
+
+		bool arrow = 
+			(comb->skills[6] == 1 && comb->skills[7] == 1) ||
+			(comb->skills[6] == 0 && comb->skills[7] == 0);
+
+		bool gambit = comb->skills[5] >= 2 || comb->skills[5] >= 0;
+
+		if (arrow && gambit)
+		{
+			desc.attackBonus = AttackSkillBonus(comb->skills[0]);
+			desc.criticalEye = CriticalEye(comb->skills[1]);
+			desc.superCritical = SuperCritical(comb->skills[2]);
+			desc.exploitWeakness = ExploitWeakness(comb->skills[3]);
+			desc.elementalBonus = ElementalSkillLevel(comb->skills[4]);
+			desc.fireDragonGambit = comb->skills[5] >= 2 ? FireDragonsGambit() : 0;
+			desc.arrowUpgrade = comb->skills[6] >= 1 && comb->skills[7] >= 1 ? 0.1 : 0;
+			desc.chargeLevel = comb->skills[8] >= 1 ? 3 : 2;
+
+			fprintf(
+				file,
+				"%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t",
+				comb->skills[0],
+				comb->skills[1],
+				comb->skills[2],
+				comb->skills[3],
+				comb->skills[4],
+				comb->skills[5],
+				comb->skills[6],
+				comb->skills[7],
+				comb->skills[8]);
+
+			Calculate(desc);
+		}
+	}
+
+#if 0
 	for (int a = 0; a <= MaxAttackSkillLevel(); ++a)
 	{
 		desc.attackBonus = AttackSkillBonus(a);
@@ -737,6 +892,7 @@ void TestDamage()
 
 		}
 	}
+#endif
 
 	fclose(file);
 }

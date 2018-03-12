@@ -10,10 +10,6 @@
 
 using namespace std;
 
-// 싱글 스레드 가정 핵
-static int skillLhs[1024];
-static int skillRhs[1024];
-
 //------------------------------------------------------------------------------
 GeneralizedCombination::GeneralizedCombination(const GeneralizedCombination& rhs)
 {
@@ -76,95 +72,84 @@ bool GeneralizedCombination::operator == (const GeneralizedCombination& rhs)
 bool GeneralizedCombination::operator <= (const GeneralizedCombination& rhs)
 {
 	// 계산을 위해서 복제한다
-	memcpy(&skillLhs[0], skills, sizeof(int) * skillCount);
-	memcpy(&skillRhs[0], rhs.skills, sizeof(int) * skillCount);
-
-	int slotLhs[3];
-	int slotRhs[3];
-
-	memcpy(slotLhs, slots, sizeof(int) * COUNT_OF(slots));
-	memcpy(slotRhs, rhs.slots, sizeof(int) * COUNT_OF(slots));
+	int slotRhs[3] = { rhs.slots[0], rhs.slots[1],rhs.slots[2], };
 
 	// 스킬의 차분을 먼저 구한다
 	int skillLeft = 0;
 	for (int i = 0; i < skillCount; ++i)
 	{
-		int toSub = min(skillLhs[i], skillRhs[i]);
-		skillLhs[i] -= toSub;
-		skillRhs[i] -= toSub;
+		int curSkill = skills[i];
 
-		skillLeft += skillLhs[i];
-	}
+		int toSub = min(curSkill, rhs.skills[i]);
+		curSkill = curSkill - toSub;
 
-	// lhs에 남은 스킬을 rhs에 장식주를 달아서 커버 가능한지 확인한다
-	if (skillLeft > 0)
-	{
-		for (int i = 0; i < skillCount; ++i)
+		// lhs에 남은 스킬을 rhs에 장식주를 달아서 커버 가능한지 확인한다
+		if (curSkill > 0)
 		{
-			while (skillLhs[i] > 0)
+			if (g_skillToDecorator[i] != nullptr)
 			{
-				if (g_skillToDecorator[i] != nullptr)
+				int slotSize = g_skillToDecorator[i]->slotSize;
+
+				for (int j = slotSize - 1; j < COUNT_OF(slots); ++j)
 				{
-					int slotSize = g_skillToDecorator[i]->slotSize;
+					int toSub = min(curSkill, slotRhs[j]);
 
-					bool slotFound = false;
-
-					for (int j = slotSize - 1; j < 3; ++j)
+					if (toSub > 0)
 					{
-						int toSub = min(skillLhs[i], slotRhs[j]);
+						curSkill -= toSub;
+						slotRhs[j] -= toSub;
 
-						if (toSub > 0)
+						if (curSkill <= 0)
 						{
-							slotRhs[j] -= toSub;
-							skillLhs[i] -= toSub;
-							slotFound = true;
 							break;
 						}
 					}
+				}
 
-					if (!slotFound)
-					{
-						return false;
-					}
-				}
-				else
-				{
-					// 장식주로 커버가 안 되는 스킬이다
-					// 이 조합은 어쩔 수 없이 살려야 한다
-					return false;
-				}
-			}
-		}
-	}
-
-	// lhs의 슬롯에 꽂을 수 있는 장식주를
-	// rhs의 슬롯에도 꽂을 수 있는지 확인한다
-	if (slotLhs[0] + slotLhs[1] + slotLhs[2] > 0)
-	{
-		int slotSize = 0;
-		while (slotSize < COUNT_OF(slots))
-		{
-			if (slotLhs[slotSize] > 0)
-			{
-				bool selected = false;
-				for (int i = slotSize; i < COUNT_OF(slotLhs); ++i)
-				{
-					if (slotRhs[i] > 0)
-					{
-						slotLhs[slotSize]--;
-						slotRhs[i]--;
-						selected = true;
-						break;
-					}
-				}
-				if (!selected)
+				if (curSkill > 0)
 				{
 					return false;
 				}
 			}
 			else
 			{
-				slotSize++;
+				// 장식주로 커버가 안 되는 스킬이다
+				// 이 조합은 어쩔 수 없이 살려야 한다
+				return false;
+			}
+		}
+	}
+
+	// lhs의 슬롯에 꽂을 수 있는 장식주를
+	// rhs의 슬롯에도 꽂을 수 있는지 확인한다
+	if (SlotCount() > 0)
+	{
+		for (int slotSize = 0; slotSize < COUNT_OF(slots); ++slotSize)
+		{
+			int curSlot = slots[slotSize];
+
+			if (curSlot <= 0) { continue; }
+
+			bool selected = false;
+			for (int i = slotSize; i < COUNT_OF(slots); ++i)
+			{
+				int toSub = min(curSlot, slotRhs[i]);
+
+				if (toSub > 0)
+				{
+					curSlot -= toSub;
+					slotRhs[i] -= toSub;
+
+					if (curSlot <= 0)
+					{
+						break;
+					}
+				}
+			}
+			
+			if (curSlot > 0)
+			{
+				return false;
 			}
 		}
 	}
