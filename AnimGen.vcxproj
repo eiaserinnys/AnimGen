@@ -139,6 +139,7 @@
     <ClCompile Include="DeferredRendrerer.cpp" />
     <ClCompile Include="DiagnosticRenderer.cpp" />
     <ClCompile Include="GeneralizedAccelerationCalculator.cpp" />
+    <ClCompile Include="GeneralizedArmor.cpp" />
     <ClCompile Include="GeneralizedCoordinate.cpp" />
     <ClCompile Include="Log.cpp" />
     <ClCompile Include="PositionRotation.cpp" />
@@ -186,13 +187,16 @@
   <ItemGroup>
     <ClInclude Include="AngleHelper.h" />
     <ClInclude Include="AnimationGeneration.h" />
+    <ClInclude Include="Armor.h" />
     <ClInclude Include="BasicMeshT.h" />
     <ClInclude Include="ClampedSplineFixedStep.h" />
     <ClInclude Include="Coefficient.h" />
+    <ClInclude Include="Decorator.h" />
     <ClInclude Include="DeferredRenderer.h" />
     <ClInclude Include="DiagnosticRenderer.h" />
     <ClInclude Include="DXMathTransform.h" />
     <ClInclude Include="GeneralizedAccelerationCalculator.h" />
+    <ClInclude Include="GeneralizedArmor.h" />
     <ClInclude Include="GeneralizedCoordinate.h" />
     <ClInclude Include="Log.h" />
     <ClInclude Include="PositionRotation.h" />
@@ -221,6 +225,7 @@
     <ClInclude Include="RobotIK.h" />
     <ClInclude Include="RobotImplementation.h" />
     <ClInclude Include="SceneDescriptor.h" />
+    <ClInclude Include="Skill.h" />
     <ClInclude Include="SolutionCoordinate.h" />
     <ClInclude Include="SolutionSpline.h" />
     <ClInclude Include="SolutionVector.h" />

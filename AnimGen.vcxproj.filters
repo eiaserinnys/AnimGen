@@ -84,6 +84,9 @@
     <Filter Include="Solver\Solution">
       <UniqueIdentifier>{e1a1d1f3-d08b-4903-8325-561b7b54869b}</UniqueIdentifier>
     </Filter>
+    <Filter Include="ThisApp\MHW">
+      <UniqueIdentifier>{ed5a2acc-3f7a-49a5-867e-954fa4b5c382}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="RenderContext.cpp">
@@ -216,7 +219,10 @@
       <Filter>Mathematics\Spline</Filter>
     </ClCompile>
     <ClCompile Include="TestDamage.cpp">
-      <Filter>ThisApp</Filter>
+      <Filter>ThisApp\MHW</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneralizedArmor.cpp">
+      <Filter>ThisApp\MHW</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -405,6 +411,18 @@
     </ClInclude>
     <ClInclude Include="PositionRotation.h">
       <Filter>Mathematics\Spline</Filter>
+    </ClInclude>
+    <ClInclude Include="GeneralizedArmor.h">
+      <Filter>ThisApp\MHW</Filter>
+    </ClInclude>
+    <ClInclude Include="Armor.h">
+      <Filter>ThisApp\MHW</Filter>
+    </ClInclude>
+    <ClInclude Include="Decorator.h">
+      <Filter>ThisApp\MHW</Filter>
+    </ClInclude>
+    <ClInclude Include="Skill.h">
+      <Filter>ThisApp\MHW</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

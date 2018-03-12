@@ -8,10 +8,23 @@
 
 #include "Vector.h"
 
+#include "Skill.h"
+#include "Decorator.h"
+#include "Armor.h"
+#include "GeneralizedArmor.h"
+
 using namespace std;
 //using namespace Core;
 
 static FILE* file = nullptr;
+
+static vector<Set*> g_sets;
+
+static map<Armor::PartType, vector<Armor*>*> g_armors;
+
+static map<Armor::PartType, vector<GeneralizedArmor*>*> g_generalized;
+
+std::vector<Decorator*> g_decorators;
 
 Core::Vector2D WeaponValue() { return Core::Vector2D(204, 270); }
 double WeaponMultipler() { return 1.2; }
@@ -189,61 +202,6 @@ vector<wstring> Tokenize(const wstring& s_)
 }
 
 //------------------------------------------------------------------------------
-struct Set
-{
-	wstring name;
-	int rarity;
-	int defense;
-	wstring skill;
-};
-
-struct Armor
-{
-	enum PartType
-	{
-		Head,
-		Body,
-		Arm,
-		Waist,
-		Leg,
-
-		Count,
-	};
-
-	Set*			set;
-	PartType		type;
-	wstring			name;
-	vector<pair<wstring, int>>	skills;
-	vector<int>		slots;
-};
-
-static wstring g_skills[] =
-{
-	L"공격",
-	L"간파",
-	L"슈퍼 회심",
-	L"약점 특효",
-	L"번개속성 공격 강화",
-	L"화룡의 비기",
-
-	// 활 강화
-	L"통상탄/통상화살 강화",
-	L"산탄/강사 강화",
-	L"활 모으기 단계 해제",
-
-	// 유틸리티
-	L"체술",
-};
-
-struct Decorator
-{
-	wstring		name;
-	wstring		skill;
-	int			skillIndex;
-	int			rarity;
-	int			slotSize;
-};
-
 struct ArmorInstance
 {
 	Armor* original = nullptr;
@@ -254,72 +212,6 @@ struct ArmorInstance
 		memset(decorators, 0, sizeof(Decorator*) * COUNT_OF(decorators));
 	}
 };
-
-struct GeneralizedArmor
-{
-	int* skills;
-	int skillCount;
-	list<ArmorInstance*>	source;
-
-	GeneralizedArmor(int skillCount)
-		: skillCount(skillCount)
-	{
-		skills = new int[skillCount] { 0 };
-	}
-
-	~GeneralizedArmor()
-	{
-		delete[] skills;
-	}
-
-	GeneralizedArmor& operator = (GeneralizedArmor& rhs)
-	{
-		delete[] skills;
-
-		skillCount = rhs.skillCount;
-		skills = new int[skillCount];
-
-		memcpy(skills, rhs.skills, sizeof(int) * skillCount);
-
-		source = rhs.source;
-
-		return *this;
-	}
-
-	bool operator == (const GeneralizedArmor& rhs)
-	{
-		for (int i = 0; i < skillCount; ++i)
-		{
-			if (skills[i] != rhs.skills[i])
-			{
-				return false;
-			}
-		}
-
-		return true;
-	}
-
-	bool operator <= (const GeneralizedArmor& rhs)
-	{
-		for (int i = 0; i < skillCount; ++i)
-		{
-			if (skills[i] > rhs.skills[i])
-			{
-				return false;
-			}
-		}
-
-		return true;
-	}
-};
-
-static vector<Set*> g_sets;
-
-static map<Armor::PartType, vector<Armor*>*> g_armors;
-
-static map<Armor::PartType, vector<GeneralizedArmor*>*> g_generalized;
-
-static vector<Decorator*> g_decorators;
 
 //------------------------------------------------------------------------------
 void LoadArmors()
@@ -503,72 +395,38 @@ void FilterArmors()
 				}
 			}
 
-			// 장식주를 처리해보자!
-			ArmorInstance inst;
-			inst.original = part;
-
-			function<void(int)> SelectDecorator;
-			SelectDecorator = [&](int slot)
+			// 슬롯을 적용한다
+			for (int k = 0; k < part->slots.size(); ++k)
 			{
-				// 슬롯을 더 끼울 수 있으면
-				if (slot < part->slots.size())
+				general.slots[part->slots[k] - 1]++;
+			}
+
+			// scan
+			bool duplication = false;
+			for (int k = 0; k < g_generalized[(Armor::PartType) i]->size(); ++k)
+			{
+				auto prev = (*g_generalized[(Armor::PartType) i])[k];
+
+				if (*prev == general)
 				{
-					// 장식주를 모두 순회하면서
-					for (int d = 0; d < g_decorators.size(); ++d)
-					{
-						auto dec = g_decorators[d];
-
-						// 끼울 수 있는 장식주를 끼우고 
-						if (part->slots[slot] >= dec->slotSize)
-						{
-							int preserved = general.skills[dec->skillIndex];
-
-							inst.decorators[slot] = dec;
-
-							general.skills[dec->skillIndex]++;
-
-							// 다음 슬롯으로 넘어간다
-							SelectDecorator(slot + 1);
-
-							general.skills[dec->skillIndex] = preserved;
-						}
-					}
+					prev->source.push_back(part);
+					duplication = true;
+					break;
 				}
-				else
-				{
-					auto newInst = new ArmorInstance;
-					*newInst = inst;
+			}
 
-					// scan
-					bool duplication = false;
-					for (int k = 0; k < g_generalized[(Armor::PartType) i]->size(); ++k)
-					{
-						auto prev = (*g_generalized[(Armor::PartType) i])[k];
+			bool added = false;
+			if (!duplication)
+			{
+				auto newGeneral = new GeneralizedArmor(COUNT_OF(g_skills));
+				*newGeneral = general;
 
-						if (*prev == general)
-						{
-							prev->source.push_back(newInst);
-							duplication = true;
-							break;
-						}
-					}
+				newGeneral->source.push_back(part);
 
-					bool added = false;
-					if (!duplication)
-					{
-						auto newGeneral = new GeneralizedArmor(COUNT_OF(g_skills));
-						*newGeneral = general;
+				g_generalized[(Armor::PartType) i]->push_back(newGeneral);
 
-						newGeneral->source.push_back(newInst);
-
-						g_generalized[(Armor::PartType) i]->push_back(newGeneral);
-
-						added = true;
-					}
-				}
-			};
-
-			SelectDecorator(0);
+				added = true;
+			}
 		}
 
 		for (int j = 0; j < g_generalized[(Armor::PartType) i]->size(); )
@@ -578,12 +436,22 @@ void FilterArmors()
 
 			bool bad = false;
 
-			for (int k = j + 1; k < g_generalized[(Armor::PartType) i]->size(); ++k)
+			for (int k = 0; k < g_generalized[(Armor::PartType) i]->size(); ++k)
 			{
+				if (j == k) { continue; }
+
 				auto* rhs = (*g_generalized[(Armor::PartType) i])[k];
 
 				if (*cur <= *rhs)
 				{
+#if 0
+					WindowsUtility::Debug(L"Dropping '");
+					cur->DumpSimple();
+					WindowsUtility::Debug(L"' for '");
+					rhs->DumpSimple();
+					WindowsUtility::Debug(L"'.\n");
+#endif
+
 					bad = true;
 					break;
 				}
@@ -605,18 +473,7 @@ void FilterArmors()
 		{
 			auto* general = (*g_generalized[(Armor::PartType) i])[j];
 
-			for (int i = 0; i < COUNT_OF(g_skills); ++i)
-			{
-				if (general->skills[i] > 0)
-				{
-					WindowsUtility::Debug(
-						L"%s Lv.%d\t",
-						g_skills[i].c_str(),
-						general->skills[i]);
-				}
-			}
-
-			WindowsUtility::Debug(L"\n");
+			general->Dump();
 		}
 
 		int validParts = g_generalized[(Armor::PartType) i]->size();
