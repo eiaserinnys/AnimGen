@@ -153,9 +153,7 @@ void Calculate(const Desc& desc)
 		"%.3f\t%.3f\t"
 
 		"%.3f\t%.3f\t"
-		"%.3f\t"
-
-		"\n",
+		"%.3f\t",
 		rawDamageWithBonus.x, rawDamageWithBonus.y,
 		modifiedBaseDamage.x, modifiedBaseDamage.y,
 
@@ -523,12 +521,7 @@ int RejectWorseCombinations(
 			if (result == GeneralizedCombinationBase::Equal)
 			{
 				// 우측을 좌측에 더하자
-				toEvaluate->instances.insert(
-					toEvaluate->instances.end(),
-					target->instances.begin(),
-					target->instances.end());
-
-				target->instances.clear();
+				toEvaluate->CombineEquivalent(target);
 
 				if (dump)
 				{
@@ -540,7 +533,6 @@ int RejectWorseCombinations(
 				}
 
 				++rejected;
-				delete target;
 				jt = next.erase(jt);
 			}
 			else if (result == GeneralizedCombinationBase::Worse)
@@ -569,7 +561,7 @@ int RejectWorseCombinations(
 				}
 
 				++rejected;
-				delete target;
+				target->Delete();
 				jt = next.erase(jt);
 			}
 			else
@@ -581,7 +573,7 @@ int RejectWorseCombinations(
 		if (bad)
 		{
 			++rejected;
-			delete toEvaluate;
+			toEvaluate->Delete();
 			it = next.erase(it);
 		}
 		else
@@ -652,75 +644,89 @@ void PopulateArmors()
 }
 
 //------------------------------------------------------------------------------
+bool AddIfBetter(
+	list<DecoratedCombination*>& next, 
+	DecoratedCombination* newCom, 
+	int& rejected)
+{
+	auto ret = DecoratedCombination::NotWorse;
+
+	for (auto prev : next)
+	{
+		ret = newCom->Compare(*prev);
+
+		if (ret == DecoratedCombination::Equal)
+		{
+			prev->equivalents.push_back(newCom);
+			newCom->addedAsEquivalent = true;
+			rejected++;
+			return false;
+		}
+		else if (ret == DecoratedCombination::Worse)
+		{
+			newCom->Delete();
+			rejected++;
+			return false;
+		}
+	}
+
+	next.push_back(newCom);
+	return true;
+}
+
+//------------------------------------------------------------------------------
+list<DecoratedCombination*> g_decAll;
+
 void PopulateDecorators()
 {
+	// 데커레이티드 컴비네이션을 새로 만든다
+	for (auto comb : g_all)
+	{
+		g_decAll.push_back(DecoratedCombination::DeriveFrom(comb));
+	}
+
 	// 작은 소켓부터 채워가며 리스트를 구축해보자
 	// 소켓 크기에 대해서 순회하는 것에 주의
 	for (int socket = 2; socket >= 0; --socket)
 	{
-		int newComb;
+		bool needToIterate = false;
 
+		WindowsUtility::Debug(L"Filling socket with size %d\n", socket + 1);
 		do
 		{
-			list<GeneralizedCombination*> next;
-
-			newComb = 0;
+			list<DecoratedCombination*> next;
 			int rejected0 = 0, rejected1 = 0;
-
-			auto& AddIfBetter = [&](GeneralizedCombination* newCom) -> bool
-			{
-				bool worse = false;
-
-				for (auto jt = next.begin(); jt != next.end(); ++jt)
-				{
-					if (newCom->IsWorseThanOrEqualTo(**jt))
-					{
-						worse = true;
-						break;
-					}
-				}
-
-				if (!worse)
-				{
-					next.push_back(newCom);
-					return true;
-				}
-				else
-				{
-					delete newCom;
-					rejected0++;
-					return false;
-				}
-			};
 
 			for (int d = 0; d < g_decorators.size(); ++d)
 			{
 				auto dec = g_decorators[d];
-				if (dec->slotSize <= socket + 1)
+				if (dec->slotSize > socket + 1) { continue; }
+
+				for (auto it = g_decAll.begin(); it != g_decAll.end(); )
 				{
-					for (auto it = g_all.begin(); it != g_all.end(); ++it)
+					auto cur = *it;
+
+					if (cur->slots[socket] > 0)
 					{
-						auto cur = *it;
-
-						auto nextCom = new GeneralizedCombination(*cur);
-
-						if (cur->slots[socket] > 0)
+						// 장식주를 꽂는 게 의미가 있는 경우
+						if (cur->skills[dec->skillIndex] + 1 <= g_skillMaxLevel[dec->skillIndex])
 						{
-							if (nextCom->skills[dec->skillIndex] + 1 <= g_skillMaxLevel[dec->skillIndex])
-							{
-								nextCom->skills[dec->skillIndex]++;
-								nextCom->slots[socket]--;
+							// 조합을 하나 더 파생한다
+							auto nextCom = DecoratedCombination::DeriveFrom(cur);
 
-								if (AddIfBetter(nextCom))
-								{
-									newComb++;
-								}
-							}
+							nextCom->skills[dec->skillIndex]++;
+							nextCom->slots[socket]--;
+							nextCom->decorator = dec;
+
+							AddIfBetter(next, nextCom, rejected0);
 						}
-						else
-						{
-							AddIfBetter(nextCom);
-						}
+
+						++it;
+					}
+					else
+					{
+						AddIfBetter(next, cur, rejected0);
+						it = g_decAll.erase(it);
 					}
 				}
 			}
@@ -728,23 +734,23 @@ void PopulateDecorators()
 			// 중복된 페어를 제거한다
 			rejected1 = RejectWorseCombinations(next, false);
 
-			for (auto inst : g_all) { delete inst; }
+			for (auto inst : g_decAll) { inst->Delete(); }
 
-			g_all.swap(next);
+			g_decAll.swap(next);
+
+			for (auto inst : g_decAll)
+			{
+				needToIterate = inst->slots[socket] > 0;
+				if (needToIterate) { break; }
+			}
 
 			WindowsUtility::Debug(
-				L"Filling socket with size %d = %d (%d,%d)-----------\n",
-				socket + 1,
-				g_all.size(),
+				L"\t%d (%d,%d)-----------\n",
+				g_decAll.size(),
 				rejected0, 
 				rejected1);
-
-		} while (newComb > 0);
-
-		for (auto it = g_all.begin(); it != g_all.end(); ++it)
-		{
-			//(*it)->Dump();
 		}
+		while (needToIterate);
 	}
 }
 
@@ -785,7 +791,7 @@ void TestDamage()
 
 	Desc desc;
 
-	for (auto it = g_all.begin(); it != g_all.end(); ++it)
+	for (auto it = g_decAll.begin(); it != g_decAll.end(); ++it)
 	{
 		auto comb = *it;
 
@@ -831,6 +837,8 @@ void TestDamage()
 				comb->skills[8]);
 
 			Calculate(desc);
+
+			fprintf(file, "\n");
 		}
 	}
 

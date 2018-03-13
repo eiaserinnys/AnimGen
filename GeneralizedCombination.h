@@ -59,7 +59,7 @@ struct GeneralizedArmor : public GeneralizedCombinationBase
 };
 
 //------------------------------------------------------------------------------
-struct CombinationInstance
+struct PartInstance
 {
 	const GeneralizedArmor* parts[5] = { nullptr, nullptr, nullptr, nullptr, nullptr, };
 };
@@ -81,10 +81,47 @@ struct GeneralizedCombination : public GeneralizedCombinationBase
 		int partIndex, 
 		const GeneralizedArmor* part);
 
+	void CombineEquivalent(GeneralizedCombination* rhs);
+
+	void Delete() { delete this; }
+
 	void Dump() const;
 
-	std::list<CombinationInstance*> instances;
+	std::list<PartInstance*> instances;
+
+	std::list<GeneralizedCombination*> equivalents;
 
 	void ClearInstances();
 };
 
+//------------------------------------------------------------------------------
+struct Decorator;
+
+struct DecoratedCombination : public GeneralizedCombinationBase
+{
+	typedef GeneralizedCombinationBase ParentType;
+
+	DecoratedCombination();
+
+	static DecoratedCombination* DeriveFrom(const GeneralizedCombination* comb);
+
+	static DecoratedCombination* DeriveFrom(DecoratedCombination* comb);
+
+	void CombineEquivalent(DecoratedCombination* rhs);
+
+	void Delete();
+
+public:
+	const GeneralizedCombination* source = nullptr;
+
+	std::list<DecoratedCombination*> equivalents;
+
+	const Decorator* decorator = nullptr;
+
+	bool addedAsEquivalent = false;
+
+private:
+	DecoratedCombination* derivedFrom = nullptr;
+	~DecoratedCombination();
+	int refCount = 1;
+};

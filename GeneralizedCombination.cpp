@@ -287,7 +287,16 @@ GeneralizedCombination::GeneralizedCombination(const GeneralizedCombination& rhs
 //------------------------------------------------------------------------------
 GeneralizedCombination& GeneralizedCombination::operator = (const GeneralizedCombination& rhs)
 {
-	throw invalid_argument("");
+	ParentType::operator = (rhs);
+
+	for (auto inst : rhs.instances)
+	{
+		auto newInst = new PartInstance;
+		*newInst = *inst;
+		instances.push_back(newInst);
+	}
+
+	return *this;
 }
 
 //------------------------------------------------------------------------------
@@ -309,7 +318,7 @@ void GeneralizedCombination::Combine(
 	{
 		for (auto prevInst : prev->instances)
 		{
-			auto inst = new CombinationInstance;
+			auto inst = new PartInstance;
 			*inst = *prevInst;
 			
 			inst->parts[partIndex] = part;
@@ -319,10 +328,21 @@ void GeneralizedCombination::Combine(
 	}
 	else
 	{
-		auto inst = new CombinationInstance;
+		auto inst = new PartInstance;
 		inst->parts[partIndex] = part;
 		instances.push_back(inst);
 	}
+}
+
+//------------------------------------------------------------------------------
+void GeneralizedCombination::CombineEquivalent(GeneralizedCombination* target)
+{
+	instances.insert(
+		instances.end(),
+		target->instances.begin(),
+		target->instances.end());
+
+	target->instances.clear();
 }
 
 //------------------------------------------------------------------------------
@@ -358,4 +378,89 @@ void GeneralizedCombination::Dump() const
 
 		WindowsUtility::Debug(L"\n");
 	}
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+int instance = 0;
+
+//------------------------------------------------------------------------------
+void DecoratedCombination::Delete()
+{
+	refCount--;
+
+	assert(refCount >= 0);
+
+	if (refCount == 0) 
+	{ 
+		if (derivedFrom != nullptr)
+		{
+			derivedFrom->Delete();
+			derivedFrom = nullptr;
+		}
+		delete this; 
+	}
+}
+
+//------------------------------------------------------------------------------
+DecoratedCombination::DecoratedCombination()
+{
+	instance++;
+}
+
+//------------------------------------------------------------------------------
+DecoratedCombination* DecoratedCombination::DeriveFrom(
+	const GeneralizedCombination* comb)
+{
+	auto ret = new DecoratedCombination;
+
+	(*ret).ParentType::operator = (*comb);
+
+	ret->source = comb;
+
+	return ret;
+}
+
+//------------------------------------------------------------------------------
+DecoratedCombination* DecoratedCombination::DeriveFrom(
+	DecoratedCombination* from)
+{
+	auto ret = new DecoratedCombination;
+
+	(*ret).ParentType::operator = (*from);
+
+	ret->source = from->source;
+
+	ret->derivedFrom = from;
+
+	from->refCount++;
+
+	return ret;
+}
+
+//------------------------------------------------------------------------------
+DecoratedCombination::~DecoratedCombination()
+{
+	if (addedAsEquivalent)
+	{
+		int i = 0;
+	}
+
+	assert(refCount == 0);
+
+	for (auto e : equivalents) 
+	{ 
+		e->Delete(); 
+	}
+	equivalents.clear();
+
+	instance--;
+}
+
+//------------------------------------------------------------------------------
+void DecoratedCombination::CombineEquivalent(DecoratedCombination* rhs)
+{
+	equivalents.push_back(rhs);
+	equivalents.insert(equivalents.end(), rhs->equivalents.begin(), rhs->equivalents.end());
+	rhs->equivalents.clear();
 }
