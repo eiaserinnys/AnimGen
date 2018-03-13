@@ -11,6 +11,7 @@
 #include "Skill.h"
 #include "Decorator.h"
 #include "Armor.h"
+#include "Charm.h"
 #include "GeneralizedCombination.h"
 
 using namespace std;
@@ -201,18 +202,6 @@ vector<wstring> Tokenize(const wstring& s_)
 }
 
 //------------------------------------------------------------------------------
-struct ArmorInstance
-{
-	Armor* original = nullptr;
-	Decorator* decorators[3];
-
-	ArmorInstance()
-	{
-		memset(decorators, 0, sizeof(Decorator*) * COUNT_OF(decorators));
-	}
-};
-
-//------------------------------------------------------------------------------
 void LoadArmors()
 {
 	fopen_s(&file, "ArmorData", "r,ccs=UTF-8");
@@ -351,6 +340,48 @@ void LoadDecorators()
 				dec->slotSize = _wtoi(tokens[1].c_str());
 
 				g_decorators.push_back(dec);
+			}
+
+			//WindowsUtility::Debug(L"%s %s R%d [%d]\n", dec->name.c_str(), dec->skill.c_str(), dec->rarity, dec->slotSize);
+		}
+	}
+
+	fclose(file);
+}
+
+//------------------------------------------------------------------------------
+vector<Charm*> g_charms;
+
+void LoadCharms()
+{
+	fopen_s(&file, "CharmData", "r,ccs=UTF-8");
+
+	wchar_t buffer[1024];
+	while (fgetws(&buffer[0], 1024, file) != nullptr)
+	{
+		// 먼저 뉴라인 문자를 제거한다
+		wstring str = buffer;
+		size_t pos;
+		if ((pos = str.find(L'\n')) != wstring::npos)
+		{
+			str = str.substr(0, pos);
+		}
+
+		// 쉼표로 자른다
+		auto tokens = Tokenize(str);
+
+		if (tokens.size() >= 3)
+		{
+			int index = GetSkillIndex(tokens[1]);
+			if (index >= 0)
+			{
+				auto dec = new Charm;
+				dec->name = tokens[0];
+				dec->skill = tokens[1];
+				dec->skillIndex = index;
+				dec->skillLevel = _wtoi(tokens[2].c_str());
+
+				g_charms.push_back(dec);
 			}
 
 			//WindowsUtility::Debug(L"%s %s R%d [%d]\n", dec->name.c_str(), dec->skill.c_str(), dec->rarity, dec->slotSize);
@@ -757,7 +788,13 @@ void PopulateDecorators()
 					continue;
 				}
 
-				for (int d = 0; d < g_decorators.size(); ++d)
+				int dFrom = 0;
+				if (cur->lastSocket == socket)
+				{
+					dFrom = cur->lastDecoratorIndex;
+				}
+
+				for (int d = dFrom; d < g_decorators.size(); ++d)
 				{
 					auto dec = g_decorators[d];
 					if (dec->slotSize > socket + 1) { continue; }
@@ -775,7 +812,7 @@ void PopulateDecorators()
 
 						if (ret == DecoratedCombination::Better)
 						{
-							auto nextCom = DecoratedCombination::DeriveFrom(cur, dec, socket);
+							auto nextCom = DecoratedCombination::DeriveFrom(cur, dec, socket, d);
 							nextCom->equivalents.push_back(toCompare);
 							*it = nextCom;
 							++rejected0;		// 옛날 게 리젝트됨
@@ -785,7 +822,7 @@ void PopulateDecorators()
 						}
 						else if (ret == DecoratedCombination::Equal)
 						{
-							auto nextCom = DecoratedCombination::DeriveFrom(cur, dec, socket);
+							auto nextCom = DecoratedCombination::DeriveFrom(cur, dec, socket, d);
 							toCompare->equivalents.push_back(nextCom);
 							rejected0++;
 
@@ -802,7 +839,7 @@ void PopulateDecorators()
 
 					if (!processed)
 					{
-						auto nextCom = DecoratedCombination::DeriveFrom(cur, dec, socket);
+						auto nextCom = DecoratedCombination::DeriveFrom(cur, dec, socket, d);
 						next.push_back(nextCom);
 					}
 				}
@@ -839,6 +876,7 @@ void TestDamage()
 {
 	LoadArmors();
 	LoadDecorators();
+	LoadCharms();
 
 	g_skillToDecorator.resize(COUNT_OF(g_skills), nullptr);
 
@@ -877,52 +915,62 @@ void TestDamage()
 	{
 		auto comb = *it;
 
-		//0L"공격",
-		//1L"간파",
-		//2L"슈퍼 회심",
-		//3L"약점 특효",
-		//4L"번개속성 공격 강화",
-		//5L"화룡의 비기",
-		//6L"통상탄/통상화살 강화",
-		//7L"산탄/강사 강화",
-		//8L"활 모으기 단계 해제",
-		//9L"체술",
-
-		bool arrow = 
-			(comb->skills[6] == 1 && comb->skills[7] == 1) ||
-			(comb->skills[6] == 0 && comb->skills[7] == 0);
-
-		bool gambit = comb->skills[5] >= 2 || comb->skills[5] >= 0;
-
-		if (arrow && gambit)
+		for (int c = 0; c < g_charms.size(); ++c)
 		{
-			desc.attackBonus = AttackSkillBonus(comb->skills[0]);
-			desc.criticalEye = CriticalEye(comb->skills[1]);
-			desc.superCritical = SuperCritical(comb->skills[2]);
-			desc.exploitWeakness = ExploitWeakness(comb->skills[3]);
-			desc.elementalBonus = ElementalSkillLevel(comb->skills[4]);
-			desc.fireDragonGambit = comb->skills[5] >= 2 ? FireDragonsGambit() : 0;
-			desc.arrowUpgrade = comb->skills[6] >= 1 && comb->skills[7] >= 1 ? 0.1 : 0;
-			desc.chargeLevel = comb->skills[8] >= 1 ? 3 : 2;
+			auto f = DecoratedCombination::DeriveFrom(comb, g_charms[c]);
 
-			fwprintf(
-				file,
-				L"%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t",
-				comb->skills[0],
-				comb->skills[1],
-				comb->skills[2],
-				comb->skills[3],
-				comb->skills[4],
-				comb->skills[5],
-				comb->skills[6],
-				comb->skills[7],
-				comb->skills[8]);
+			//0L"공격",
+			//1L"간파",
+			//2L"슈퍼 회심",
+			//3L"약점 특효",
+			//4L"번개속성 공격 강화",
+			//5L"화룡의 비기",
+			//6L"통상탄/통상화살 강화",
+			//7L"산탄/강사 강화",
+			//8L"활 모으기 단계 해제",
+			//9L"체술",
 
-			Calculate(desc);
+			bool arrow =
+				(f->skills[6] == 1 && f->skills[7] == 1) ||
+				(f->skills[6] == 0 && f->skills[7] == 0);
 
-			comb->Write(file);
+			bool gambit = f->skills[5] >= 2 || f->skills[5] >= 0;
 
-			fwprintf(file, L"\n");
+			bool move = f->skills[9] >= 3;
+
+			if (arrow && gambit && move)
+			{
+				desc.attackBonus = AttackSkillBonus(f->skills[0]);
+				desc.criticalEye = CriticalEye(f->skills[1]);
+				desc.superCritical = SuperCritical(f->skills[2]);
+				desc.exploitWeakness = ExploitWeakness(f->skills[3]);
+				desc.elementalBonus = ElementalSkillLevel(f->skills[4]);
+				desc.fireDragonGambit = f->skills[5] >= 2 ? FireDragonsGambit() : 0;
+				desc.arrowUpgrade = f->skills[6] >= 1 && f->skills[7] >= 1 ? 0.1 : 0;
+				desc.chargeLevel = f->skills[8] >= 1 ? 3 : 2;
+
+				fwprintf(
+					file,
+					L"%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t",
+					f->skills[0],
+					f->skills[1],
+					f->skills[2],
+					f->skills[3],
+					f->skills[4],
+					f->skills[5],
+					f->skills[6],
+					f->skills[7],
+					f->skills[8],
+					f->skills[9]);
+
+				Calculate(desc);
+
+				f->Write(file);
+
+				fwprintf(file, L"\n");
+			}
+
+			f->Delete();
 		}
 	}
 

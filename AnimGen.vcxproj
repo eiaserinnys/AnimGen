@@ -190,6 +190,7 @@
     <ClInclude Include="AnimationGeneration.h" />
     <ClInclude Include="Armor.h" />
     <ClInclude Include="BasicMeshT.h" />
+    <ClInclude Include="Charm.h" />
     <ClInclude Include="ClampedSplineFixedStep.h" />
     <ClInclude Include="Coefficient.h" />
     <ClInclude Include="Damage.h" />

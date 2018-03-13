@@ -7,6 +7,7 @@
 #include "Skill.h"
 #include "Armor.h"
 #include "Decorator.h"
+#include "Charm.h"
 
 using namespace std;
 
@@ -128,12 +129,14 @@ GeneralizedCombinationBase::ComparisonResult
 			if (skillLeft > 0)
 			{
 				notWorseThan[index] = true;
+				if (notWorseThan[0] && notWorseThan[1]) { return Undetermined; }
 			}
 		}
 		else
 		{
 			// 장식주로 커버가 안 되는 스킬이다
 			notWorseThan[index] = true;
+			if (notWorseThan[0] && notWorseThan[1]) { return Undetermined; }
 		}
 	}
 
@@ -176,6 +179,7 @@ GeneralizedCombinationBase::ComparisonResult
 				if (curSlot > 0)
 				{
 					notWorseThan[j] = true;
+					if (notWorseThan[0] && notWorseThan[1]) { return Undetermined; }
 				}
 			}
 		}
@@ -188,15 +192,11 @@ GeneralizedCombinationBase::ComparisonResult
 
 	if (notWorseThan[0])
 	{
-		return notWorseThan[1] ?
-			GeneralizedCombinationBase::Undetermined :
-			GeneralizedCombinationBase::Better;
+		return notWorseThan[1] ? Undetermined : Better;
 	}
 	else
 	{
-		return notWorseThan[1] ?
-			GeneralizedCombinationBase::Worse :
-			GeneralizedCombinationBase::Equal;
+		return notWorseThan[1] ? Worse : Equal;
 	}	
 }
 
@@ -574,7 +574,8 @@ DecoratedCombination* DecoratedCombination::DeriveFrom(
 DecoratedCombination* DecoratedCombination::DeriveFrom(
 	DecoratedCombination* from,
 	const Decorator* dec,
-	int socket)
+	int socket,
+	int decIndex)
 {
 	auto ret = new DecoratedCombination;
 
@@ -596,7 +597,39 @@ DecoratedCombination* DecoratedCombination::DeriveFrom(
 			ret->decorator = dec;
 		}
 
+		ret->lastSocket = socket;
+		ret->lastDecoratorIndex = decIndex;
+
 		ret->slots[socket]--;	// 어쨌든 슬롯은 소비
+	}
+
+	return ret;
+}
+
+//------------------------------------------------------------------------------
+DecoratedCombination* DecoratedCombination::DeriveFrom(
+	DecoratedCombination* from,
+	const Charm* charm)
+{
+	auto ret = new DecoratedCombination;
+
+	(*ret).ParentType::operator = (*from);
+
+	ret->source = from->source;
+
+	ret->derivedFrom = from;
+
+	from->refCount++;
+
+	if (charm != nullptr)
+	{
+		auto index = charm->skillIndex;
+
+		int total = ret->skills[index] + charm->skillLevel;
+
+		ret->skills[index] = 
+			 total < g_skillMaxLevel[index] ? total : g_skillMaxLevel[index];
+		ret->charm = charm;
 	}
 
 	return ret;
@@ -632,6 +665,11 @@ void DecoratedCombination::Write(FILE* file) const
 	for (int i = 0; i < COUNT_OF(inst->parts); ++i)
 	{
 		fwprintf(file, L"%s ", (*inst->parts[i]->source.begin())->name.c_str());
+	}
+
+	if (charm != nullptr)
+	{
+		fwprintf(file, L"%s ", charm->name.c_str());
 	}
 
 	const DecoratedCombination* c = this;

@@ -110,6 +110,7 @@ struct GeneralizedCombination : public GeneralizedCombinationBase
 
 //------------------------------------------------------------------------------
 struct Decorator;
+struct Charm;
 
 struct DecoratedCombination : public GeneralizedCombinationBase
 {
@@ -122,7 +123,12 @@ struct DecoratedCombination : public GeneralizedCombinationBase
 	static DecoratedCombination* DeriveFrom(
 		DecoratedCombination* comb, 
 		const Decorator* dec, 
-		int socket);
+		int socket,
+		int decIndex);
+
+	static DecoratedCombination* DeriveFrom(
+		DecoratedCombination* comb,
+		const Charm* charm);
 
 	void CombineEquivalent(DecoratedCombination* rhs);
 
@@ -136,6 +142,10 @@ public:
 	std::list<DecoratedCombination*> equivalents;
 
 	const Decorator* decorator = nullptr;
+	int lastSocket = 0;
+	int lastDecoratorIndex = - 1;
+
+	const Charm* charm = nullptr;
 
 private:
 	DecoratedCombination* derivedFrom = nullptr;

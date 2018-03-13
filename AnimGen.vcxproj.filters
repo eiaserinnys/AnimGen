@@ -430,6 +430,9 @@
     <ClInclude Include="Damage.h">
       <Filter>ThisApp\MHW</Filter>
     </ClInclude>
+    <ClInclude Include="Charm.h">
+      <Filter>ThisApp\MHW</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Shader\Object.fx">
