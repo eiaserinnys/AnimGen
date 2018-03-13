@@ -54,9 +54,20 @@ int GeneralizedCombinationBase::SlotCount() const
 
 //------------------------------------------------------------------------------
 GeneralizedCombinationBase::ComparisonResult
+GeneralizedCombinationBase::Compare(
+	const GeneralizedCombinationBase& lhs,
+	const GeneralizedCombinationBase& rhs)
+{
+	return Compare(lhs, rhs, -1, -1);
+}
+
+//------------------------------------------------------------------------------
+GeneralizedCombinationBase::ComparisonResult
 	GeneralizedCombinationBase::Compare(
 		const GeneralizedCombinationBase& lhs, 
-		const GeneralizedCombinationBase& rhs)
+		const GeneralizedCombinationBase& rhs,
+		int lhsSkillToAdd,
+		int lhsSocketToUse)
 {
 	assert(lhs.skillCount == rhs.skillCount);
 	int skillCount = lhs.skillCount;
@@ -68,13 +79,18 @@ GeneralizedCombinationBase::ComparisonResult
 	int slotLhs[3] = { lhs.slots[0], lhs.slots[1], lhs.slots[2], };
 	int slotRhs[3] = { rhs.slots[0], rhs.slots[1], rhs.slots[2], };
 
+	if (lhsSocketToUse >= 0 && lhsSocketToUse < COUNT_OF(slotLhs))
+	{
+		slotLhs[lhsSocketToUse]--;
+	}
+
 	bool notWorseThan[2] = { false, false };
 
 	// 스킬의 차분을 먼저 구한다
 	int skillLeft = 0;
 	for (int i = 0; i < skillCount; ++i)
 	{
-		int lhsSkill = lhs.skills[i];
+		int lhsSkill = lhs.skills[i] + (i == lhsSkillToAdd ? 1 : 0);
 		int rhsSkill = rhs.skills[i];
 
 		// 완전 동일 여부를 확인한다
@@ -131,7 +147,13 @@ GeneralizedCombinationBase::ComparisonResult
 
 			for (int j = 0; j < 2; ++j)
 			{
-				int curSlot = j == 0 ? lhs.slots[slotSize] : rhs.slots[slotSize];
+				int curSlot = j == 0 ? 
+					lhs.slots[slotSize] : rhs.slots[slotSize];
+
+				if (j == 0 && slotSize == lhsSocketToUse)
+				{
+					curSlot--;
+				}
 
 				if (curSlot == 0) { continue; }
 
@@ -550,7 +572,9 @@ DecoratedCombination* DecoratedCombination::DeriveFrom(
 
 //------------------------------------------------------------------------------
 DecoratedCombination* DecoratedCombination::DeriveFrom(
-	DecoratedCombination* from)
+	DecoratedCombination* from,
+	const Decorator* dec,
+	int socket)
 {
 	auto ret = new DecoratedCombination;
 
@@ -562,17 +586,25 @@ DecoratedCombination* DecoratedCombination::DeriveFrom(
 
 	from->refCount++;
 
+	if (dec != nullptr)
+	{
+		auto index = dec->skillIndex;
+
+		if (ret->skills[index] + 1 <= g_skillMaxLevel[index])
+		{
+			ret->skills[index]++;
+			ret->decorator = dec;
+		}
+
+		ret->slots[socket]--;	// 어쨌든 슬롯은 소비
+	}
+
 	return ret;
 }
 
 //------------------------------------------------------------------------------
 DecoratedCombination::~DecoratedCombination()
 {
-	if (addedAsEquivalent)
-	{
-		int i = 0;
-	}
-
 	assert(refCount == 0);
 
 	for (auto e : equivalents) 

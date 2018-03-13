@@ -28,8 +28,8 @@ std::vector<Decorator*> g_decorators;
 
 std::vector<Decorator*> g_skillToDecorator;
 
-Core::Vector2D WeaponValue() { return Core::Vector2D(240, 390); }
-double WeaponCritical() { return -0.2; }
+Core::Vector2D WeaponValue() { return Core::Vector2D(180, 390); }
+double WeaponCritical() { return 0; }
 int WeaponSlot(int slot)
 {
 	int slots[] = { 0, 0, 0 };
@@ -41,8 +41,8 @@ double WeaponMultipler() { return 1.2; }
 double BaseCriticalDamageRate(double criticalRate) { return criticalRate >= 0 ? 1.25 : 0.75; }
 double MotionValue(int chargeLevel) { return chargeLevel >= 3 ? 0.11 : 0.10; }
 
-double PhysicalDefense() { return 0.45; }
-double ElementalDefense() { return 0.25; }
+double PhysicalDefense() { return 0.6; }
+double ElementalDefense() { return 0.4; }
 
 //------------------------------------------------------------------------------
 struct Desc
@@ -707,7 +707,6 @@ bool AddIfBetter(
 		else if (ret == DecoratedCombination::Equal)
 		{
 			toCompare->equivalents.push_back(newCom);
-			newCom->addedAsEquivalent = true;
 			rejected++;
 			return false;
 		}
@@ -741,6 +740,7 @@ void PopulateDecorators()
 		bool needToIterate = false;
 
 		WindowsUtility::Debug(L"Filling socket with size %d\n", socket + 1);
+
 		do
 		{
 			list<DecoratedCombination*> next;
@@ -750,34 +750,64 @@ void PopulateDecorators()
 			{
 				auto cur = *it;
 
-				if (cur->slots[socket] > 0)
-				{
-					for (int d = 0; d < g_decorators.size(); ++d)
-					{
-						auto dec = g_decorators[d];
-						if (dec->slotSize > socket + 1) { continue; }
-
-						auto nextCom = DecoratedCombination::DeriveFrom(cur);
-
-						bool notMaxed = cur->skills[dec->skillIndex] + 1 <= g_skillMaxLevel[dec->skillIndex];
-
-						nextCom->skills[dec->skillIndex] = 
-							notMaxed ? 
-								cur->skills[dec->skillIndex] + 1 : 
-								g_skillMaxLevel[dec->skillIndex];
-						nextCom->slots[socket]--;
-						nextCom->decorator = notMaxed ? dec : nullptr;
-
-						AddIfBetter(next, nextCom, rejected0);
-					}
-
-					++it;
-				}
-				else
+				if (cur->slots[socket] <= 0)
 				{
 					AddIfBetter(next, cur, rejected0);
 					it = g_decAll.erase(it);
+					continue;
 				}
+
+				for (int d = 0; d < g_decorators.size(); ++d)
+				{
+					auto dec = g_decorators[d];
+					if (dec->slotSize > socket + 1) { continue; }
+
+					bool notMaxed = cur->skills[dec->skillIndex] + 1 <= g_skillMaxLevel[dec->skillIndex];
+					int toAdd = notMaxed ? dec->skillIndex : -1;
+
+					bool processed = false;
+					for (auto it = next.begin(); it != next.end(); ++it)
+					{
+						auto toCompare = *it;
+
+						// 만들지 않은 상태에서 비교한다
+						auto ret = DecoratedCombination::Compare(*cur, *toCompare, toAdd, socket);
+
+						if (ret == DecoratedCombination::Better)
+						{
+							auto nextCom = DecoratedCombination::DeriveFrom(cur, dec, socket);
+							nextCom->equivalents.push_back(toCompare);
+							*it = nextCom;
+							++rejected0;		// 옛날 게 리젝트됨
+
+							processed = true;
+							break;
+						}
+						else if (ret == DecoratedCombination::Equal)
+						{
+							auto nextCom = DecoratedCombination::DeriveFrom(cur, dec, socket);
+							toCompare->equivalents.push_back(nextCom);
+							rejected0++;
+
+							processed = true;
+							break;
+						}
+						else if (ret == DecoratedCombination::Worse)
+						{
+							rejected0++;
+							processed = true;
+							break;
+						}
+					}
+
+					if (!processed)
+					{
+						auto nextCom = DecoratedCombination::DeriveFrom(cur, dec, socket);
+						next.push_back(nextCom);
+					}
+				}
+
+				++it;
 			}
 
 			// 중복된 페어를 제거한다

@@ -41,6 +41,12 @@ struct GeneralizedCombinationBase
 		const GeneralizedCombinationBase& lhs, 
 		const GeneralizedCombinationBase& rhs);
 
+	static ComparisonResult Compare(
+		const GeneralizedCombinationBase& lhs,
+		const GeneralizedCombinationBase& rhs,
+		int skillToAddToLhs,
+		int lhsSocketToUse);
+
 	ComparisonResult Compare(const GeneralizedCombinationBase& rhs) const;
 
 	bool IsWorseThanOrEqualTo(const GeneralizedCombinationBase& rhs) const;
@@ -113,7 +119,10 @@ struct DecoratedCombination : public GeneralizedCombinationBase
 
 	static DecoratedCombination* DeriveFrom(const GeneralizedCombination* comb);
 
-	static DecoratedCombination* DeriveFrom(DecoratedCombination* comb);
+	static DecoratedCombination* DeriveFrom(
+		DecoratedCombination* comb, 
+		const Decorator* dec, 
+		int socket);
 
 	void CombineEquivalent(DecoratedCombination* rhs);
 
@@ -127,8 +136,6 @@ public:
 	std::list<DecoratedCombination*> equivalents;
 
 	const Decorator* decorator = nullptr;
-
-	bool addedAsEquivalent = false;
 
 private:
 	DecoratedCombination* derivedFrom = nullptr;
