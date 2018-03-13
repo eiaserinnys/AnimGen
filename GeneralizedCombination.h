@@ -28,10 +28,18 @@ struct GeneralizedCombinationBase
 
 	enum ComparisonResult
 	{
-		NotWorse,
+		Better, 
+		Undetermined,
+
+		NotWorse, 
+
 		Worse,
 		Equal, 
 	};
+
+	static ComparisonResult Compare(
+		const GeneralizedCombinationBase& lhs, 
+		const GeneralizedCombinationBase& rhs);
 
 	ComparisonResult Compare(const GeneralizedCombinationBase& rhs) const;
 
@@ -110,6 +118,8 @@ struct DecoratedCombination : public GeneralizedCombinationBase
 	void CombineEquivalent(DecoratedCombination* rhs);
 
 	void Delete();
+
+	void Write(FILE* file) const;
 
 public:
 	const GeneralizedCombination* source = nullptr;

@@ -53,6 +53,133 @@ int GeneralizedCombinationBase::SlotCount() const
 }
 
 //------------------------------------------------------------------------------
+GeneralizedCombinationBase::ComparisonResult
+	GeneralizedCombinationBase::Compare(
+		const GeneralizedCombinationBase& lhs, 
+		const GeneralizedCombinationBase& rhs)
+{
+	assert(lhs.skillCount == rhs.skillCount);
+	int skillCount = lhs.skillCount;
+
+	// 완전 동일 여부 체크
+	bool exactSame = true;
+
+	// 계산을 위해서 복제한다
+	int slotLhs[3] = { lhs.slots[0], lhs.slots[1], lhs.slots[2], };
+	int slotRhs[3] = { rhs.slots[0], rhs.slots[1], rhs.slots[2], };
+
+	bool notWorseThan[2] = { false, false };
+
+	// 스킬의 차분을 먼저 구한다
+	int skillLeft = 0;
+	for (int i = 0; i < skillCount; ++i)
+	{
+		int lhsSkill = lhs.skills[i];
+		int rhsSkill = rhs.skills[i];
+
+		// 완전 동일 여부를 확인한다
+		exactSame = exactSame && (lhsSkill == rhsSkill);
+
+		if (lhsSkill == 0 && rhsSkill == 0) { continue; }
+
+		int toSub = min(lhsSkill , rhsSkill);
+		lhsSkill = lhsSkill - toSub;
+		rhsSkill = rhsSkill - toSub;
+
+		if (lhsSkill == 0 && rhsSkill == 0) { continue; }
+
+		if (lhsSkill > 0) { assert(rhsSkill == 0); } else { assert(lhsSkill == 0); }
+
+		int skillLeft = lhsSkill > 0 ? lhsSkill : rhsSkill;
+		int* slotsInOtherSide = lhsSkill > 0 ? slotRhs : slotLhs;
+		int index = lhsSkill > 0 ? 0 : 1;
+
+		// 어느 한 쪽에 남은 스킬을 
+		// 반대쪽에 장식주를 달아서 커버 가능한지 확인한다
+		if (g_skillToDecorator[i] != nullptr)
+		{
+			int slotSize = g_skillToDecorator[i]->slotSize;
+
+			for (int j = slotSize - 1; j < COUNT_OF(slots); ++j)
+			{
+				int toSub = min(skillLeft, slotsInOtherSide[j]);
+
+				skillLeft -= toSub;
+				slotsInOtherSide[j] -= toSub;
+				if (skillLeft <= 0) { break; }
+			}
+
+			if (skillLeft > 0)
+			{
+				notWorseThan[index] = true;
+			}
+		}
+		else
+		{
+			// 장식주로 커버가 안 되는 스킬이다
+			notWorseThan[index] = true;
+		}
+	}
+
+	// 상호 슬롯을 비교한다
+	if (lhs.SlotCount() > 0 || rhs.SlotCount() > 0)
+	{
+		for (int slotSize = 0; slotSize < COUNT_OF(slots); ++slotSize)
+		{
+			// 완전 동일 여부를 확인한다
+			exactSame = exactSame && (lhs.slots[slotSize] == rhs.slots[slotSize]);
+
+			for (int j = 0; j < 2; ++j)
+			{
+				int curSlot = j == 0 ? lhs.slots[slotSize] : rhs.slots[slotSize];
+
+				if (curSlot == 0) { continue; }
+
+				int* otherSide = j == 0 ? slotRhs : slotLhs;
+
+				bool selected = false;
+				for (int i = slotSize; i < COUNT_OF(slots); ++i)
+				{
+					int toSub = min(curSlot, otherSide[i]);
+
+					curSlot -= toSub;
+					otherSide[i] -= toSub;
+
+					if (curSlot <= 0)
+					{
+						break;
+					}
+				}
+
+				if (curSlot > 0)
+				{
+					notWorseThan[j] = true;
+				}
+			}
+		}
+	}
+
+	if (exactSame)
+	{
+		assert(!notWorseThan[0] && !notWorseThan[1]);
+	}
+
+	if (notWorseThan[0])
+	{
+		return notWorseThan[1] ?
+			GeneralizedCombinationBase::Undetermined :
+			GeneralizedCombinationBase::Better;
+	}
+	else
+	{
+		return notWorseThan[1] ?
+			GeneralizedCombinationBase::Worse :
+			GeneralizedCombinationBase::Equal;
+	}	
+}
+
+
+//------------------------------------------------------------------------------
 GeneralizedCombinationBase::ComparisonResult 
 	GeneralizedCombinationBase::Compare(
 		const GeneralizedCombinationBase& rhs) const
@@ -124,7 +251,7 @@ GeneralizedCombinationBase::ComparisonResult
 			int curSlot = slots[slotSize];
 
 			// 완전 동일 여부를 확인한다
-			exactSame = exactSame && (curSlot == slots[slotSize]);
+			exactSame = exactSame && (curSlot == rhs.slots[slotSize]);
 
 			if (curSlot > 0)
 			{
@@ -463,4 +590,26 @@ void DecoratedCombination::CombineEquivalent(DecoratedCombination* rhs)
 	equivalents.push_back(rhs);
 	equivalents.insert(equivalents.end(), rhs->equivalents.begin(), rhs->equivalents.end());
 	rhs->equivalents.clear();
+}
+
+//------------------------------------------------------------------------------
+void DecoratedCombination::Write(FILE* file) const
+{
+	// 첫번째 조합만 덤프하자
+	auto inst = *source->instances.begin();
+	for (int i = 0; i < COUNT_OF(inst->parts); ++i)
+	{
+		fwprintf(file, L"%s ", (*inst->parts[i]->source.begin())->name.c_str());
+	}
+
+	const DecoratedCombination* c = this;
+	while (c != nullptr)
+	{
+		if (c->decorator != nullptr)
+		{
+			fwprintf(file, L"%s ", c->decorator->name.c_str());
+		}
+
+		c = c->derivedFrom;
+	}
 }

@@ -28,17 +28,21 @@ std::vector<Decorator*> g_decorators;
 
 std::vector<Decorator*> g_skillToDecorator;
 
-Core::Vector2D WeaponValue() { return Core::Vector2D(204, 270); }
-double WeaponMultipler() { return 1.2; }
-double WeaponCritical() { return 0.15; }
-double BaseCriticalDamageRate() { return 1.25; }
-double MotionValue(int chargeLevel) 
-{ 
-	return chargeLevel >= 3 ? 0.11 : 0.10; 
+Core::Vector2D WeaponValue() { return Core::Vector2D(240, 390); }
+double WeaponCritical() { return -0.2; }
+int WeaponSlot(int slot)
+{
+	int slots[] = { 0, 0, 0 };
+	return slots[slot];
 }
 
+double WeaponMultipler() { return 1.2; }
+
+double BaseCriticalDamageRate(double criticalRate) { return criticalRate >= 0 ? 1.25 : 0.75; }
+double MotionValue(int chargeLevel) { return chargeLevel >= 3 ? 0.11 : 0.10; }
+
 double PhysicalDefense() { return 0.45; }
-double ElementalDefense() { return 0.2; }
+double ElementalDefense() { return 0.25; }
 
 //------------------------------------------------------------------------------
 struct Desc
@@ -86,10 +90,13 @@ void Calculate(const Desc& desc)
 		desc.exploitWeakness;
 
 	if (criticalProbability > 1) { criticalProbability = 1; }
+	if (criticalProbability < - 1) { criticalProbability = -1; }
+
+	double absCriticalProb = abs(criticalProbability);
 
 	// 물리 회심 배율
 	auto physicalCriticalRate =
-		BaseCriticalDamageRate() +
+		BaseCriticalDamageRate(criticalProbability) +
 		desc.superCritical;
 
 	// 속성 회심 배율
@@ -131,14 +138,14 @@ void Calculate(const Desc& desc)
 	// 최종 기대 대미지
 	Core::Vector2D finalExpectedDamage =
 		Core::Vector2D(
-			int(appliedDamage.x) * (1 - criticalProbability) +
-			int(criticalAppliedDamage.x) * criticalProbability,
-			int(appliedDamage.y) * (1 - criticalProbability) +
-			int(criticalAppliedDamage.y) * criticalProbability);
+			int(appliedDamage.x) * (1 - absCriticalProb) +
+			int(criticalAppliedDamage.x) * absCriticalProb,
+			int(appliedDamage.y) * (1 - absCriticalProb) +
+			int(criticalAppliedDamage.y) * absCriticalProb);
 
-	fprintf(
+	fwprintf(
 		file,
-		"%.3f\t%.3f\t"
+		L"%.3f\t%.3f\t"
 		"%.3f\t%.3f\t"
 
 		"%.3f\t%.3f\t%.3f\t"
@@ -516,9 +523,44 @@ int RejectWorseCombinations(
 		{
 			auto target = *jt;
 
-			auto result = toEvaluate->Compare(*target);
+			auto result3 = GeneralizedCombinationBase::Compare(*toEvaluate, *target);
 
-			if (result == GeneralizedCombinationBase::Equal)
+#if 0
+			{
+				auto result = toEvaluate->Compare(*target);
+				auto result2 = target->Compare(*toEvaluate);
+
+				if (result == GeneralizedCombinationBase::Equal)
+				{
+					assert(result2 == GeneralizedCombinationBase::Equal);
+					assert(result3 == GeneralizedCombinationBase::Equal);
+				}
+				else if (result == GeneralizedCombinationBase::Worse)
+				{
+					assert(result2 == GeneralizedCombinationBase::NotWorse);
+					assert(result3 == GeneralizedCombinationBase::Worse);
+				}
+				else if (result == GeneralizedCombinationBase::NotWorse)
+				{
+					if (result2 == GeneralizedCombinationBase::NotWorse)
+					{
+						result3 = GeneralizedCombinationBase::Compare(*toEvaluate, *target);
+						assert(result3 == GeneralizedCombinationBase::Undetermined);
+					}
+					else if (result2 == GeneralizedCombinationBase::Worse)
+					{
+						assert(result3 == GeneralizedCombinationBase::Better);
+					}
+					else
+					{
+						auto result2 = target->Compare(*toEvaluate);
+						assert(!"impossible");
+					}
+				}
+			}
+#endif
+
+			if (result3 == GeneralizedCombinationBase::Equal)
 			{
 				// 우측을 좌측에 더하자
 				toEvaluate->CombineEquivalent(target);
@@ -535,7 +577,7 @@ int RejectWorseCombinations(
 				++rejected;
 				jt = next.erase(jt);
 			}
-			else if (result == GeneralizedCombinationBase::Worse)
+			else if (result3 == GeneralizedCombinationBase::Worse)
 			{
 				if (dump)
 				{
@@ -549,7 +591,7 @@ int RejectWorseCombinations(
 				bad = true;
 				break;
 			}
-			else if (target->IsWorseThanOrEqualTo(*toEvaluate))
+			else if (result3 == GeneralizedCombinationBase::Better)
 			{
 				if (dump)
 				{
@@ -564,7 +606,7 @@ int RejectWorseCombinations(
 				target->Delete();
 				jt = next.erase(jt);
 			}
-			else
+			else // Undetermined
 			{
 				jt++;
 			}
@@ -649,15 +691,22 @@ bool AddIfBetter(
 	DecoratedCombination* newCom, 
 	int& rejected)
 {
-	auto ret = DecoratedCombination::NotWorse;
-
-	for (auto prev : next)
+	for (auto it = next.begin(); it != next.end(); ++it)
 	{
-		ret = newCom->Compare(*prev);
+		auto toCompare = *it;
 
-		if (ret == DecoratedCombination::Equal)
+		auto ret = DecoratedCombination::Compare(*newCom, *toCompare);
+
+		if (ret == DecoratedCombination::Better)
 		{
-			prev->equivalents.push_back(newCom);
+			newCom->equivalents.push_back(toCompare);
+			*it = newCom;
+			++rejected;		// 옛날 게 리젝트됨
+			return true;
+		}
+		else if (ret == DecoratedCombination::Equal)
+		{
+			toCompare->equivalents.push_back(newCom);
 			newCom->addedAsEquivalent = true;
 			rejected++;
 			return false;
@@ -697,37 +746,37 @@ void PopulateDecorators()
 			list<DecoratedCombination*> next;
 			int rejected0 = 0, rejected1 = 0;
 
-			for (int d = 0; d < g_decorators.size(); ++d)
+			for (auto it = g_decAll.begin(); it != g_decAll.end(); )
 			{
-				auto dec = g_decorators[d];
-				if (dec->slotSize > socket + 1) { continue; }
+				auto cur = *it;
 
-				for (auto it = g_decAll.begin(); it != g_decAll.end(); )
+				if (cur->slots[socket] > 0)
 				{
-					auto cur = *it;
-
-					if (cur->slots[socket] > 0)
+					for (int d = 0; d < g_decorators.size(); ++d)
 					{
-						// 장식주를 꽂는 게 의미가 있는 경우
-						if (cur->skills[dec->skillIndex] + 1 <= g_skillMaxLevel[dec->skillIndex])
-						{
-							// 조합을 하나 더 파생한다
-							auto nextCom = DecoratedCombination::DeriveFrom(cur);
+						auto dec = g_decorators[d];
+						if (dec->slotSize > socket + 1) { continue; }
 
-							nextCom->skills[dec->skillIndex]++;
-							nextCom->slots[socket]--;
-							nextCom->decorator = dec;
+						auto nextCom = DecoratedCombination::DeriveFrom(cur);
 
-							AddIfBetter(next, nextCom, rejected0);
-						}
+						bool notMaxed = cur->skills[dec->skillIndex] + 1 <= g_skillMaxLevel[dec->skillIndex];
 
-						++it;
+						nextCom->skills[dec->skillIndex] = 
+							notMaxed ? 
+								cur->skills[dec->skillIndex] + 1 : 
+								g_skillMaxLevel[dec->skillIndex];
+						nextCom->slots[socket]--;
+						nextCom->decorator = notMaxed ? dec : nullptr;
+
+						AddIfBetter(next, nextCom, rejected0);
 					}
-					else
-					{
-						AddIfBetter(next, cur, rejected0);
-						it = g_decAll.erase(it);
-					}
+
+					++it;
+				}
+				else
+				{
+					AddIfBetter(next, cur, rejected0);
+					it = g_decAll.erase(it);
 				}
 			}
 
@@ -738,6 +787,7 @@ void PopulateDecorators()
 
 			g_decAll.swap(next);
 
+			needToIterate = false;
 			for (auto inst : g_decAll)
 			{
 				needToIterate = inst->slots[socket] > 0;
@@ -782,12 +832,14 @@ void TestDamage()
 	for (auto it = g_all.begin(); it != g_all.end(); ++it)
 	{
 		auto comb = *it;
-		comb->slots[0]++;
+		comb->slots[0] += WeaponSlot(0);
+		comb->slots[1] += WeaponSlot(1);
+		comb->slots[2] += WeaponSlot(2);
 	}
 
 	PopulateDecorators();
 
-	fopen_s(&file, "log_damage.txt", "w");
+	fopen_s(&file, "log_damage.txt", "w,ccs=UNICODE");
 
 	Desc desc;
 
@@ -823,9 +875,9 @@ void TestDamage()
 			desc.arrowUpgrade = comb->skills[6] >= 1 && comb->skills[7] >= 1 ? 0.1 : 0;
 			desc.chargeLevel = comb->skills[8] >= 1 ? 3 : 2;
 
-			fprintf(
+			fwprintf(
 				file,
-				"%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t",
+				L"%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t",
 				comb->skills[0],
 				comb->skills[1],
 				comb->skills[2],
@@ -838,7 +890,9 @@ void TestDamage()
 
 			Calculate(desc);
 
-			fprintf(file, "\n");
+			comb->Write(file);
+
+			fwprintf(file, L"\n");
 		}
 	}
 
