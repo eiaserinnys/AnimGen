@@ -34,70 +34,11 @@ double WeaponCritical() { return 0.15; }
 double BaseCriticalDamageRate() { return 1.25; }
 double MotionValue(int chargeLevel) 
 { 
-	return chargeLevel >= 3 ? 0.12 : 0.11; 
+	return chargeLevel >= 3 ? 0.11 : 0.10; 
 }
 
 double PhysicalDefense() { return 0.45; }
 double ElementalDefense() { return 0.2; }
-
-//------------------------------------------------------------------------------
-int MaxAttackSkillLevel() { return 7; }
-
-pair<int, double> AttackSkillBonus(int level)
-{
-	int damage[] = { 0, 3, 6, 9, 12, 15, 18, 21, };
-	double critical[] = { 0, 0, 0, 0, 0, 0.05, 0.05, 0.05, };
-	if (0 <= level && level < COUNT_OF(damage)) 
-	{ return make_pair(damage[level], critical[level]); }
-	throw invalid_argument("");
-}
-
-//------------------------------------------------------------------------------
-int MaxElementalSkillLevel() { return 5; }
-
-pair<int, double> ElementalSkillLevel(int level)
-{
-	int damage[] = { 0, 30, 60, 100, 100, 100, };
-	double modifier[] = { 0, 0, 0, 0, 0.05, 0.1, };
-	if (0 <= level && level < COUNT_OF(damage))
-	{ return make_pair(damage[level], modifier[level]); }
-	throw invalid_argument("");
-}
-
-//------------------------------------------------------------------------------
-int MaxCriticalEyeSkillLevel() { return 7; }
-
-double CriticalEye(int level)
-{
-	double modifier[] = { 0, 0.03, 0.06, 0.1, 0.15, 0.2, 0.25, 0.3 };
-	if (0 <= level && level < COUNT_OF(modifier)) { return modifier[level]; }
-	throw invalid_argument("");
-}
-
-//------------------------------------------------------------------------------
-int MaxSuperCriticalSkillLevel() { return 3; }
-
-double SuperCritical(int level)
-{
-	double modifier[] = { 0, 0.05, 0.1, 0.15, };
-	if (0 <= level && level < COUNT_OF(modifier))
-	{ return modifier[level]; }
-	throw invalid_argument("");
-}
-
-//------------------------------------------------------------------------------
-int MaxExploitWeaknessSkillLevel() { return 3; }
-
-double ExploitWeakness(int level)
-{
-	double modifier[] = { 0, 0.15, 0.3, 0.5, };
-	if (0 <= level && level < COUNT_OF(modifier))
-	{ return modifier[level]; }
-	throw invalid_argument("");
-}
-
-//------------------------------------------------------------------------------
-double FireDragonsGambit() { return 0.35; }
 
 //------------------------------------------------------------------------------
 struct Desc
@@ -455,21 +396,26 @@ void FilterArmors()
 			}
 
 			// scan
-			bool duplication = false;
+			GeneralizedArmor::ComparisonResult compare = GeneralizedArmor::NotWorse;
 			for (int k = 0; k < g_generalized[(Armor::PartType) i]->size(); ++k)
 			{
 				auto prev = (*g_generalized[(Armor::PartType) i])[k];
 
-				if (*prev == general)
+				compare = general.Compare(*prev);
+
+				if (compare == GeneralizedArmor::Equal)
 				{
 					prev->source.push_back(part);
-					duplication = true;
+					break;
+				}
+				else if (compare == GeneralizedArmor::Worse)
+				{
 					break;
 				}
 			}
 
 			bool added = false;
-			if (!duplication)
+			if (compare == GeneralizedArmor::NotWorse)
 			{
 				auto newGeneral = new GeneralizedArmor(COUNT_OF(g_skills));
 				*newGeneral = general;
@@ -493,7 +439,7 @@ void FilterArmors()
 			{
 				auto* rhs = (*g_generalized[(Armor::PartType) i])[k];
 
-				if (*cur <= *rhs)
+				if (cur->IsWorseThanOrEqualTo(*rhs))
 				{
 					WindowsUtility::Debug(L"Dropping '");
 					cur->DumpSimple();
@@ -504,7 +450,7 @@ void FilterArmors()
 					bad = true;
 					break;
 				}
-				else if (*rhs <= *cur)
+				else if (rhs->IsWorseThanOrEqualTo(*cur))
 				{
 					WindowsUtility::Debug(L"Dropping '");
 					rhs->DumpSimple();
@@ -552,7 +498,10 @@ void FilterArmors()
 list<GeneralizedCombination*> g_all;
 
 //------------------------------------------------------------------------------
-int RejectWorseCombinations(list<GeneralizedCombination*>& next, bool dump)
+template <typename CombinationType>
+int RejectWorseCombinations(
+	list<CombinationType*>& next, 
+	bool dump)
 {
 	// 생성된 페어를 평가한다
 	int rejected = 0;
@@ -568,7 +517,33 @@ int RejectWorseCombinations(list<GeneralizedCombination*>& next, bool dump)
 		for (; jt != next.end();)
 		{
 			auto target = *jt;
-			if (*toEvaluate <= *target)
+
+			auto result = toEvaluate->Compare(*target);
+
+			if (result == GeneralizedCombinationBase::Equal)
+			{
+				// 우측을 좌측에 더하자
+				toEvaluate->instances.insert(
+					toEvaluate->instances.end(),
+					target->instances.begin(),
+					target->instances.end());
+
+				target->instances.clear();
+
+				if (dump)
+				{
+					WindowsUtility::Debug(L"Dropping '");
+					target->DumpSimple();
+					WindowsUtility::Debug(L"' for '");
+					toEvaluate->DumpSimple();
+					WindowsUtility::Debug(L"'. (Same)\n");
+				}
+
+				++rejected;
+				delete target;
+				jt = next.erase(jt);
+			}
+			else if (result == GeneralizedCombinationBase::Worse)
 			{
 				if (dump)
 				{
@@ -576,13 +551,13 @@ int RejectWorseCombinations(list<GeneralizedCombination*>& next, bool dump)
 					toEvaluate->DumpSimple();
 					WindowsUtility::Debug(L"' for '");
 					target->DumpSimple();
-					WindowsUtility::Debug(L"'.\n");
+					WindowsUtility::Debug(L"'. (Worse)\n");
 				}
 
 				bad = true;
 				break;
 			}
-			else if (*target <= *toEvaluate)
+			else if (target->IsWorseThanOrEqualTo(*toEvaluate))
 			{
 				if (dump)
 				{
@@ -590,7 +565,7 @@ int RejectWorseCombinations(list<GeneralizedCombination*>& next, bool dump)
 					target->DumpSimple();
 					WindowsUtility::Debug(L"' for '");
 					toEvaluate->DumpSimple();
-					WindowsUtility::Debug(L"'.\n");
+					WindowsUtility::Debug(L"'. (Worse)\n");
 				}
 
 				++rejected;
@@ -629,11 +604,17 @@ void PopulateArmors()
 		for (int i = 0; i < gs.size(); ++i)
 		{
 			auto newComb = new GeneralizedCombination(COUNT_OF(g_skills));
-			newComb->Combine(*gs[i]);
+			newComb->Combine(nullptr, channel, gs[i]);
 			g_all.push_back(newComb);
 		}
 
 		WindowsUtility::Debug(L"%d\n", g_all.size());
+
+		// 전체 덤프 ㄱㄱ
+		for (auto it = g_all.begin(); it != g_all.end(); ++it)
+		{
+			(*it)->Dump();
+		}
 	}
 
 	// 다음 채널을 추가해서 늘린다
@@ -649,12 +630,12 @@ void PopulateArmors()
 			for (int i = 0; i < gs.size(); ++i)
 			{
 				auto newComb = new GeneralizedCombination(COUNT_OF(g_skills));
-				*newComb = **it;
-				newComb->Combine(*gs[i]);
+				newComb->Combine(*it, channel, gs[i]);
 				next.push_back(newComb);
 			}
 		}
 
+		// 전체 덤프 ㄱㄱ
 		int rejected = RejectWorseCombinations(next, false);
 
 		for (auto it = g_all.begin(); it != g_all.end(); ++it)
@@ -666,6 +647,8 @@ void PopulateArmors()
 
 		WindowsUtility::Debug(L"%d (%d)---------------------------------------\n", g_all.size(), rejected);
 	}
+
+	//for (auto it = g_all.begin(); it != g_all.end(); ++it) { (*it)->Dump(); }
 }
 
 //------------------------------------------------------------------------------
@@ -690,7 +673,7 @@ void PopulateDecorators()
 
 				for (auto jt = next.begin(); jt != next.end(); ++jt)
 				{
-					if (*newCom <= **jt)
+					if (newCom->IsWorseThanOrEqualTo(**jt))
 					{
 						worse = true;
 						break;
@@ -745,10 +728,7 @@ void PopulateDecorators()
 			// 중복된 페어를 제거한다
 			rejected1 = RejectWorseCombinations(next, false);
 
-			for (auto it = g_all.begin(); it != g_all.end(); ++it)
-			{
-				delete *it;
-			}
+			for (auto inst : g_all) { delete inst; }
 
 			g_all.swap(next);
 

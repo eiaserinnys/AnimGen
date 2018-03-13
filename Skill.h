@@ -35,3 +35,26 @@ static int g_skillMaxLevel[] =
 struct Decorator;
 
 extern std::vector<Decorator*> g_skillToDecorator;
+
+//------------------------------------------------------------------------------
+int MaxAttackSkillLevel();
+std::pair<int, double> AttackSkillBonus(int level);
+
+//------------------------------------------------------------------------------
+int MaxElementalSkillLevel();
+std::pair<int, double> ElementalSkillLevel(int level);
+
+//------------------------------------------------------------------------------
+int MaxCriticalEyeSkillLevel();
+double CriticalEye(int level);
+
+//------------------------------------------------------------------------------
+int MaxSuperCriticalSkillLevel();
+double SuperCritical(int level);
+
+//------------------------------------------------------------------------------
+int MaxExploitWeaknessSkillLevel();
+double ExploitWeakness(int level);
+
+//------------------------------------------------------------------------------
+double FireDragonsGambit();

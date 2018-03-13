@@ -224,6 +224,9 @@
     <ClCompile Include="GeneralizedCombination.cpp">
       <Filter>ThisApp\MHW</Filter>
     </ClCompile>
+    <ClCompile Include="Skill.cpp">
+      <Filter>ThisApp\MHW</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="RenderContext.h">
@@ -422,6 +425,9 @@
       <Filter>ThisApp\MHW</Filter>
     </ClInclude>
     <ClInclude Include="GeneralizedCombination.h">
+      <Filter>ThisApp\MHW</Filter>
+    </ClInclude>
+    <ClInclude Include="Damage.h">
       <Filter>ThisApp\MHW</Filter>
     </ClInclude>
   </ItemGroup>

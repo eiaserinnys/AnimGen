@@ -169,6 +169,7 @@
     <ClCompile Include="RobotCoordinate.cpp" />
     <ClCompile Include="RobotIK.cpp" />
     <ClCompile Include="SceneDescriptor.cpp" />
+    <ClCompile Include="Skill.cpp" />
     <ClCompile Include="SolutionCoordinate.cpp" />
     <ClCompile Include="SolutionVector.cpp" />
     <ClCompile Include="Solver.cpp" />
@@ -191,6 +192,7 @@
     <ClInclude Include="BasicMeshT.h" />
     <ClInclude Include="ClampedSplineFixedStep.h" />
     <ClInclude Include="Coefficient.h" />
+    <ClInclude Include="Damage.h" />
     <ClInclude Include="Decorator.h" />
     <ClInclude Include="DeferredRenderer.h" />
     <ClInclude Include="DiagnosticRenderer.h" />

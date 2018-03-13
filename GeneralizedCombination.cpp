@@ -11,13 +11,13 @@
 using namespace std;
 
 //------------------------------------------------------------------------------
-GeneralizedCombination::GeneralizedCombination(const GeneralizedCombination& rhs)
+GeneralizedCombinationBase::GeneralizedCombinationBase(const GeneralizedCombinationBase& rhs)
 {
 	operator = (rhs);
 }
 
 //------------------------------------------------------------------------------
-GeneralizedCombination::GeneralizedCombination(int skillCount)
+GeneralizedCombinationBase::GeneralizedCombinationBase(int skillCount)
 	: skillCount(skillCount)
 {
 	skills = new int[skillCount] { 0 };
@@ -26,13 +26,13 @@ GeneralizedCombination::GeneralizedCombination(int skillCount)
 }
 
 //------------------------------------------------------------------------------
-GeneralizedCombination::~GeneralizedCombination()
+GeneralizedCombinationBase::~GeneralizedCombinationBase()
 {
 	delete[] skills;
 }
 
 //------------------------------------------------------------------------------
-GeneralizedCombination& GeneralizedCombination::operator = (const GeneralizedCombination& rhs)
+GeneralizedCombinationBase& GeneralizedCombinationBase::operator = (const GeneralizedCombinationBase& rhs)
 {
 	delete[] skills;
 
@@ -47,30 +47,19 @@ GeneralizedCombination& GeneralizedCombination::operator = (const GeneralizedCom
 }
 
 //------------------------------------------------------------------------------
-int GeneralizedCombination::SlotCount() const
+int GeneralizedCombinationBase::SlotCount() const
 {
 	return slots[0] + slots[1] + slots[2];
 }
 
 //------------------------------------------------------------------------------
-bool GeneralizedCombination::operator == (const GeneralizedCombination& rhs)
+GeneralizedCombinationBase::ComparisonResult 
+	GeneralizedCombinationBase::Compare(
+		const GeneralizedCombinationBase& rhs) const
 {
-	for (int i = 0; i < skillCount; ++i)
-	{
-		if (skills[i] != rhs.skills[i]) { return false; }
-	}
+	// 완전 동일 여부 체크
+	bool exactSame = true;
 
-	for (int i = 0; i < COUNT_OF(slots); ++i)
-	{
-		if (slots[i] != rhs.slots[i]) { return false; }
-	}
-
-	return true;
-}
-
-//------------------------------------------------------------------------------
-bool GeneralizedCombination::operator <= (const GeneralizedCombination& rhs)
-{
 	// 계산을 위해서 복제한다
 	int slotRhs[3] = { rhs.slots[0], rhs.slots[1],rhs.slots[2], };
 
@@ -80,42 +69,48 @@ bool GeneralizedCombination::operator <= (const GeneralizedCombination& rhs)
 	{
 		int curSkill = skills[i];
 
-		int toSub = min(curSkill, rhs.skills[i]);
-		curSkill = curSkill - toSub;
+		// 완전 동일 여부를 확인한다
+		exactSame = exactSame && (curSkill == rhs.skills[i]);
 
-		// lhs에 남은 스킬을 rhs에 장식주를 달아서 커버 가능한지 확인한다
 		if (curSkill > 0)
 		{
-			if (g_skillToDecorator[i] != nullptr)
+			int toSub = min(curSkill, rhs.skills[i]);
+			curSkill = curSkill - toSub;
+
+			// lhs에 남은 스킬을 rhs에 장식주를 달아서 커버 가능한지 확인한다
+			if (curSkill > 0)
 			{
-				int slotSize = g_skillToDecorator[i]->slotSize;
-
-				for (int j = slotSize - 1; j < COUNT_OF(slots); ++j)
+				if (g_skillToDecorator[i] != nullptr)
 				{
-					int toSub = min(curSkill, slotRhs[j]);
+					int slotSize = g_skillToDecorator[i]->slotSize;
 
-					if (toSub > 0)
+					for (int j = slotSize - 1; j < COUNT_OF(slots); ++j)
 					{
-						curSkill -= toSub;
-						slotRhs[j] -= toSub;
+						int toSub = min(curSkill, slotRhs[j]);
 
-						if (curSkill <= 0)
+						if (toSub > 0)
 						{
-							break;
+							curSkill -= toSub;
+							slotRhs[j] -= toSub;
+
+							if (curSkill <= 0)
+							{
+								break;
+							}
 						}
 					}
-				}
 
-				if (curSkill > 0)
-				{
-					return false;
+					if (curSkill > 0)
+					{
+						return NotWorse;
+					}
 				}
-			}
-			else
-			{
-				// 장식주로 커버가 안 되는 스킬이다
-				// 이 조합은 어쩔 수 없이 살려야 한다
-				return false;
+				else
+				{
+					// 장식주로 커버가 안 되는 스킬이다
+					// 이 조합은 어쩔 수 없이 살려야 한다
+					return NotWorse;
+				}
 			}
 		}
 	}
@@ -128,37 +123,53 @@ bool GeneralizedCombination::operator <= (const GeneralizedCombination& rhs)
 		{
 			int curSlot = slots[slotSize];
 
-			if (curSlot <= 0) { continue; }
+			// 완전 동일 여부를 확인한다
+			exactSame = exactSame && (curSlot == slots[slotSize]);
 
-			bool selected = false;
-			for (int i = slotSize; i < COUNT_OF(slots); ++i)
-			{
-				int toSub = min(curSlot, slotRhs[i]);
-
-				if (toSub > 0)
-				{
-					curSlot -= toSub;
-					slotRhs[i] -= toSub;
-
-					if (curSlot <= 0)
-					{
-						break;
-					}
-				}
-			}
-			
 			if (curSlot > 0)
 			{
-				return false;
+				bool selected = false;
+				for (int i = slotSize; i < COUNT_OF(slots); ++i)
+				{
+					int toSub = min(curSlot, slotRhs[i]);
+
+					if (toSub > 0)
+					{
+						curSlot -= toSub;
+						slotRhs[i] -= toSub;
+
+						if (curSlot <= 0)
+						{
+							break;
+						}
+					}
+				}
+
+				if (curSlot > 0)
+				{
+					return NotWorse;
+				}
 			}
 		}
 	}
+	else
+	{
+		// 완전 동일 여부를 확인한다
+		exactSame = exactSame && (rhs.SlotCount() == 0);
+	}
 
-	return true;
+	return exactSame ? Equal : Worse;
 }
 
 //------------------------------------------------------------------------------
-void GeneralizedCombination::Combine(const GeneralizedCombination& rhs)
+bool GeneralizedCombinationBase::IsWorseThanOrEqualTo(const GeneralizedCombinationBase& rhs) const
+{
+	auto result = Compare(rhs);
+	return result != NotWorse;
+}
+
+//------------------------------------------------------------------------------
+void GeneralizedCombinationBase::Combine(const GeneralizedCombinationBase& rhs)
 {
 	for (int i = 0; i < skillCount; ++i)
 	{
@@ -177,7 +188,7 @@ void GeneralizedCombination::Combine(const GeneralizedCombination& rhs)
 }
 
 //------------------------------------------------------------------------------
-void GeneralizedCombination::Dump() const
+void GeneralizedCombinationBase::Dump() const
 {
 	DumpSimple();
 
@@ -185,7 +196,7 @@ void GeneralizedCombination::Dump() const
 }
 
 //------------------------------------------------------------------------------
-void GeneralizedCombination::DumpSimple() const
+void GeneralizedCombinationBase::DumpSimple() const
 {
 	bool first = true;
 	for (int i = 0; i < skillCount; ++i)
@@ -243,5 +254,108 @@ void GeneralizedArmor::Dump() const
 	for (auto it = source.begin(); it != source.end(); ++it)
 	{
 		WindowsUtility::Debug(L"\t%s\n", (*it)->name.c_str());
+	}
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+//------------------------------------------------------------------------------
+GeneralizedCombination::GeneralizedCombination(int skillCount)
+	: ParentType(skillCount)
+{
+}
+
+//------------------------------------------------------------------------------
+GeneralizedCombination::~GeneralizedCombination()
+{
+	ClearInstances();
+}
+
+//------------------------------------------------------------------------------
+void GeneralizedCombination::ClearInstances()
+{
+	for (auto comb : instances) { delete comb; }
+	instances.clear();
+}
+
+//------------------------------------------------------------------------------
+GeneralizedCombination::GeneralizedCombination(const GeneralizedCombination& rhs)
+{
+	operator = (rhs);
+}
+
+//------------------------------------------------------------------------------
+GeneralizedCombination& GeneralizedCombination::operator = (const GeneralizedCombination& rhs)
+{
+	throw invalid_argument("");
+}
+
+//------------------------------------------------------------------------------
+void GeneralizedCombination::Combine(
+	const GeneralizedCombination* prev,
+	int partIndex, 
+	const GeneralizedArmor* part)
+{
+	ClearInstances();
+
+	if (prev != nullptr)
+	{ 
+		ParentType::operator = (*prev);
+	}
+
+	ParentType::Combine(*part);
+
+	if (prev != nullptr)
+	{
+		for (auto prevInst : prev->instances)
+		{
+			auto inst = new CombinationInstance;
+			*inst = *prevInst;
+			
+			inst->parts[partIndex] = part;
+
+			instances.push_back(inst);
+		}
+	}
+	else
+	{
+		auto inst = new CombinationInstance;
+		inst->parts[partIndex] = part;
+		instances.push_back(inst);
+	}
+}
+
+//------------------------------------------------------------------------------
+void GeneralizedCombination::Dump() const
+{
+	DumpSimple();
+
+	WindowsUtility::Debug(L"\n");
+
+	for (auto it = instances.begin(); it != instances.end(); ++it)
+	{
+		auto inst = *it;
+
+		WindowsUtility::Debug(L"\t");
+
+		for (int i = 0; i < COUNT_OF(inst->parts); ++i)
+		{
+			if (inst->parts[i] == nullptr) { continue; }
+
+			WindowsUtility::Debug(
+				L"%s", 
+				(*inst->parts[i]->source.begin())->name.c_str());
+
+			if (inst->parts[i]->source.size() > 1)
+			{
+				WindowsUtility::Debug(L"(외 %d개) | ", inst->parts[i]->source.size());
+			}
+			else
+			{
+				WindowsUtility::Debug(L" | ");
+			}
+		}
+
+		WindowsUtility::Debug(L"\n");
 	}
 }

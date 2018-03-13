@@ -4,40 +4,48 @@
 
 struct Armor;
 
-struct GeneralizedCombination
+//------------------------------------------------------------------------------
+struct GeneralizedCombinationBase
 {
 	int* skills = nullptr;
 	int skillCount = 0;
 
 	int slots[3];
 
-	GeneralizedCombination() = default;
+	GeneralizedCombinationBase() = default;
 
-	GeneralizedCombination(const GeneralizedCombination& rhs);
+	GeneralizedCombinationBase(const GeneralizedCombinationBase& rhs);
 
-	GeneralizedCombination& operator = (const GeneralizedCombination& rhs);
+	GeneralizedCombinationBase& operator = (const GeneralizedCombinationBase& rhs);
 
-	GeneralizedCombination(int skillCount);
+	GeneralizedCombinationBase(int skillCount);
 
-	~GeneralizedCombination();
+	~GeneralizedCombinationBase();
 
-	void Combine(const GeneralizedCombination& rhs);
+	void Combine(const GeneralizedCombinationBase& rhs);
 
 	int SlotCount() const;
 
-	bool operator == (const GeneralizedCombination& rhs);
+	enum ComparisonResult
+	{
+		NotWorse,
+		Worse,
+		Equal, 
+	};
 
-	bool operator <= (const GeneralizedCombination& rhs);
+	ComparisonResult Compare(const GeneralizedCombinationBase& rhs) const;
+
+	bool IsWorseThanOrEqualTo(const GeneralizedCombinationBase& rhs) const;
 
 	void Dump() const;
 
 	void DumpSimple() const;
 };
 
-
-struct GeneralizedArmor : public GeneralizedCombination
+//------------------------------------------------------------------------------
+struct GeneralizedArmor : public GeneralizedCombinationBase
 {
-	typedef GeneralizedCombination ParentType;
+	typedef GeneralizedCombinationBase ParentType;
 
 	GeneralizedArmor(int skillCount);
 
@@ -49,3 +57,34 @@ struct GeneralizedArmor : public GeneralizedCombination
 
 	std::list<Armor*> source;
 };
+
+//------------------------------------------------------------------------------
+struct CombinationInstance
+{
+	const GeneralizedArmor* parts[5] = { nullptr, nullptr, nullptr, nullptr, nullptr, };
+};
+
+struct GeneralizedCombination : public GeneralizedCombinationBase
+{
+	typedef GeneralizedCombinationBase ParentType;
+
+	~GeneralizedCombination();
+
+	GeneralizedCombination(int skillCount);
+
+	GeneralizedCombination(const GeneralizedCombination& rhs);
+
+	GeneralizedCombination& operator = (const GeneralizedCombination& rhs);
+
+	void Combine(
+		const GeneralizedCombination* prev, 
+		int partIndex, 
+		const GeneralizedArmor* part);
+
+	void Dump() const;
+
+	std::list<CombinationInstance*> instances;
+
+	void ClearInstances();
+};
+
