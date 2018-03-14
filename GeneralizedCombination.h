@@ -73,8 +73,11 @@ struct GeneralizedArmor : public GeneralizedCombinationBase
 };
 
 //------------------------------------------------------------------------------
+struct Charm;
+
 struct PartInstance
 {
+	const Charm* charm = nullptr;
 	const GeneralizedArmor* parts[5] = { nullptr, nullptr, nullptr, nullptr, nullptr, };
 };
 
@@ -89,6 +92,10 @@ struct GeneralizedCombination : public GeneralizedCombinationBase
 	GeneralizedCombination(const GeneralizedCombination& rhs);
 
 	GeneralizedCombination& operator = (const GeneralizedCombination& rhs);
+
+	void Combine(
+		const GeneralizedCombination* prev,
+		const Charm* charm);
 
 	void Combine(
 		const GeneralizedCombination* prev, 
@@ -110,7 +117,6 @@ struct GeneralizedCombination : public GeneralizedCombinationBase
 
 //------------------------------------------------------------------------------
 struct Decorator;
-struct Charm;
 
 struct DecoratedCombination : public GeneralizedCombinationBase
 {
@@ -126,10 +132,6 @@ struct DecoratedCombination : public GeneralizedCombinationBase
 		int socket,
 		int decIndex);
 
-	static DecoratedCombination* DeriveFrom(
-		DecoratedCombination* comb,
-		const Charm* charm);
-
 	void CombineEquivalent(DecoratedCombination* rhs);
 
 	void Delete();
@@ -144,8 +146,6 @@ public:
 	const Decorator* decorator = nullptr;
 	int lastSocket = 0;
 	int lastDecoratorIndex = - 1;
-
-	const Charm* charm = nullptr;
 
 private:
 	DecoratedCombination* derivedFrom = nullptr;

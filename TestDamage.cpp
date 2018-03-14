@@ -372,16 +372,27 @@ void LoadCharms()
 
 		if (tokens.size() >= 3)
 		{
-			int index = GetSkillIndex(tokens[1]);
-			if (index >= 0)
-			{
-				auto dec = new Charm;
-				dec->name = tokens[0];
-				dec->skill = tokens[1];
-				dec->skillIndex = index;
-				dec->skillLevel = _wtoi(tokens[2].c_str());
+			auto dec = new Charm;
+			dec->name = tokens[0];
 
+			for (int i = 1; i < tokens.size() - 1; i++)
+			{
+				int index = GetSkillIndex(tokens[i]);
+				if (index >= 0)
+				{
+					dec->skills.push_back(make_pair(tokens[i], index));
+				}
+			}
+
+			dec->skillLevel = _wtoi(tokens.rbegin()->c_str());
+
+			if (!dec->skills.empty())
+			{
 				g_charms.push_back(dec);
+			}
+			else
+			{
+				delete dec;
 			}
 
 			//WindowsUtility::Debug(L"%s %s R%d [%d]\n", dec->name.c_str(), dec->skill.c_str(), dec->rarity, dec->slotSize);
@@ -663,13 +674,10 @@ void PopulateArmors()
 {
 	// 초기 리스트를 만든다
 	{
-		int channel = 0;
-		auto& gs = *g_generalized[(Armor::PartType) channel];
-
-		for (int i = 0; i < gs.size(); ++i)
+		for (int i = 0; i < g_charms.size(); ++i)
 		{
 			auto newComb = new GeneralizedCombination(COUNT_OF(g_skills));
-			newComb->Combine(nullptr, channel, gs[i]);
+			newComb->Combine(nullptr, g_charms[i]);
 			g_all.push_back(newComb);
 		}
 
@@ -683,7 +691,7 @@ void PopulateArmors()
 	}
 
 	// 다음 채널을 추가해서 늘린다
-	for (int channel = 1; channel < Armor::Count; ++channel)
+	for (int channel = 0; channel < Armor::Count; ++channel)
 	{
 		list<GeneralizedCombination*> next;
 
@@ -717,43 +725,6 @@ void PopulateArmors()
 }
 
 //------------------------------------------------------------------------------
-bool AddIfBetter(
-	list<DecoratedCombination*>& next, 
-	DecoratedCombination* newCom, 
-	int& rejected)
-{
-	for (auto it = next.begin(); it != next.end(); ++it)
-	{
-		auto toCompare = *it;
-
-		auto ret = DecoratedCombination::Compare(*newCom, *toCompare);
-
-		if (ret == DecoratedCombination::Better)
-		{
-			newCom->equivalents.push_back(toCompare);
-			*it = newCom;
-			++rejected;		// 옛날 게 리젝트됨
-			return true;
-		}
-		else if (ret == DecoratedCombination::Equal)
-		{
-			toCompare->equivalents.push_back(newCom);
-			rejected++;
-			return false;
-		}
-		else if (ret == DecoratedCombination::Worse)
-		{
-			newCom->Delete();
-			rejected++;
-			return false;
-		}
-	}
-
-	next.push_back(newCom);
-	return true;
-}
-
-//------------------------------------------------------------------------------
 list<DecoratedCombination*> g_decAll;
 
 void PopulateDecorators()
@@ -764,110 +735,147 @@ void PopulateDecorators()
 		g_decAll.push_back(DecoratedCombination::DeriveFrom(comb));
 	}
 
+	auto rejected = RejectWorseCombinations(g_decAll, false);
+	WindowsUtility::Debug(
+		L"\tInitial Rejection: %d (%d)\n",
+		g_decAll.size(),
+		rejected);
+
 	// 작은 소켓부터 채워가며 리스트를 구축해보자
 	// 소켓 크기에 대해서 순회하는 것에 주의
-	for (int socket = 2; socket >= 0; --socket)
+	bool first = true;
+	for (int socket = 2; socket >= 0; )
 	{
-		bool needToIterate = false;
-
-		WindowsUtility::Debug(L"Filling socket with size %d\n", socket + 1);
-
-		do
+		if (first)
 		{
-			list<DecoratedCombination*> next;
-			int rejected0 = 0, rejected1 = 0;
-
-			for (auto it = g_decAll.begin(); it != g_decAll.end(); )
-			{
-				auto cur = *it;
-
-				if (cur->slots[socket] <= 0)
-				{
-					AddIfBetter(next, cur, rejected0);
-					it = g_decAll.erase(it);
-					continue;
-				}
-
-				int dFrom = 0;
-				if (cur->lastSocket == socket)
-				{
-					dFrom = cur->lastDecoratorIndex;
-				}
-
-				for (int d = dFrom; d < g_decorators.size(); ++d)
-				{
-					auto dec = g_decorators[d];
-					if (dec->slotSize > socket + 1) { continue; }
-
-					bool notMaxed = cur->skills[dec->skillIndex] + 1 <= g_skillMaxLevel[dec->skillIndex];
-					int toAdd = notMaxed ? dec->skillIndex : -1;
-
-					bool processed = false;
-					for (auto it = next.begin(); it != next.end(); ++it)
-					{
-						auto toCompare = *it;
-
-						// 만들지 않은 상태에서 비교한다
-						auto ret = DecoratedCombination::Compare(*cur, *toCompare, toAdd, socket);
-
-						if (ret == DecoratedCombination::Better)
-						{
-							auto nextCom = DecoratedCombination::DeriveFrom(cur, dec, socket, d);
-							nextCom->equivalents.push_back(toCompare);
-							*it = nextCom;
-							++rejected0;		// 옛날 게 리젝트됨
-
-							processed = true;
-							break;
-						}
-						else if (ret == DecoratedCombination::Equal)
-						{
-							auto nextCom = DecoratedCombination::DeriveFrom(cur, dec, socket, d);
-							toCompare->equivalents.push_back(nextCom);
-							rejected0++;
-
-							processed = true;
-							break;
-						}
-						else if (ret == DecoratedCombination::Worse)
-						{
-							rejected0++;
-							processed = true;
-							break;
-						}
-					}
-
-					if (!processed)
-					{
-						auto nextCom = DecoratedCombination::DeriveFrom(cur, dec, socket, d);
-						next.push_back(nextCom);
-					}
-				}
-
-				++it;
-			}
-
-			// 중복된 페어를 제거한다
-			rejected1 = RejectWorseCombinations(next, false);
-
-			for (auto inst : g_decAll) { inst->Delete(); }
-
-			g_decAll.swap(next);
-
-			needToIterate = false;
-			for (auto inst : g_decAll)
-			{
-				needToIterate = inst->slots[socket] > 0;
-				if (needToIterate) { break; }
-			}
-
-			WindowsUtility::Debug(
-				L"\t%d (%d,%d)-----------\n",
-				g_decAll.size(),
-				rejected0, 
-				rejected1);
+			WindowsUtility::Debug(L"Filling socket with size %d\n", socket + 1);
+			first = false;
 		}
-		while (needToIterate);
+
+		list<DecoratedCombination*> next;
+
+		// 먼저 더 슬롯에 끼울 게 없는 조합을 옮긴다
+		for (auto it = g_decAll.begin(); it != g_decAll.end(); )
+		{
+			auto cur = *it;
+			if (cur->slots[socket] <= 0)
+			{
+				next.push_back(cur);
+				it = g_decAll.erase(it);
+			}
+			else
+			{
+				it++;
+			}
+		}
+
+		int rejected[] = { 0, 0, 0, };
+		for (auto it = g_decAll.begin(); it != g_decAll.end(); )
+		{
+			auto cur = *it;
+			assert(cur->slots[socket] > 0);
+
+			int dFrom = cur->lastSocket == socket ? cur->lastDecoratorIndex : 0;
+
+			for (int d = dFrom; d < g_decorators.size(); ++d)
+			{
+				auto dec = g_decorators[d];
+				if (dec->slotSize > socket + 1) { continue; }
+
+				bool notMaxed = cur->skills[dec->skillIndex] + 1 <= g_skillMaxLevel[dec->skillIndex];
+				int toAdd = notMaxed ? dec->skillIndex : -1;
+
+				DecoratedCombination* newCombination = nullptr;
+
+				bool processed = false;
+				for (auto it = next.begin(); it != next.end(); )
+				{
+					auto toCompare = *it;
+
+					// 만들지 않은 상태에서 비교한다
+					auto ret = DecoratedCombination::Compare(*cur, *toCompare, toAdd, socket);
+
+					if (ret == DecoratedCombination::Better)
+					{
+						// 옛날 걸 리젝트한다
+						toCompare->Delete();
+						it = next.erase(it);
+						++rejected[0];
+					}
+					else if (ret == DecoratedCombination::Equal)
+					{
+						if (newCombination == nullptr)
+						{
+							newCombination = DecoratedCombination::DeriveFrom(cur, dec, socket, d);
+						}
+
+						// 옛날 걸 리젝트한다
+						newCombination->CombineEquivalent(toCompare);
+
+						it = next.erase(it);
+
+						++rejected[1];
+					}
+					else if (ret == DecoratedCombination::Worse)
+					{
+						++rejected[2];
+						processed = true;
+						break;
+					}
+					else
+					{
+						++it;
+					}
+				}
+
+				if (!processed)
+				{
+					if (newCombination == nullptr)
+					{
+						newCombination = DecoratedCombination::DeriveFrom(cur, dec, socket, d);
+					}
+
+					next.push_back(newCombination);
+				}
+				else
+				{
+					if (newCombination != nullptr)
+					{
+						newCombination->Delete();
+					}
+				}
+			}
+
+			++it;
+		}
+
+		// 중복된 페어를 제거한다
+		//rejected1 = RejectWorseCombinations(next, false);
+		//assert(rejected1 == 0);
+
+		for (auto inst : g_decAll) { inst->Delete(); }
+
+		g_decAll.swap(next);
+
+		bool needToIterate = false;
+		for (auto inst : g_decAll)
+		{
+			needToIterate = inst->slots[socket] > 0;
+			if (needToIterate) { break; }
+		}
+
+		if (!needToIterate) 
+		{ 
+			socket--; 
+			first = true;
+		}
+
+		WindowsUtility::Debug(
+			L"\t%d (%d,%d,%d)\n",
+			g_decAll.size(),
+			rejected[0], 
+			rejected[1],
+			rejected[2]);
 	}
 }
 
@@ -896,7 +904,7 @@ void TestDamage()
 
 	PopulateArmors();
 
-	// 무기 1슬롯을 더 뚫는다
+	// 무기 슬롯을 더 뚫는다
 	for (auto it = g_all.begin(); it != g_all.end(); ++it)
 	{
 		auto comb = *it;
@@ -915,62 +923,61 @@ void TestDamage()
 	{
 		auto comb = *it;
 
-		for (int c = 0; c < g_charms.size(); ++c)
+		//0L"공격",
+		//1L"간파",
+		//2L"슈퍼 회심",
+		//3L"약점 특효",
+		//4L"번개속성 공격 강화",
+		//5L"화룡의 비기",
+		//6L"통상탄/통상화살 강화",
+		//7L"산탄/강사 강화",
+		//8L"활 모으기 단계 해제",
+		//9L"체술",
+
+		bool arrow =
+			(comb->skills[6] == 1 && comb->skills[7] == 1) ||
+			(comb->skills[6] == 0 && comb->skills[7] == 0) ||
+			g_skills[6] != L"통상탄/통상화살 강화" || 
+			g_skills[7] != L"산탄/강사 강화";
+
+		bool gambit = 
+			(comb->skills[5] >= 2 || comb->skills[5] == 0) || 
+			g_skills[5] != L"화룡의 비기";
+
+		bool move = 
+			comb->skills[9] >= 3 || 
+			g_skills[9] != L"체술";
+
+		if (arrow && gambit && move)
 		{
-			auto f = DecoratedCombination::DeriveFrom(comb, g_charms[c]);
+			desc.attackBonus = AttackSkillBonus(comb->skills[0]);
+			desc.criticalEye = CriticalEye(comb->skills[1]);
+			desc.superCritical = SuperCritical(comb->skills[2]);
+			desc.exploitWeakness = ExploitWeakness(comb->skills[3]);
+			desc.elementalBonus = ElementalSkillLevel(comb->skills[4]);
+			desc.fireDragonGambit = comb->skills[5] >= 2 ? FireDragonsGambit() : 0;
+			desc.arrowUpgrade = comb->skills[6] >= 1 && comb->skills[7] >= 1 ? 0.1 : 0;
+			desc.chargeLevel = comb->skills[8] >= 1 ? 3 : 2;
 
-			//0L"공격",
-			//1L"간파",
-			//2L"슈퍼 회심",
-			//3L"약점 특효",
-			//4L"번개속성 공격 강화",
-			//5L"화룡의 비기",
-			//6L"통상탄/통상화살 강화",
-			//7L"산탄/강사 강화",
-			//8L"활 모으기 단계 해제",
-			//9L"체술",
+			fwprintf(
+				file,
+				L"%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t",
+				comb->skills[0],
+				comb->skills[1],
+				comb->skills[2],
+				comb->skills[3],
+				comb->skills[4],
+				comb->skills[5],
+				comb->skills[6],
+				comb->skills[7],
+				comb->skills[8],
+				comb->skills[9]);
 
-			bool arrow =
-				(f->skills[6] == 1 && f->skills[7] == 1) ||
-				(f->skills[6] == 0 && f->skills[7] == 0);
+			Calculate(desc);
 
-			bool gambit = f->skills[5] >= 2 || f->skills[5] >= 0;
+			comb->Write(file);
 
-			bool move = f->skills[9] >= 3;
-
-			if (arrow && gambit && move)
-			{
-				desc.attackBonus = AttackSkillBonus(f->skills[0]);
-				desc.criticalEye = CriticalEye(f->skills[1]);
-				desc.superCritical = SuperCritical(f->skills[2]);
-				desc.exploitWeakness = ExploitWeakness(f->skills[3]);
-				desc.elementalBonus = ElementalSkillLevel(f->skills[4]);
-				desc.fireDragonGambit = f->skills[5] >= 2 ? FireDragonsGambit() : 0;
-				desc.arrowUpgrade = f->skills[6] >= 1 && f->skills[7] >= 1 ? 0.1 : 0;
-				desc.chargeLevel = f->skills[8] >= 1 ? 3 : 2;
-
-				fwprintf(
-					file,
-					L"%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t",
-					f->skills[0],
-					f->skills[1],
-					f->skills[2],
-					f->skills[3],
-					f->skills[4],
-					f->skills[5],
-					f->skills[6],
-					f->skills[7],
-					f->skills[8],
-					f->skills[9]);
-
-				Calculate(desc);
-
-				f->Write(file);
-
-				fwprintf(file, L"\n");
-			}
-
-			f->Delete();
+			fwprintf(file, L"\n");
 		}
 	}
 

@@ -6,8 +6,9 @@
 struct Charm
 {
 	std::wstring name;
-	std::wstring skill;
-	int skillIndex;
+
+	std::vector<std::pair<std::wstring, int>> skills;
+
 	int skillLevel;
 };
 

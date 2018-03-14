@@ -451,6 +451,48 @@ GeneralizedCombination& GeneralizedCombination::operator = (const GeneralizedCom
 //------------------------------------------------------------------------------
 void GeneralizedCombination::Combine(
 	const GeneralizedCombination* prev,
+	const Charm* charm)
+{
+	ClearInstances();
+
+	if (prev != nullptr)
+	{
+		ParentType::operator = (*prev);
+	}
+
+	for (int i = 0; i < charm->skills.size(); ++i)
+	{
+		int index = charm->skills[i].second;
+
+		skills[index] += charm->skillLevel;
+
+		if (skills[index] > g_skillMaxLevel[index])
+		{
+			skills[index] = g_skillMaxLevel[index];
+		}
+	}
+
+	if (prev != nullptr)
+	{
+		for (auto prevInst : prev->instances)
+		{
+			auto inst = new PartInstance;
+			*inst = *prevInst;
+			inst->charm = charm;
+			instances.push_back(inst);
+		}
+	}
+	else
+	{
+		auto inst = new PartInstance;
+		inst->charm = charm;
+		instances.push_back(inst);
+	}
+}
+
+//------------------------------------------------------------------------------
+void GeneralizedCombination::Combine(
+	const GeneralizedCombination* prev,
 	int partIndex, 
 	const GeneralizedArmor* part)
 {
@@ -525,6 +567,11 @@ void GeneralizedCombination::Dump() const
 			}
 		}
 
+		if (inst->charm != nullptr)
+		{
+			WindowsUtility::Debug(L"%s", inst->charm->name.c_str());
+		}
+
 		WindowsUtility::Debug(L"\n");
 	}
 }
@@ -597,39 +644,10 @@ DecoratedCombination* DecoratedCombination::DeriveFrom(
 			ret->decorator = dec;
 		}
 
-		ret->lastSocket = socket;
 		ret->lastDecoratorIndex = decIndex;
+		ret->lastSocket = socket;
 
 		ret->slots[socket]--;	// ¾îÂ·µç ½½·ÔÀº ¼Òºñ
-	}
-
-	return ret;
-}
-
-//------------------------------------------------------------------------------
-DecoratedCombination* DecoratedCombination::DeriveFrom(
-	DecoratedCombination* from,
-	const Charm* charm)
-{
-	auto ret = new DecoratedCombination;
-
-	(*ret).ParentType::operator = (*from);
-
-	ret->source = from->source;
-
-	ret->derivedFrom = from;
-
-	from->refCount++;
-
-	if (charm != nullptr)
-	{
-		auto index = charm->skillIndex;
-
-		int total = ret->skills[index] + charm->skillLevel;
-
-		ret->skills[index] = 
-			 total < g_skillMaxLevel[index] ? total : g_skillMaxLevel[index];
-		ret->charm = charm;
 	}
 
 	return ret;
@@ -667,9 +685,9 @@ void DecoratedCombination::Write(FILE* file) const
 		fwprintf(file, L"%s ", (*inst->parts[i]->source.begin())->name.c_str());
 	}
 
-	if (charm != nullptr)
+	if (inst->charm != nullptr)
 	{
-		fwprintf(file, L"%s ", charm->name.c_str());
+		fwprintf(file, L"%s ", inst->charm->name.c_str());
 	}
 
 	const DecoratedCombination* c = this;
