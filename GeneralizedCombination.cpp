@@ -619,6 +619,13 @@ DecoratedCombination* DecoratedCombination::DeriveFrom(
 
 //------------------------------------------------------------------------------
 DecoratedCombination* DecoratedCombination::DeriveFrom(
+	DecoratedCombination* from)
+{
+	return DeriveFrom(from, nullptr, -1, -1);
+}
+
+//------------------------------------------------------------------------------
+DecoratedCombination* DecoratedCombination::DeriveFrom(
 	DecoratedCombination* from,
 	const Decorator* dec,
 	int socket,

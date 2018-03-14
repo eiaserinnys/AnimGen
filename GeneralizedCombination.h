@@ -124,7 +124,11 @@ struct DecoratedCombination : public GeneralizedCombinationBase
 
 	DecoratedCombination();
 
-	static DecoratedCombination* DeriveFrom(const GeneralizedCombination* comb);
+	static DecoratedCombination* DeriveFrom(
+		const GeneralizedCombination* comb);
+
+	static DecoratedCombination* DeriveFrom(
+		DecoratedCombination* comb);
 
 	static DecoratedCombination* DeriveFrom(
 		DecoratedCombination* comb, 
