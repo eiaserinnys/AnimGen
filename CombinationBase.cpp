@@ -55,12 +55,18 @@ int CombinationBase::SlotCount() const
 static void CalculateFreedom(
 	const CombinationBase** side,
 	int slotSize,
+	int lhsSocketToUse, 
 	int* freedom,
 	bool* maxed)
 {
 	for (int s = 0; s < 2; ++s)
 	{
 		int slotAvailable = side[s]->slots[slotSize];
+
+		if (s == 0 && lhsSocketToUse == slotSize)
+		{
+			slotAvailable--;
+		}
 
 		for (auto si : g_skillsBySlotSize[slotSize])
 		{
@@ -127,6 +133,17 @@ CombinationBase::ComparisonResult
 		const CombinationBase& lhs,
 		const CombinationBase& rhs)
 {
+	return CompareStrict2(lhs, rhs, -1, -1);
+}
+
+//------------------------------------------------------------------------------
+CombinationBase::ComparisonResult
+	CombinationBase::CompareStrict2(
+		const CombinationBase& lhs,
+		const CombinationBase& rhs,
+		int skillToAddToLhs,
+		int lhsSocketToUse)
+{
 	const CombinationBase* side[] = { &lhs, &rhs };
 
 	bool canExpressOther[] = { true, true };
@@ -157,6 +174,8 @@ CombinationBase::ComparisonResult
 	int skills[2][bufferSize];
 	assert(COUNT_OF(g_skills) < bufferSize);
 
+	if (skillToAddToLhs >= 0) { skills[0][skillToAddToLhs]++; }
+
 	for (int i = 0; i < COUNT_OF(side); ++i)
 	{
 		memcpy(skills[i], side[i]->skills, sizeof(int) * COUNT_OF(g_skills));
@@ -168,7 +187,7 @@ CombinationBase::ComparisonResult
 		// 먼저 슬롯 크기별 자유도를 계산한다
 		int freedom[] = { 0, 0, };
 		bool maxed[] = { false, false, };
-		CalculateFreedom(side, slotSize, freedom, maxed);
+		CalculateFreedom(side, slotSize, lhsSocketToUse, freedom, maxed);
 
 		// 양측의 자유도를 구한 상태에서 비교에 들어간다
 		// 가용한 모든 스킬 최대인 경우 크기 비교가 무의미하다
@@ -181,10 +200,60 @@ CombinationBase::ComparisonResult
 		}
 		else
 		{
-			// 슬롯을 모두 사용했을 때 
-			// 각각 스킬의 달성 가능한 최대 레벨이 얼마인지 비교한다
-			// 어느 한쪽이 다른 쪽보다 항상 높으면 유리/불리를 따질 수 있다
 			int available[] = { freedom[0], freedom[1], };
+			int totalLevel[] = { freedom[0], freedom[1], };
+
+			for (auto si : g_skillsBySlotSize[slotSize])
+			{
+				totalLevel[0] += side[0]->skills[si];
+				totalLevel[1] += side[1]->skills[si];
+			}
+
+			// 모든 스킬 레벨의 합이 적은 쪽은 다른 쪽을 표현할 수 없다
+			if (totalLevel[0] > totalLevel[1])
+			{
+				canExpressOther[1] = false;
+				CHECK_SHORTCIRCUIT();
+			}
+			else if (totalLevel[0] < totalLevel[1])
+			{
+				canExpressOther[0] = false;
+				CHECK_SHORTCIRCUIT();
+			}
+
+			// 한쪽에 장식주를 꽂아서 다른 쪽을 만들 수 있는지 확인한다
+			for (int s = 0; s < 2; ++s)
+			{
+				int o = 1 - s;
+
+				for (auto si : g_skillsBySlotSize[slotSize])
+				{
+					if (side[s]->skills[si] < side[o]->skills[si])
+					{
+						auto delta = side[o]->skills[si] - side[s]->skills[si];
+						if (delta > available[s])
+						{
+							canExpressOther[s] = false;
+							CHECK_SHORTCIRCUIT();
+							break;
+						}
+						else
+						{
+							available[s] -= delta;
+						}
+					}
+				}
+
+				// 원복
+				available[s] = freedom[s];
+			}
+
+			// 아직도 Undetermined로 기각되지 않았다면 
+			// 양 조합의 슬롯을 모두 사용했을 때 
+			// 각 스킬의 달성 가능 최대 레벨이 얼마인지 비교한다
+			// 어느 한쪽이 다른 쪽보다 항상 높으면 유리/불리를 따질 수 있다
+			char checked[bufferSize] = { 0 };
+			assert(g_skillsBySlotSize[slotSize].size() < bufferSize);
 
 			function<bool()> EvaluatePermutations;
 
@@ -192,6 +261,8 @@ CombinationBase::ComparisonResult
 			{
 				for (auto si : g_skillsBySlotSize[slotSize])
 				{
+					if (checked[si] != 0) { continue; }
+
 					if (skills[0][si] >= g_skillMaxLevel[si] &&
 						skills[1][si] >= g_skillMaxLevel[si])
 					{
@@ -207,6 +278,8 @@ CombinationBase::ComparisonResult
 					skills[0][si] += toUse[0]; available[0] -= toUse[0];
 					skills[1][si] += toUse[1]; available[1] -= toUse[1];
 
+					// 장식주를 꽂아서 달성 가능한 최대 레벨이 
+					// 낮으면 한 쪽을 이용해서 다른 한 쪽을 조합할 수 없다
 					if (skills[0][si] > skills[1][si])
 					{
 						canExpressOther[1] = false;
@@ -222,12 +295,16 @@ CombinationBase::ComparisonResult
 						// 아직 더 봐야 알 수 있다
 					}
 
-					if (available[0] > 0 && available[1] > 0)
+					if (available[0] > 0 || available[1] > 0)
 					{
+						checked[si] = 1;
+
 						if (EvaluatePermutations())
 						{
 							return true;
 						}
+
+						checked[si] = 0;
 					}
 					else
 					{
@@ -240,10 +317,6 @@ CombinationBase::ComparisonResult
 						{
 							canExpressOther[0] = false;
 							CHECK_SHORTCIRCUIT();
-						}
-						else
-						{
-							// 동시에 똑 떨어졌으면 뭐...
 						}
 					}
 
@@ -747,11 +820,79 @@ void CombinationBase::Combine(const CombinationBase& rhs)
 }
 
 //------------------------------------------------------------------------------
+bool CombinationBase::IsTriviallyWorse(const CombinationBase& rhs) const
+{
+	for (int i = 0; i < skillCount; ++i)
+	{
+		if (skills[i] > rhs.skills[i]) { return false; }
+	}
+
+	for (int i = 0; i < COUNT_OF(slots); ++i)
+	{
+		if (slots[i] > rhs.slots[i]) { return false; }
+	}
+
+	return true;
+}
+
+//------------------------------------------------------------------------------
+bool CombinationBase::IsTriviallyEquivalent(const CombinationBase& rhs) const
+{
+	for (int i = 0; i < skillCount; ++i)
+	{
+		if (skills[i] != rhs.skills[i]) { return false; }
+	}
+
+	for (int i = 0; i < COUNT_OF(slots); ++i)
+	{
+		if (slots[i] != rhs.slots[i]) { return false; }
+	}
+
+	return true;
+}
+
+//------------------------------------------------------------------------------
 void CombinationBase::Dump() const
 {
 	DumpSimple();
 
 	WindowsUtility::Debug(L"\n");
+}
+
+//------------------------------------------------------------------------------
+void CombinationBase::Dump(FILE* file) const
+{
+	fwprintf(file, L"%s\n", DumpToString().c_str());
+}
+
+//------------------------------------------------------------------------------
+wstring CombinationBase::DumpToString() const
+{
+	wstring result;
+
+	bool first = true;
+	for (int i = 0; i < skillCount; ++i)
+	{
+		if (skills[i] > 0)
+		{
+			result += Utility::FormatW(
+				first ? L"%s%d" : L" %s%d",
+				g_skillsAbb[i].c_str(),
+				skills[i]);
+			first = false;
+		}
+	}
+
+	for (int i = 0; i < COUNT_OF(slots); ++i)
+	{
+		//for (int j = 0; j < slots[i]; ++j)
+		//{
+		//	WindowsUtility::Debug(L" [%d]", i + 1);
+		//}
+		result += Utility::FormatW(L" (%d)", slots[i]);
+	}
+
+	return result;
 }
 
 //------------------------------------------------------------------------------
@@ -763,8 +904,8 @@ void CombinationBase::DumpSimple() const
 		if (skills[i] > 0)
 		{
 			WindowsUtility::Debug(
-				first ? L"%s Lv.%d" : L" %s Lv.%d",
-				g_skills[i].c_str(),
+				first ? L"%s%d" : L" %s%d",
+				g_skillsAbb[i].c_str(),
 				skills[i]);
 			first = false;
 		}

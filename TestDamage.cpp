@@ -83,7 +83,7 @@ int RejectWorseCombinations(
 			if (result3 == GeneralizedCombination::Equal)
 			{
 				// 우측을 좌측에 더하자
-				toEvaluate->CombineEquivalent(target);
+				toEvaluate->CombineEquivalent(*target);
 
 				if (dump)
 				{
@@ -145,70 +145,6 @@ int RejectWorseCombinations(
 	}
 
 	return rejected;
-}
-
-//------------------------------------------------------------------------------
-void PopulateArmors(
-	const map<Armor::PartType, std::vector<GeneralizedArmor*>*>& g_generalized)
-{
-	bool dump = false;
-
-	// 초기 리스트를 만든다
-	{
-		for (int i = 0; i < g_charms.size(); ++i)
-		{
-			auto newComb = new GeneralizedCombination(COUNT_OF(g_skills));
-			newComb->Combine(nullptr, g_charms[i]);
-			g_all.push_back(newComb);
-		}
-
-		WindowsUtility::Debug(L"%d\n", g_all.size());
-
-		// 전체 덤프 ㄱㄱ
-		for (auto it = g_all.begin(); it != g_all.end(); ++it)
-		{
-			(*it)->Dump();
-		}
-	}
-
-	// 다음 채널을 추가해서 늘린다
-	for (int channel = 0; channel < Armor::Count; ++channel)
-	{
-		list<GeneralizedCombination*> next;
-
-		auto it = g_generalized.find((Armor::PartType) channel);
-		if (it == g_generalized.end())
-		{
-			throw invalid_argument("");
-		}
-
-		auto& gs = *it->second;
-
-		// 모든 조합 x 조합의 페어를 일단 생성
-		for (auto it = g_all.begin(); it != g_all.end(); ++it)
-		{
-			for (int i = 0; i < gs.size(); ++i)
-			{
-				auto newComb = new GeneralizedCombination(COUNT_OF(g_skills));
-				newComb->Combine(*it, channel, gs[i]);
-				next.push_back(newComb);
-			}
-		}
-
-		// 전체 덤프 ㄱㄱ
-		int rejected = RejectWorseCombinations(next, true);
-
-		for (auto it = g_all.begin(); it != g_all.end(); ++it)
-		{
-			delete *it;
-		}
-
-		g_all.swap(next);
-
-		WindowsUtility::Debug(L"%d (%d)---------------------------------------\n", g_all.size(), rejected);
-	}
-	
-	WindowsUtility::Debug(L"%d\n", g_all.size());
 }
 
 //------------------------------------------------------------------------------
@@ -405,9 +341,7 @@ void PopulateDecorators(bool strict)
 					auto toCompare = *it;
 
 					// 만들지 않은 상태에서 비교한다
-					auto ret = strict ?
-						DecoratedCombination::CompareStrict(*cur, *toCompare, skillToAdd, socket) :
-						DecoratedCombination::Compare(*cur, *toCompare, skillToAdd, socket);
+					auto ret = DecoratedCombination::CompareStrict2(*cur, *toCompare, skillToAdd, socket);
 
 					if (ret == DecoratedCombination::Better)
 					{
@@ -438,7 +372,7 @@ void PopulateDecorators(bool strict)
 						}
 
 						// 옛날 걸 리젝트한다
-						newCombination->CombineEquivalent(toCompare);
+						newCombination->CombineEquivalent(*toCompare);
 
 						it = next.erase(it);
 
@@ -540,11 +474,23 @@ void TestDamage()
 	LoadDecorators();
 	LoadCharms();
 	CheckActiveSkills();
-	
-	map<Armor::PartType, vector<GeneralizedArmor*>*> g_generalized;
-	FilterArmors(g_generalized, false);
 
-	PopulateArmors(g_generalized);
+	if (false)
+	{
+		CombinationBase a(COUNT_OF(g_skills)), b(COUNT_OF(g_skills));
+		a.skills[0] = 1;
+		a.skills[1] = 1;
+		b.slots[0] = 1;
+
+		auto comp = CombinationBase::CompareStrict2(a, b);
+
+		comp = CombinationBase::CompareStrict2(a, b);
+	}
+	
+	map<Armor::PartType, list<GeneralizedArmor*>*> g_generalized;
+	FilterArmors(g_generalized, true, true);
+
+	PopulateArmors(g_generalized, g_all, false, true);
 
 	WeaponDesc weapon;
 	MonsterDesc monster;

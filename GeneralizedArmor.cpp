@@ -52,7 +52,7 @@ GeneralizedArmor& GeneralizedArmor::operator = (const GeneralizedArmor& rhs)
 }
 
 //------------------------------------------------------------------------------
-void GeneralizedArmor::CombineSource(const GeneralizedArmor& rhs)
+void GeneralizedArmor::CombineEquivalent(const GeneralizedArmor& rhs)
 {
 	source.insert(source.end(), rhs.source.begin(), rhs.source.end());
 }
@@ -70,96 +70,33 @@ void GeneralizedArmor::Dump() const
 	}
 }
 
-////////////////////////////////////////////////////////////////////////////////
-
 //------------------------------------------------------------------------------
-void AddIfNotWorse(
-	vector<GeneralizedArmor*>& container,
-	GeneralizedArmor* newPart,
-	bool dump)
+void GeneralizedArmor::Dump(FILE* file) const
 {
-	for (auto it = container.begin(); it != container.end(); )
+	ParentType::Dump(file);
+
+	for (auto it = source.begin(); it != source.end(); ++it)
 	{
-		auto prev = *it;
-
-		auto compare = CombinationBase::CompareStrict2(*newPart, *prev);
-
-		if (compare == GeneralizedArmor::Equal)
-		{
-			if (dump)
-			{ 
-				WindowsUtility::Debug(L"\t");
-				newPart->DumpSimple();
-				WindowsUtility::Debug(L" is equivalent to ");
-				prev->DumpSimple();
-				WindowsUtility::Debug(L"\n");
-			}
-
-			prev->CombineSource(*newPart);
-
-			delete newPart;
-			newPart = nullptr;
-
-			break;
-		}
-		else if (compare == GeneralizedArmor::Better)
-		{
-			if (dump)
-			{
-				WindowsUtility::Debug(L"\t");
-				newPart->DumpSimple();
-				WindowsUtility::Debug(L" is rejecting ");
-				prev->DumpSimple();
-				WindowsUtility::Debug(L"\n");
-			}
-
-			delete prev;
-			it = container.erase(it);
-		}
-		else if (compare == GeneralizedArmor::Worse)
-		{
-			if (dump)
-			{
-				WindowsUtility::Debug(L"\t");
-				newPart->DumpSimple();
-				WindowsUtility::Debug(L" is rejected by ");
-				prev->DumpSimple();
-				WindowsUtility::Debug(L"\n");
-			}
-
-			delete newPart;
-			newPart = nullptr;
-			break;
-		}
-		else
-		{
-			++it;
-		}
-	}
-
-	if (newPart != nullptr)
-	{
-		container.push_back(newPart);
-
-		if (dump)
-		{
-			WindowsUtility::Debug(L"\t");
-			newPart->DumpSimple();
-			WindowsUtility::Debug(L" is added.\n");
-		}
+		fwprintf(file, L"\t%s\n", (*it)->name.c_str());
 	}
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
 //------------------------------------------------------------------------------
 void FilterArmors(
-	map<Armor::PartType, vector<GeneralizedArmor*>*>& g_generalized,
-	bool dump)
+	map<Armor::PartType, list<GeneralizedArmor*>*>& g_generalized,
+	bool dumpList,
+	bool dumpComparison)
 {
-	g_generalized.insert(make_pair(Armor::Head, new vector<GeneralizedArmor*>));
-	g_generalized.insert(make_pair(Armor::Body, new vector<GeneralizedArmor*>));
-	g_generalized.insert(make_pair(Armor::Arm, new vector<GeneralizedArmor*>));
-	g_generalized.insert(make_pair(Armor::Waist, new vector<GeneralizedArmor*>));
-	g_generalized.insert(make_pair(Armor::Leg, new vector<GeneralizedArmor*>));
+	FILE* file;
+	fopen_s(&file, "log_armor.txt", "w,ccs=UNICODE");
+
+	g_generalized.insert(make_pair(Armor::Head, new list<GeneralizedArmor*>));
+	g_generalized.insert(make_pair(Armor::Body, new list<GeneralizedArmor*>));
+	g_generalized.insert(make_pair(Armor::Arm, new list<GeneralizedArmor*>));
+	g_generalized.insert(make_pair(Armor::Waist, new list<GeneralizedArmor*>));
+	g_generalized.insert(make_pair(Armor::Leg, new list<GeneralizedArmor*>));
 		
 	int total = 1;
 
@@ -167,9 +104,9 @@ void FilterArmors(
 	{
 		auto& container = *g_generalized[(Armor::PartType) i];
 
-		if (dump)
+		if (dumpComparison)
 		{
-			WindowsUtility::Debug(L"----------------------------------------\n");
+			fwprintf(file, L"----------------------------------------\n");
 		}
 
 		auto parts = g_armors[(Armor::PartType) i];
@@ -184,9 +121,9 @@ void FilterArmors(
 				continue; 
 			}
 			
-			if (dump)
+			if (dumpComparison)
 			{
-				part->Dump(true);
+				//part->Dump(true);
 			}
 
 			// 계산을 위해서 베이스를 만든다
@@ -205,7 +142,7 @@ void FilterArmors(
 					newPart->slots[i] += add[i] - subtract[i];
 				}
 
-				AddIfNotWorse(container, newPart, dump);
+				AddIfNotWorse(container, newPart, file, true);
 			};
 
 			function<void(int)> Permutate;
@@ -242,19 +179,27 @@ void FilterArmors(
 			Permutate(1);
 		}
 
-		WindowsUtility::Debug(L"----------------------------------------\n");
+		fwprintf(file, L"----------------------------------------\n");
 
 		int validParts = g_generalized[(Armor::PartType) i]->size();
+
+		fwprintf(file, L"%d effective parts found\n", validParts);
 		WindowsUtility::Debug(L"%d effective parts found\n", validParts);
 
-		for (auto general : *g_generalized[(Armor::PartType) i])
+		if (dumpList)
 		{
-			general->Dump();
+			for (auto general : *g_generalized[(Armor::PartType) i])
+			{
+				general->Dump(file);
+			}
 		}
 
 		total *= validParts;
 	}
 
-	WindowsUtility::Debug(L"Total Combination = %d\n", total);
+	fwprintf(file, L"Total Possible Combination = %d\n", total);
+	WindowsUtility::Debug(L"Total Possible Combination = %d\n", total);
+
+	fclose(file);
 }
 

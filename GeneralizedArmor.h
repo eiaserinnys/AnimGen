@@ -15,12 +15,16 @@ struct GeneralizedArmor : public CombinationBase
 
 	void Dump() const;
 
-	void CombineSource(const GeneralizedArmor& rhs);
+	void Dump(FILE* file) const;
+
+	void CombineEquivalent(const GeneralizedArmor& rhs);
 
 	std::list<const Armor*> source;
 };
 
 //------------------------------------------------------------------------------
 void FilterArmors(
-	std::map<Armor::PartType, std::vector<GeneralizedArmor*>*>& g_generalized,
-	bool dump);
+	std::map<Armor::PartType, std::list<GeneralizedArmor*>*>& g_generalized,
+	bool dumpList, 
+	bool dumpComparison);
+

@@ -18,6 +18,22 @@ static std::wstring g_skills[] =
 	L"체술",
 };
 
+static std::wstring g_skillsAbb[] =
+{
+	L"공격",
+	L"간파",
+	L"슈회",
+	L"약특",
+	L"속강",
+	L"화비",
+
+	L"통강",
+	L"산강",
+	L"활모",
+
+	L"체술"
+};
+
 static int g_skillMaxLevel[] =
 {
 	7,
