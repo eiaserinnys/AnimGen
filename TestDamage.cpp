@@ -26,7 +26,6 @@ list<GeneralizedCombination*> g_all;
 template <typename CombinationType>
 int RejectWorseCombinations(
 	list<CombinationType*>& next, 
-	bool strict, 
 	bool dump)
 {
 	// 생성된 페어를 평가한다
@@ -44,10 +43,7 @@ int RejectWorseCombinations(
 		{
 			auto target = *jt;
 
-			auto result3 = 
-				strict ? 
-					GeneralizedCombination::CompareStrict(*toEvaluate, *target) :
-					GeneralizedCombination::Compare(*toEvaluate, *target);
+			auto result3 = GeneralizedCombination::CompareStrict2(*toEvaluate, *target);
 
 #if 0
 			{
@@ -200,7 +196,7 @@ void PopulateArmors(
 		}
 
 		// 전체 덤프 ㄱㄱ
-		int rejected = RejectWorseCombinations(next, false, false);
+		int rejected = RejectWorseCombinations(next, true);
 
 		for (auto it = g_all.begin(); it != g_all.end(); ++it)
 		{
@@ -212,206 +208,7 @@ void PopulateArmors(
 		WindowsUtility::Debug(L"%d (%d)---------------------------------------\n", g_all.size(), rejected);
 	}
 	
-	// 모든 페어에 대해서 큰 슬롯을 작은 슬롯으로 대체한 버전을 모두 만든다
-	// 이후 각 슬롯에 딱 맞는 크기의 장식주만 조합해보면 된다
-	list<GeneralizedCombination*> slotPerm;
-
-	int rejected[] = { 0, 0, 0 };
-
-	for (auto it = g_all.begin(); it != g_all.end(); ++it)
-	{
-		auto cur = *it;
-
-		int subtract[] = { 0, 0, 0 };
-		int add[] = { 0, 0, 0, };
-
-		auto Dump = [&](GeneralizedCombination* comb)
-		{
-			if (dump)
-			{
-				for (int i = 0; i < COUNT_OF(g_skills); ++i)
-				{
-					WindowsUtility::Debug(L"%d ", comb->skills[i]);
-				}
-
-				for (int i = 0; i < 3; ++i)
-				{
-					WindowsUtility::Debug(
-						L"[%d] ",
-						comb->slots[i]);
-				}
-			}
-		};
-
-		auto TryToAdd = [&]()
-		{
-			auto newComb = new GeneralizedCombination(COUNT_OF(g_skills));
-			*newComb = *cur;
-
-			if (dump)
-			{
-				for (int i = 0; i < COUNT_OF(g_skills); ++i)
-				{
-					WindowsUtility::Debug(L"%d ", newComb->skills[i]);
-				}
-
-				for (int i = 0; i < 3; ++i)
-				{
-					WindowsUtility::Debug(L"[%d] ", newComb->slots[i] - subtract[i] + add[i]);
-				}
-
-				WindowsUtility::Debug(L"(");
-
-				for (int i = 0; i < 3; ++i)
-				{
-					if (subtract[i] > 0)
-					{
-						WindowsUtility::Debug(L"-%d", subtract[i]);
-					}
-					else
-					{
-						WindowsUtility::Debug(L"  ");
-					}
-
-					if (add[i] > 0)
-					{
-						WindowsUtility::Debug(L"+%d", add[i]);
-					}
-					else
-					{
-						WindowsUtility::Debug(L"  ");
-					}
-
-					if (i + 1 < 3)
-					{
-						WindowsUtility::Debug(L",");
-					}
-				}
-
-				WindowsUtility::Debug(L") ");
-			}
-
-			for (int i = 0; i < 3; ++i)
-			{
-				newComb->slots[i] = newComb->slots[i] - subtract[i] + add[i];
-			}
-
-			bool newlineNeeded = true;
-
-			for (auto jt = slotPerm.begin(); jt != slotPerm.end(); )
-			{
-				auto prev = *jt;
-
-				auto result = GeneralizedCombination::CompareStrict(*newComb, *prev);
-
-				if (result == GeneralizedCombination::Better)
-				{
-					if (dump)
-					{
-						if (newlineNeeded) { WindowsUtility::Debug(L"\n"); newlineNeeded = false; }
-						WindowsUtility::Debug(L"\t");
-						Dump(prev);
-						WindowsUtility::Debug(L" rejected by newer one\n");
-					}
-
-					rejected[0]++;
-					delete prev;
-					jt = slotPerm.erase(jt);
-				}
-				else if (result == GeneralizedCombination::Equal)
-				{
-					if (dump)
-					{
-						if (newlineNeeded) { WindowsUtility::Debug(L"\n\t"); newlineNeeded = false; }
-						WindowsUtility::Debug(L"\t");
-						Dump(prev);
-						WindowsUtility::Debug(L" rejected by equivalent\n");
-					}
-
-					rejected[1]++;
-					newComb->CombineEquivalent(prev);
-					jt = slotPerm.erase(jt);
-				}
-				else if (result == GeneralizedCombination::Worse)
-				{
-					if (dump)
-					{
-						if (!newlineNeeded) { WindowsUtility::Debug(L"\t"); }
-						WindowsUtility::Debug(L"rejected worse by ");
-						Dump(prev);
-						WindowsUtility::Debug(L"\n");
-					}
-
-					rejected[2]++;
-					delete newComb;
-					newComb = nullptr;
-					break;
-				}
-				else
-				{
-					++jt;
-				}
-			}
-
-			if (newComb != nullptr)
-			{
-				if (dump)
-				{
-					if (!newlineNeeded) { WindowsUtility::Debug(L"\t"); }
-					WindowsUtility::Debug(L"passed\n");
-				}
-
-				slotPerm.push_back(newComb);
-			}
-		};
-
-		function<void(int)> Permutate;
-		Permutate = [&](int socket)
-		{
-			if (socket + 1 < 3 && cur->slots[socket + 1] > 0)
-			{
-				Permutate(socket + 1);
-			}
-
-			if (cur->slots[socket] - subtract[socket] > 0)
-			{
-				subtract[socket]++;
-
-				for (int i = 0; i < socket; ++i)
-				{
-					add[i]++;
-
-					// 슬롯을 바꿀 때마다 추가해보자
-					TryToAdd();
-
-					Permutate(socket);
-
-					add[i]--;
-				}
-
-				subtract[socket]--;
-			}
-		};
-
-		// 아무 조작도 안 한 상태도 추가
-		TryToAdd();
-
-		Permutate(1);
-	}
-
-	for (auto prev : g_all) { delete prev; }
-
-	g_all.swap(slotPerm);
-
-	int r = RejectWorseCombinations(g_all, true, false);
-
-	WindowsUtility::Debug(
-		L"%d (%d,%d,%d,%d)\n", 
-		g_all.size(), 
-		rejected[0],
-		rejected[1],
-		rejected[2],
-		r);
+	WindowsUtility::Debug(L"%d\n", g_all.size());
 }
 
 //------------------------------------------------------------------------------
@@ -425,7 +222,7 @@ void PopulateDecorators(bool strict)
 		g_decAll.push_back(DecoratedCombination::DeriveFrom(comb));
 	}
 
-	auto rejected = RejectWorseCombinations(g_decAll, true, false);
+	auto rejected = RejectWorseCombinations(g_decAll, false);
 	WindowsUtility::Debug(
 		L"\tInitial Rejection: %d (%d)\n",
 		g_decAll.size(),
@@ -745,7 +542,7 @@ void TestDamage()
 	CheckActiveSkills();
 	
 	map<Armor::PartType, vector<GeneralizedArmor*>*> g_generalized;
-	FilterArmors(g_generalized);
+	FilterArmors(g_generalized, false);
 
 	PopulateArmors(g_generalized);
 

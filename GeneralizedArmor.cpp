@@ -78,12 +78,6 @@ void AddIfNotWorse(
 	GeneralizedArmor* newPart,
 	bool dump)
 {
-	if (dump)
-	{
-		WindowsUtility::Debug(L"\tEvaluating ");
-		newPart->Dump();
-	}
-
 	for (auto it = container.begin(); it != container.end(); )
 	{
 		auto prev = *it;
@@ -94,8 +88,11 @@ void AddIfNotWorse(
 		{
 			if (dump)
 			{ 
-				WindowsUtility::Debug(L"\t\tEquivalent to ");
-				prev->Dump();
+				WindowsUtility::Debug(L"\t");
+				newPart->DumpSimple();
+				WindowsUtility::Debug(L" is equivalent to ");
+				prev->DumpSimple();
+				WindowsUtility::Debug(L"\n");
 			}
 
 			prev->CombineSource(*newPart);
@@ -109,8 +106,11 @@ void AddIfNotWorse(
 		{
 			if (dump)
 			{
-				WindowsUtility::Debug(L"\t\tBetter than ");
-				prev->Dump();
+				WindowsUtility::Debug(L"\t");
+				newPart->DumpSimple();
+				WindowsUtility::Debug(L" is rejecting ");
+				prev->DumpSimple();
+				WindowsUtility::Debug(L"\n");
 			}
 
 			delete prev;
@@ -120,10 +120,11 @@ void AddIfNotWorse(
 		{
 			if (dump)
 			{
-				compare = CombinationBase::CompareStrict2(*newPart, *prev);
-
-				WindowsUtility::Debug(L"\t\tWorse than ");
-				prev->Dump();
+				WindowsUtility::Debug(L"\t");
+				newPart->DumpSimple();
+				WindowsUtility::Debug(L" is rejected by ");
+				prev->DumpSimple();
+				WindowsUtility::Debug(L"\n");
 			}
 
 			delete newPart;
@@ -142,28 +143,34 @@ void AddIfNotWorse(
 
 		if (dump)
 		{
-			WindowsUtility::Debug(L"\tAdded\n");
+			WindowsUtility::Debug(L"\t");
+			newPart->DumpSimple();
+			WindowsUtility::Debug(L" is added.\n");
 		}
 	}
 }
 
 //------------------------------------------------------------------------------
 void FilterArmors(
-	map<Armor::PartType, vector<GeneralizedArmor*>*>& g_generalized)
+	map<Armor::PartType, vector<GeneralizedArmor*>*>& g_generalized,
+	bool dump)
 {
 	g_generalized.insert(make_pair(Armor::Head, new vector<GeneralizedArmor*>));
 	g_generalized.insert(make_pair(Armor::Body, new vector<GeneralizedArmor*>));
 	g_generalized.insert(make_pair(Armor::Arm, new vector<GeneralizedArmor*>));
 	g_generalized.insert(make_pair(Armor::Waist, new vector<GeneralizedArmor*>));
 	g_generalized.insert(make_pair(Armor::Leg, new vector<GeneralizedArmor*>));
-
-	bool dump = false;
-
+		
 	int total = 1;
 
 	for (int i = 0; i < Armor::Count; ++i)
 	{
 		auto& container = *g_generalized[(Armor::PartType) i];
+
+		if (dump)
+		{
+			WindowsUtility::Debug(L"----------------------------------------\n");
+		}
 
 		auto parts = g_armors[(Armor::PartType) i];
 		for (int j = 0; j < parts->size(); ++j)

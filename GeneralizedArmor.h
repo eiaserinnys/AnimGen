@@ -22,6 +22,5 @@ struct GeneralizedArmor : public CombinationBase
 
 //------------------------------------------------------------------------------
 void FilterArmors(
-	std::map<
-	Armor::PartType,
-	std::vector<GeneralizedArmor*>*>& g_generalized);
+	std::map<Armor::PartType, std::vector<GeneralizedArmor*>*>& g_generalized,
+	bool dump);

@@ -772,9 +772,10 @@ void CombinationBase::DumpSimple() const
 
 	for (int i = 0; i < COUNT_OF(slots); ++i)
 	{
-		for (int j = 0; j < slots[i]; ++j)
-		{
-			WindowsUtility::Debug(L" [%d]", i + 1);
-		}
+		//for (int j = 0; j < slots[i]; ++j)
+		//{
+		//	WindowsUtility::Debug(L" [%d]", i + 1);
+		//}
+		WindowsUtility::Debug(L" (%d)", slots[i]);
 	}
 }
