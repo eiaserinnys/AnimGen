@@ -87,6 +87,12 @@
     <Filter Include="ThisApp\MHW">
       <UniqueIdentifier>{ed5a2acc-3f7a-49a5-867e-954fa4b5c382}</UniqueIdentifier>
     </Filter>
+    <Filter Include="ThisApp\MHW\Data">
+      <UniqueIdentifier>{65afcade-87d8-42b6-87ce-afc952023d6d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ThisApp\MHW\Utility">
+      <UniqueIdentifier>{2d4efe33-e2a0-42f1-9124-f25f8433b38f}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="RenderContext.cpp">
@@ -224,8 +230,26 @@
     <ClCompile Include="GeneralizedCombination.cpp">
       <Filter>ThisApp\MHW</Filter>
     </ClCompile>
-    <ClCompile Include="Skill.cpp">
+    <ClCompile Include="DamageCalculation.cpp">
       <Filter>ThisApp\MHW</Filter>
+    </ClCompile>
+    <ClCompile Include="Armor.cpp">
+      <Filter>ThisApp\MHW\Data</Filter>
+    </ClCompile>
+    <ClCompile Include="Skill.cpp">
+      <Filter>ThisApp\MHW\Data</Filter>
+    </ClCompile>
+    <ClCompile Include="Decorator.cpp">
+      <Filter>ThisApp\MHW\Data</Filter>
+    </ClCompile>
+    <ClCompile Include="Charm.cpp">
+      <Filter>ThisApp\MHW\Data</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneralizedArmor.cpp">
+      <Filter>ThisApp\MHW\Data</Filter>
+    </ClCompile>
+    <ClCompile Include="CombinationBase.cpp">
+      <Filter>ThisApp\MHW\Utility</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -415,23 +439,32 @@
     <ClInclude Include="PositionRotation.h">
       <Filter>Mathematics\Spline</Filter>
     </ClInclude>
-    <ClInclude Include="Armor.h">
-      <Filter>ThisApp\MHW</Filter>
-    </ClInclude>
-    <ClInclude Include="Decorator.h">
-      <Filter>ThisApp\MHW</Filter>
-    </ClInclude>
-    <ClInclude Include="Skill.h">
-      <Filter>ThisApp\MHW</Filter>
-    </ClInclude>
     <ClInclude Include="GeneralizedCombination.h">
       <Filter>ThisApp\MHW</Filter>
     </ClInclude>
     <ClInclude Include="Damage.h">
       <Filter>ThisApp\MHW</Filter>
     </ClInclude>
-    <ClInclude Include="Charm.h">
+    <ClInclude Include="DamageCalculation.h">
       <Filter>ThisApp\MHW</Filter>
+    </ClInclude>
+    <ClInclude Include="Armor.h">
+      <Filter>ThisApp\MHW\Data</Filter>
+    </ClInclude>
+    <ClInclude Include="Charm.h">
+      <Filter>ThisApp\MHW\Data</Filter>
+    </ClInclude>
+    <ClInclude Include="Decorator.h">
+      <Filter>ThisApp\MHW\Data</Filter>
+    </ClInclude>
+    <ClInclude Include="Skill.h">
+      <Filter>ThisApp\MHW\Data</Filter>
+    </ClInclude>
+    <ClInclude Include="GeneralizedArmor.h">
+      <Filter>ThisApp\MHW\Data</Filter>
+    </ClInclude>
+    <ClInclude Include="CombinationBase.h">
+      <Filter>ThisApp\MHW\Utility</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

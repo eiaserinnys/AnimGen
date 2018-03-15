@@ -14,3 +14,4 @@ struct Charm
 
 extern std::vector<Charm*> g_charms;
 
+void LoadCharms();

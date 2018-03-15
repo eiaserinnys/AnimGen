@@ -15,7 +15,7 @@ static std::wstring g_skills[] =
 	L"활 모으기 단계 해제",
 
 	// 유틸리티
-	L"체술",
+	L"~체술",
 };
 
 static int g_skillMaxLevel[] =
@@ -35,6 +35,15 @@ static int g_skillMaxLevel[] =
 struct Decorator;
 
 extern std::vector<Decorator*> g_skillToDecorator;
+
+extern std::vector<int> g_skillWithNoDecorator;
+
+extern std::vector<std::vector<int>> g_skillsBySlotSize;
+
+void CheckActiveSkills();
+
+//------------------------------------------------------------------------------
+int GetSkillIndex(const std::wstring& skill);
 
 //------------------------------------------------------------------------------
 int MaxAttackSkillLevel();

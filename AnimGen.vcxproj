@@ -135,10 +135,16 @@
   <ItemGroup>
     <ClCompile Include="AngleHelper.cpp" />
     <ClCompile Include="AnimationGeneration.cpp" />
+    <ClCompile Include="Armor.cpp" />
+    <ClCompile Include="Charm.cpp" />
     <ClCompile Include="ClampedSplineFixedStep.cpp" />
+    <ClCompile Include="CombinationBase.cpp" />
+    <ClCompile Include="DamageCalculation.cpp" />
+    <ClCompile Include="Decorator.cpp" />
     <ClCompile Include="DeferredRendrerer.cpp" />
     <ClCompile Include="DiagnosticRenderer.cpp" />
     <ClCompile Include="GeneralizedAccelerationCalculator.cpp" />
+    <ClCompile Include="GeneralizedArmor.cpp" />
     <ClCompile Include="GeneralizedCombination.cpp" />
     <ClCompile Include="GeneralizedCoordinate.cpp" />
     <ClCompile Include="Log.cpp" />
@@ -193,12 +199,15 @@
     <ClInclude Include="Charm.h" />
     <ClInclude Include="ClampedSplineFixedStep.h" />
     <ClInclude Include="Coefficient.h" />
+    <ClInclude Include="CombinationBase.h" />
     <ClInclude Include="Damage.h" />
+    <ClInclude Include="DamageCalculation.h" />
     <ClInclude Include="Decorator.h" />
     <ClInclude Include="DeferredRenderer.h" />
     <ClInclude Include="DiagnosticRenderer.h" />
     <ClInclude Include="DXMathTransform.h" />
     <ClInclude Include="GeneralizedAccelerationCalculator.h" />
+    <ClInclude Include="GeneralizedArmor.h" />
     <ClInclude Include="GeneralizedCombination.h" />
     <ClInclude Include="GeneralizedCoordinate.h" />
     <ClInclude Include="Log.h" />

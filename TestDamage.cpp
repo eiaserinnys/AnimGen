@@ -12,535 +12,13 @@
 #include "Decorator.h"
 #include "Armor.h"
 #include "Charm.h"
-#include "GeneralizedCombination.h"
+#include "GeneralizedArmor.h"
+#include "DamageCalculation.h"
 
 using namespace std;
 //using namespace Core;
 
 static FILE* file = nullptr;
-
-static vector<Set*> g_sets;
-
-static map<Armor::PartType, vector<Armor*>*> g_armors;
-
-static map<Armor::PartType, vector<GeneralizedArmor*>*> g_generalized;
-
-std::vector<Decorator*> g_decorators;
-
-std::vector<Decorator*> g_skillToDecorator;
-
-Core::Vector2D WeaponValue() { return Core::Vector2D(180, 390); }
-double WeaponCritical() { return 0; }
-int WeaponSlot(int slot)
-{
-	int slots[] = { 0, 0, 0 };
-	return slots[slot];
-}
-
-double WeaponMultipler() { return 1.2; }
-
-double BaseCriticalDamageRate(double criticalRate) { return criticalRate >= 0 ? 1.25 : 0.75; }
-double MotionValue(int chargeLevel) { return chargeLevel >= 3 ? 0.11 : 0.10; }
-
-double PhysicalDefense() { return 0.6; }
-double ElementalDefense() { return 0.4; }
-
-//------------------------------------------------------------------------------
-struct Desc
-{
-	pair<int, double> attackBonus;
-	pair<int, double> elementalBonus;
-	double criticalEye;
-	double superCritical;
-	double exploitWeakness;
-	double fireDragonGambit;
-	double arrowUpgrade;
-	int chargeLevel;
-};
-
-//------------------------------------------------------------------------------
-void Calculate(const Desc& desc)
-{
-	// 무기 기본 대미지
-	Core::Vector2D rawDamage = WeaponValue();
-	rawDamage.x /= WeaponMultipler();
-	rawDamage.y /= 10;
-
-	// 대미지 보너스
-	Core::Vector2D rawDamageWithBonus =
-		rawDamage +
-		Core::Vector2D(
-			desc.attackBonus.first, 
-			desc.elementalBonus.first / 10);
-
-	if (rawDamageWithBonus.y >= rawDamage.y * 1.3)
-	{
-		rawDamageWithBonus.y = rawDamage.y * 1.3;
-	}
-
-	// 기본 대미지 * 강격병 * 거리 크리티컬
-	Core::Vector2D modifiedBaseDamage(
-		rawDamageWithBonus.x * (1 + desc.arrowUpgrade) * 1.5 * 1.5,
-		rawDamageWithBonus.y * (1 + desc.elementalBonus.second));
-
-	// 회심률
-	auto criticalProbability =
-		WeaponCritical() +
-		desc.attackBonus.second +
-		desc.criticalEye +
-		desc.exploitWeakness;
-
-	if (criticalProbability > 1) { criticalProbability = 1; }
-	if (criticalProbability < - 1) { criticalProbability = -1; }
-
-	double absCriticalProb = abs(criticalProbability);
-
-	// 물리 회심 배율
-	auto physicalCriticalRate =
-		BaseCriticalDamageRate(criticalProbability) +
-		desc.superCritical;
-
-	// 속성 회심 배율
-	auto elementalCriticalRate =
-		1 +
-		desc.fireDragonGambit;
-
-	// 기대 대미지
-	//Core::Vector2D expectedDamage(
-	//	modifiedBaseDamage.x * criticalProbability * physicalCriticalRate +
-	//	modifiedBaseDamage.x * (1 - criticalProbability),
-	//	modifiedBaseDamage.y * criticalProbability * elementalCriticalRate +
-	//	modifiedBaseDamage.y * (1 - criticalProbability)
-	//);
-	Core::Vector2D expectedDamage(
-		modifiedBaseDamage.x, 
-		modifiedBaseDamage.y);
-
-	Core::Vector2D criticalExpectedDamage(
-		modifiedBaseDamage.x * physicalCriticalRate,
-		modifiedBaseDamage.y * elementalCriticalRate);
-
-	// 모션 적용
-	Core::Vector2D motionDamage =
-		expectedDamage *
-		Core::Vector2D(MotionValue(desc.chargeLevel), 1);
-	Core::Vector2D criticalMotionDamage =
-		criticalExpectedDamage * 
-		Core::Vector2D(MotionValue(desc.chargeLevel), 1);
-
-	// 방어력 적용
-	Core::Vector2D appliedDamage =
-		motionDamage *
-		Core::Vector2D(PhysicalDefense(), ElementalDefense());
-	Core::Vector2D criticalAppliedDamage =
-		criticalMotionDamage *
-		Core::Vector2D(PhysicalDefense(), ElementalDefense());
-
-	// 최종 기대 대미지
-	Core::Vector2D finalExpectedDamage =
-		Core::Vector2D(
-			int(appliedDamage.x) * (1 - absCriticalProb) +
-			int(criticalAppliedDamage.x) * absCriticalProb,
-			int(appliedDamage.y) * (1 - absCriticalProb) +
-			int(criticalAppliedDamage.y) * absCriticalProb);
-
-	fwprintf(
-		file,
-		L"%.3f\t%.3f\t"
-		"%.3f\t%.3f\t"
-
-		"%.3f\t%.3f\t%.3f\t"
-
-		"%.3f\t%.3f\t"
-		"%.3f\t%.3f\t"
-
-		"%.3f\t%.3f\t"
-		"%.3f\t%.3f\t"
-
-		"%.3f\t%.3f\t"
-		"%.3f\t%.3f\t"
-
-		"%.3f\t%.3f\t"
-		"%.3f\t",
-		rawDamageWithBonus.x, rawDamageWithBonus.y,
-		modifiedBaseDamage.x, modifiedBaseDamage.y,
-
-		criticalProbability,
-		physicalCriticalRate, elementalCriticalRate, 
-
-		expectedDamage.x, expectedDamage.y,
-		criticalExpectedDamage.x, criticalExpectedDamage.y,
-
-		motionDamage.x, motionDamage.y,
-		criticalMotionDamage.x, criticalMotionDamage.y,
-
-		appliedDamage.x, appliedDamage.y,
-		criticalAppliedDamage.x, criticalAppliedDamage.y,
-
-		finalExpectedDamage.x, finalExpectedDamage.y,
-		finalExpectedDamage.x + finalExpectedDamage.y);
-}
-
-//------------------------------------------------------------------------------
-vector<wstring> Tokenize(const wstring& s_)
-{
-	vector<wstring> result;
-
-	wstring s = s_;
-
-	size_t pos = 0;
-	wstring token;
-	while ((pos = s.find(L',')) != wstring::npos) 
-	{
-		token = s.substr(0, pos);
-		result.push_back(token);
-		s.erase(0, pos + 1);
-	}
-	result.push_back(s);
-
-	return result;
-}
-
-//------------------------------------------------------------------------------
-void LoadArmors()
-{
-	fopen_s(&file, "ArmorData", "r,ccs=UTF-8");
-
-	Set* curSet = nullptr;
-	int offset = 0;
-
-	g_armors.insert(make_pair(Armor::Head, new vector<Armor*>));
-	g_armors.insert(make_pair(Armor::Body, new vector<Armor*>));
-	g_armors.insert(make_pair(Armor::Arm, new vector<Armor*>));
-	g_armors.insert(make_pair(Armor::Waist, new vector<Armor*>));
-	g_armors.insert(make_pair(Armor::Leg, new vector<Armor*>));
-
-	wchar_t buffer[1024];
-	while (fgetws(&buffer[0], 1024, file) != nullptr)
-	{
-		// 먼저 뉴라인 문자를 제거한다
-		wstring str = buffer;
-		size_t pos;
-		if ((pos = str.find(L'\n')) != wstring::npos)
-		{ 
-			str = str.substr(0, pos);
-		}
-
-		// 쉼표로 자른다
-		auto tokens = Tokenize(str);
-
-		if (offset == 0)
-		{
-			curSet = new Set;
-			curSet->name = tokens[0];
-			curSet->rarity = _wtoi(tokens[1].c_str());
-			curSet->defense = _wtoi(tokens[2].c_str());
-			if (tokens.size() >= 7) { curSet->skill = tokens[6].c_str(); }
-			g_sets.push_back(curSet);
-		}
-		else if (offset < 6)
-		{
-			if (tokens.size() >= 3)
-			{
-				auto part = new Armor;
-				part->type = (Armor::PartType) (offset - 1);
-				part->set = curSet;
-				part->name = tokens[0];
-
-				int skillCount = _wtoi(tokens[1].c_str());
-				for (int i = 0; i < skillCount; ++i)
-				{
-					part->skills.push_back(make_pair(
-						tokens[2 + i * 2 + 0],
-						_wtoi(tokens[2 + i * 2 + 1].c_str())));
-				}
-
-				int slotCount = _wtoi(tokens[2 + skillCount * 2].c_str());
-				for (int i = 0; i < slotCount; ++i)
-				{
-					part->slots.push_back(
-						_wtoi(tokens[3 + skillCount * 2 + i].c_str()));
-				}
-
-				g_armors[part->type]->push_back(part);
-
-#if 0
-				WindowsUtility::Debug(L"\"%s\"\t", part->name.c_str());
-				for (int i = 0; i < part->skills.size(); ++i)
-				{
-					WindowsUtility::Debug(
-						L"%s Lv.%d\t", 
-						part->skills[i].first.c_str(),
-						part->skills[i].second);
-				}
-				if (!part->set->skill.empty())
-				{
-					WindowsUtility::Debug(
-						L"%s\t",
-						part->set->skill.c_str());
-				}
-				for (int i = 0; i < part->slots.size(); ++i)
-				{
-					WindowsUtility::Debug(L"[%d] ", part->slots[i]);
-				}
-				WindowsUtility::Debug(L"\n");
-#endif
-			}
-		}
-
-		offset = (offset + 1) % 7;
-	}
-
-	fclose(file);
-}
-
-//------------------------------------------------------------------------------
-int GetSkillIndex(const wstring& skill)
-{
-	for (int i = 0; i < COUNT_OF(g_skills); ++i)
-	{
-		if (g_skills[i] == skill)
-		{
-			return i;
-		}
-	}
-
-	return -1;
-}
-
-//------------------------------------------------------------------------------
-void LoadDecorators()
-{
-	fopen_s(&file, "DecorationData", "r,ccs=UTF-8");
-
-	wchar_t buffer[1024];
-	while (fgetws(&buffer[0], 1024, file) != nullptr)
-	{
-		// 먼저 뉴라인 문자를 제거한다
-		wstring str = buffer;
-		size_t pos;
-		if ((pos = str.find(L'\n')) != wstring::npos)
-		{
-			str = str.substr(0, pos);
-		}
-
-		// 쉼표로 자른다
-		auto tokens = Tokenize(str);
-
-		if (tokens.size() >= 4)
-		{
-			int index = GetSkillIndex(tokens[0]);
-			if (index >= 0)
-			{
-				auto dec = new Decorator;
-				dec->name = tokens[3];
-				dec->skill = tokens[0];
-				dec->skillIndex = index;
-				dec->rarity = _wtoi(tokens[2].c_str());
-				dec->slotSize = _wtoi(tokens[1].c_str());
-
-				g_decorators.push_back(dec);
-			}
-
-			//WindowsUtility::Debug(L"%s %s R%d [%d]\n", dec->name.c_str(), dec->skill.c_str(), dec->rarity, dec->slotSize);
-		}
-	}
-
-	fclose(file);
-}
-
-//------------------------------------------------------------------------------
-vector<Charm*> g_charms;
-
-void LoadCharms()
-{
-	fopen_s(&file, "CharmData", "r,ccs=UTF-8");
-
-	wchar_t buffer[1024];
-	while (fgetws(&buffer[0], 1024, file) != nullptr)
-	{
-		// 먼저 뉴라인 문자를 제거한다
-		wstring str = buffer;
-		size_t pos;
-		if ((pos = str.find(L'\n')) != wstring::npos)
-		{
-			str = str.substr(0, pos);
-		}
-
-		// 쉼표로 자른다
-		auto tokens = Tokenize(str);
-
-		if (tokens.size() >= 3)
-		{
-			auto dec = new Charm;
-			dec->name = tokens[0];
-
-			for (int i = 1; i < tokens.size() - 1; i++)
-			{
-				int index = GetSkillIndex(tokens[i]);
-				if (index >= 0)
-				{
-					dec->skills.push_back(make_pair(tokens[i], index));
-				}
-			}
-
-			dec->skillLevel = _wtoi(tokens.rbegin()->c_str());
-
-			if (!dec->skills.empty())
-			{
-				g_charms.push_back(dec);
-			}
-			else
-			{
-				delete dec;
-			}
-
-			//WindowsUtility::Debug(L"%s %s R%d [%d]\n", dec->name.c_str(), dec->skill.c_str(), dec->rarity, dec->slotSize);
-		}
-	}
-
-	fclose(file);
-}
-
-//------------------------------------------------------------------------------
-void FilterArmors()
-{
-	g_generalized.insert(make_pair(Armor::Head, new vector<GeneralizedArmor*>));
-	g_generalized.insert(make_pair(Armor::Body, new vector<GeneralizedArmor*>));
-	g_generalized.insert(make_pair(Armor::Arm, new vector<GeneralizedArmor*>));
-	g_generalized.insert(make_pair(Armor::Waist, new vector<GeneralizedArmor*>));
-	g_generalized.insert(make_pair(Armor::Leg, new vector<GeneralizedArmor*>));
-
-	int total = 1;
-
-	for (int i = 0; i < Armor::Count; ++i)
-	{
-		auto parts = g_armors[(Armor::PartType) i];
-		for (int j = 0; j < parts->size(); ++j)
-		{
-			auto part = (*parts)[j];
-
-			GeneralizedArmor general(COUNT_OF(g_skills));
-
-			// 셋트 스킬이 포함시킬 스킬인 경우
-			int index = GetSkillIndex(part->set->skill);
-			if (index >= 0) { general.skills[index]++; }
-
-			// 개별 파트 스킬이 포함시킬 스킬인 경우
-			for (int k = 0; k < part->skills.size(); ++k)
-			{
-				int index = GetSkillIndex(part->skills[k].first);
-				if (index >= 0)
-				{
-					general.skills[index] += part->skills[k].second;
-				}
-			}
-
-			// 슬롯을 적용한다
-			for (int k = 0; k < part->slots.size(); ++k)
-			{
-				general.slots[part->slots[k] - 1]++;
-			}
-
-			// scan
-			GeneralizedArmor::ComparisonResult compare = GeneralizedArmor::NotWorse;
-			for (int k = 0; k < g_generalized[(Armor::PartType) i]->size(); ++k)
-			{
-				auto prev = (*g_generalized[(Armor::PartType) i])[k];
-
-				compare = general.Compare(*prev);
-
-				if (compare == GeneralizedArmor::Equal)
-				{
-					prev->source.push_back(part);
-					break;
-				}
-				else if (compare == GeneralizedArmor::Worse)
-				{
-					break;
-				}
-			}
-
-			bool added = false;
-			if (compare == GeneralizedArmor::NotWorse)
-			{
-				auto newGeneral = new GeneralizedArmor(COUNT_OF(g_skills));
-				*newGeneral = general;
-
-				newGeneral->source.push_back(part);
-
-				g_generalized[(Armor::PartType) i]->push_back(newGeneral);
-
-				added = true;
-			}
-		}
-
-		for (int j = 0; j < g_generalized[(Armor::PartType) i]->size(); )
-		{
-			// 다른 조합보다 불리한 조합은 모두 제거한다
-			auto* cur = (*g_generalized[(Armor::PartType) i])[j];
-
-			bool bad = false;
-
-			for (int k = j + 1; k < g_generalized[(Armor::PartType) i]->size(); )
-			{
-				auto* rhs = (*g_generalized[(Armor::PartType) i])[k];
-
-				if (cur->IsWorseThanOrEqualTo(*rhs))
-				{
-					WindowsUtility::Debug(L"Dropping '");
-					cur->DumpSimple();
-					WindowsUtility::Debug(L"' for '");
-					rhs->DumpSimple();
-					WindowsUtility::Debug(L"'.\n");
-
-					bad = true;
-					break;
-				}
-				else if (rhs->IsWorseThanOrEqualTo(*cur))
-				{
-					WindowsUtility::Debug(L"Dropping '");
-					rhs->DumpSimple();
-					WindowsUtility::Debug(L"' for '");
-					cur->DumpSimple();
-					WindowsUtility::Debug(L"'.\n");
-
-					g_generalized[(Armor::PartType) i]->erase(
-						g_generalized[(Armor::PartType) i]->begin() + k);
-					delete rhs;
-				}
-				else
-				{
-					k++;
-				}
-			}
-
-			if (bad)
-			{
-				g_generalized[(Armor::PartType) i]->erase(
-					g_generalized[(Armor::PartType) i]->begin() + j);
-				delete cur;
-			}
-			else
-			{
-				++j;
-			}
-		}
-
-		for (int j = 0; j < g_generalized[(Armor::PartType) i]->size(); j++)
-		{
-			auto* general = (*g_generalized[(Armor::PartType) i])[j];
-
-			general->Dump();
-		}
-
-		int validParts = g_generalized[(Armor::PartType) i]->size();
-		WindowsUtility::Debug(L"%d-------------------------\n", validParts);
-		total *= validParts;
-	}
-
-	WindowsUtility::Debug(L"Total Combination = %d\n", total);
-}
 
 list<GeneralizedCombination*> g_all;
 
@@ -548,6 +26,7 @@ list<GeneralizedCombination*> g_all;
 template <typename CombinationType>
 int RejectWorseCombinations(
 	list<CombinationType*>& next, 
+	bool strict, 
 	bool dump)
 {
 	// 생성된 페어를 평가한다
@@ -565,33 +44,36 @@ int RejectWorseCombinations(
 		{
 			auto target = *jt;
 
-			auto result3 = GeneralizedCombinationBase::Compare(*toEvaluate, *target);
+			auto result3 = 
+				strict ? 
+					GeneralizedCombination::CompareStrict(*toEvaluate, *target) :
+					GeneralizedCombination::Compare(*toEvaluate, *target);
 
 #if 0
 			{
 				auto result = toEvaluate->Compare(*target);
 				auto result2 = target->Compare(*toEvaluate);
 
-				if (result == GeneralizedCombinationBase::Equal)
+				if (result == GeneralizedCombination::Equal)
 				{
-					assert(result2 == GeneralizedCombinationBase::Equal);
-					assert(result3 == GeneralizedCombinationBase::Equal);
+					assert(result2 == GeneralizedCombination::Equal);
+					assert(result3 == GeneralizedCombination::Equal);
 				}
-				else if (result == GeneralizedCombinationBase::Worse)
+				else if (result == GeneralizedCombination::Worse)
 				{
-					assert(result2 == GeneralizedCombinationBase::NotWorse);
-					assert(result3 == GeneralizedCombinationBase::Worse);
+					assert(result2 == GeneralizedCombination::NotWorse);
+					assert(result3 == GeneralizedCombination::Worse);
 				}
-				else if (result == GeneralizedCombinationBase::NotWorse)
+				else if (result == GeneralizedCombination::NotWorse)
 				{
-					if (result2 == GeneralizedCombinationBase::NotWorse)
+					if (result2 == GeneralizedCombination::NotWorse)
 					{
-						result3 = GeneralizedCombinationBase::Compare(*toEvaluate, *target);
-						assert(result3 == GeneralizedCombinationBase::Undetermined);
+						result3 = GeneralizedCombination::Compare(*toEvaluate, *target);
+						assert(result3 == GeneralizedCombination::Undetermined);
 					}
-					else if (result2 == GeneralizedCombinationBase::Worse)
+					else if (result2 == GeneralizedCombination::Worse)
 					{
-						assert(result3 == GeneralizedCombinationBase::Better);
+						assert(result3 == GeneralizedCombination::Better);
 					}
 					else
 					{
@@ -602,7 +84,7 @@ int RejectWorseCombinations(
 			}
 #endif
 
-			if (result3 == GeneralizedCombinationBase::Equal)
+			if (result3 == GeneralizedCombination::Equal)
 			{
 				// 우측을 좌측에 더하자
 				toEvaluate->CombineEquivalent(target);
@@ -619,7 +101,7 @@ int RejectWorseCombinations(
 				++rejected;
 				jt = next.erase(jt);
 			}
-			else if (result3 == GeneralizedCombinationBase::Worse)
+			else if (result3 == GeneralizedCombination::Worse)
 			{
 				if (dump)
 				{
@@ -633,7 +115,7 @@ int RejectWorseCombinations(
 				bad = true;
 				break;
 			}
-			else if (result3 == GeneralizedCombinationBase::Better)
+			else if (result3 == GeneralizedCombination::Better)
 			{
 				if (dump)
 				{
@@ -670,8 +152,11 @@ int RejectWorseCombinations(
 }
 
 //------------------------------------------------------------------------------
-void PopulateArmors()
+void PopulateArmors(
+	const map<Armor::PartType, std::vector<GeneralizedArmor*>*>& g_generalized)
 {
+	bool dump = false;
+
 	// 초기 리스트를 만든다
 	{
 		for (int i = 0; i < g_charms.size(); ++i)
@@ -695,7 +180,13 @@ void PopulateArmors()
 	{
 		list<GeneralizedCombination*> next;
 
-		auto& gs = *g_generalized[(Armor::PartType) channel];
+		auto it = g_generalized.find((Armor::PartType) channel);
+		if (it == g_generalized.end())
+		{
+			throw invalid_argument("");
+		}
+
+		auto& gs = *it->second;
 
 		// 모든 조합 x 조합의 페어를 일단 생성
 		for (auto it = g_all.begin(); it != g_all.end(); ++it)
@@ -709,7 +200,7 @@ void PopulateArmors()
 		}
 
 		// 전체 덤프 ㄱㄱ
-		int rejected = RejectWorseCombinations(next, false);
+		int rejected = RejectWorseCombinations(next, false, false);
 
 		for (auto it = g_all.begin(); it != g_all.end(); ++it)
 		{
@@ -720,14 +211,213 @@ void PopulateArmors()
 
 		WindowsUtility::Debug(L"%d (%d)---------------------------------------\n", g_all.size(), rejected);
 	}
+	
+	// 모든 페어에 대해서 큰 슬롯을 작은 슬롯으로 대체한 버전을 모두 만든다
+	// 이후 각 슬롯에 딱 맞는 크기의 장식주만 조합해보면 된다
+	list<GeneralizedCombination*> slotPerm;
 
-	//for (auto it = g_all.begin(); it != g_all.end(); ++it) { (*it)->Dump(); }
+	int rejected[] = { 0, 0, 0 };
+
+	for (auto it = g_all.begin(); it != g_all.end(); ++it)
+	{
+		auto cur = *it;
+
+		int subtract[] = { 0, 0, 0 };
+		int add[] = { 0, 0, 0, };
+
+		auto Dump = [&](GeneralizedCombination* comb)
+		{
+			if (dump)
+			{
+				for (int i = 0; i < COUNT_OF(g_skills); ++i)
+				{
+					WindowsUtility::Debug(L"%d ", comb->skills[i]);
+				}
+
+				for (int i = 0; i < 3; ++i)
+				{
+					WindowsUtility::Debug(
+						L"[%d] ",
+						comb->slots[i]);
+				}
+			}
+		};
+
+		auto TryToAdd = [&]()
+		{
+			auto newComb = new GeneralizedCombination(COUNT_OF(g_skills));
+			*newComb = *cur;
+
+			if (dump)
+			{
+				for (int i = 0; i < COUNT_OF(g_skills); ++i)
+				{
+					WindowsUtility::Debug(L"%d ", newComb->skills[i]);
+				}
+
+				for (int i = 0; i < 3; ++i)
+				{
+					WindowsUtility::Debug(L"[%d] ", newComb->slots[i] - subtract[i] + add[i]);
+				}
+
+				WindowsUtility::Debug(L"(");
+
+				for (int i = 0; i < 3; ++i)
+				{
+					if (subtract[i] > 0)
+					{
+						WindowsUtility::Debug(L"-%d", subtract[i]);
+					}
+					else
+					{
+						WindowsUtility::Debug(L"  ");
+					}
+
+					if (add[i] > 0)
+					{
+						WindowsUtility::Debug(L"+%d", add[i]);
+					}
+					else
+					{
+						WindowsUtility::Debug(L"  ");
+					}
+
+					if (i + 1 < 3)
+					{
+						WindowsUtility::Debug(L",");
+					}
+				}
+
+				WindowsUtility::Debug(L") ");
+			}
+
+			for (int i = 0; i < 3; ++i)
+			{
+				newComb->slots[i] = newComb->slots[i] - subtract[i] + add[i];
+			}
+
+			bool newlineNeeded = true;
+
+			for (auto jt = slotPerm.begin(); jt != slotPerm.end(); )
+			{
+				auto prev = *jt;
+
+				auto result = GeneralizedCombination::CompareStrict(*newComb, *prev);
+
+				if (result == GeneralizedCombination::Better)
+				{
+					if (dump)
+					{
+						if (newlineNeeded) { WindowsUtility::Debug(L"\n"); newlineNeeded = false; }
+						WindowsUtility::Debug(L"\t");
+						Dump(prev);
+						WindowsUtility::Debug(L" rejected by newer one\n");
+					}
+
+					rejected[0]++;
+					delete prev;
+					jt = slotPerm.erase(jt);
+				}
+				else if (result == GeneralizedCombination::Equal)
+				{
+					if (dump)
+					{
+						if (newlineNeeded) { WindowsUtility::Debug(L"\n\t"); newlineNeeded = false; }
+						WindowsUtility::Debug(L"\t");
+						Dump(prev);
+						WindowsUtility::Debug(L" rejected by equivalent\n");
+					}
+
+					rejected[1]++;
+					newComb->CombineEquivalent(prev);
+					jt = slotPerm.erase(jt);
+				}
+				else if (result == GeneralizedCombination::Worse)
+				{
+					if (dump)
+					{
+						if (!newlineNeeded) { WindowsUtility::Debug(L"\t"); }
+						WindowsUtility::Debug(L"rejected worse by ");
+						Dump(prev);
+						WindowsUtility::Debug(L"\n");
+					}
+
+					rejected[2]++;
+					delete newComb;
+					newComb = nullptr;
+					break;
+				}
+				else
+				{
+					++jt;
+				}
+			}
+
+			if (newComb != nullptr)
+			{
+				if (dump)
+				{
+					if (!newlineNeeded) { WindowsUtility::Debug(L"\t"); }
+					WindowsUtility::Debug(L"passed\n");
+				}
+
+				slotPerm.push_back(newComb);
+			}
+		};
+
+		function<void(int)> Permutate;
+		Permutate = [&](int socket)
+		{
+			if (socket + 1 < 3 && cur->slots[socket + 1] > 0)
+			{
+				Permutate(socket + 1);
+			}
+
+			if (cur->slots[socket] - subtract[socket] > 0)
+			{
+				subtract[socket]++;
+
+				for (int i = 0; i < socket; ++i)
+				{
+					add[i]++;
+
+					// 슬롯을 바꿀 때마다 추가해보자
+					TryToAdd();
+
+					Permutate(socket);
+
+					add[i]--;
+				}
+
+				subtract[socket]--;
+			}
+		};
+
+		// 아무 조작도 안 한 상태도 추가
+		TryToAdd();
+
+		Permutate(1);
+	}
+
+	for (auto prev : g_all) { delete prev; }
+
+	g_all.swap(slotPerm);
+
+	int r = RejectWorseCombinations(g_all, true, false);
+
+	WindowsUtility::Debug(
+		L"%d (%d,%d,%d,%d)\n", 
+		g_all.size(), 
+		rejected[0],
+		rejected[1],
+		rejected[2],
+		r);
 }
 
 //------------------------------------------------------------------------------
 list<DecoratedCombination*> g_decAll;
 
-void PopulateDecorators()
+void PopulateDecorators(bool strict)
 {
 	// 데커레이티드 컴비네이션을 새로 만든다
 	for (auto comb : g_all)
@@ -735,7 +425,7 @@ void PopulateDecorators()
 		g_decAll.push_back(DecoratedCombination::DeriveFrom(comb));
 	}
 
-	auto rejected = RejectWorseCombinations(g_decAll, false);
+	auto rejected = RejectWorseCombinations(g_decAll, true, false);
 	WindowsUtility::Debug(
 		L"\tInitial Rejection: %d (%d)\n",
 		g_decAll.size(),
@@ -745,12 +435,8 @@ void PopulateDecorators()
 	// 소켓 크기에 대해서 순회하는 것에 주의
 	bool first = true;
 
-	int socketEval[] = { 0, 2, 1 };
-
-	for (int socket_ = 0; socket_ < 3; )
+	for (int socket = 0; socket < 3; )
 	{
-		int socket = socketEval[socket_];
-
 		if (first)
 		{
 			WindowsUtility::Debug(L"Filling socket with size %d\n", socket + 1);
@@ -774,6 +460,9 @@ void PopulateDecorators()
 			}
 		}
 
+		WindowsUtility::Debug(L"%d combinations moved\n", next.size());
+
+		int pass = next.size();
 		int evaluated = 0;
 		int rejected[] = { 0, 0, 0, };
 		for (auto it = g_decAll.begin(); it != g_decAll.end(); ++it)
@@ -781,6 +470,7 @@ void PopulateDecorators()
 			auto cur = *it;
 			assert(cur->slots[socket] > 0);
 
+#if 0
 			// 모든 가능 조합을 한 번에 구축한 뒤 비교하자
 			// 이게 좀 더 빠를 것 같은 기분이 있음
 			vector<int> decorators;
@@ -793,7 +483,15 @@ void PopulateDecorators()
 				for (int d = iterateFrom; d < g_decorators.size(); ++d)
 				{
 					auto dec = g_decorators[d];
-					if (dec->slotSize > socket + 1) { continue; }
+
+					if (strict)
+					{
+						if (dec->slotSize != socket + 1) { continue; }
+					}
+					else
+					{
+						if (dec->slotSize > socket + 1) { continue; }
+					}
 
 					bool notMaxed = 
 						temp->skills[dec->skillIndex] + 1 <= 
@@ -843,7 +541,9 @@ void PopulateDecorators()
 							auto toCompare = *it;
 
 							// 만들지 않은 상태에서 비교한다
-							auto ret = DecoratedCombination::Compare(*newComb, *toCompare);
+							auto ret = strict ? 
+								DecoratedCombination::CompareStrict(*newComb, *toCompare) :
+								DecoratedCombination::Compare(*newComb, *toCompare);
 
 							if (ret == DecoratedCombination::Better)
 							{
@@ -892,17 +592,13 @@ void PopulateDecorators()
 			BuildCombination(0);
 
 			temp->Delete();
+#else
 
-#if 0
-			int dFrom = cur->lastSocket == socket ? cur->lastDecoratorIndex : 0;
-
-			for (int d = dFrom; d < g_decorators.size(); ++d)
+			auto TryToAdd = [&](Decorator* dec, int decIndex, int socket)
 			{
-				auto dec = g_decorators[d];
-				if (dec->slotSize > socket + 1) { continue; }
+				evaluated++;
 
-				bool notMaxed = cur->skills[dec->skillIndex] + 1 <= g_skillMaxLevel[dec->skillIndex];
-				int toAdd = notMaxed ? dec->skillIndex : -1;
+				int skillToAdd = dec != nullptr ? dec->skillIndex : - 1;
 
 				DecoratedCombination* newCombination = nullptr;
 
@@ -912,10 +608,26 @@ void PopulateDecorators()
 					auto toCompare = *it;
 
 					// 만들지 않은 상태에서 비교한다
-					auto ret = DecoratedCombination::Compare(*cur, *toCompare, toAdd, socket);
+					auto ret = strict ?
+						DecoratedCombination::CompareStrict(*cur, *toCompare, skillToAdd, socket) :
+						DecoratedCombination::Compare(*cur, *toCompare, skillToAdd, socket);
 
 					if (ret == DecoratedCombination::Better)
 					{
+#if 0
+						auto temp = DecoratedCombination::DeriveFrom(cur, dec, socket, decIndex);
+
+						WindowsUtility::Debug(L"Saving\n\t");
+						temp->Dump();
+						temp->Delete();
+						WindowsUtility::Debug(L"for\n\t");
+						toCompare->Dump();
+
+						ret = strict ?
+							DecoratedCombination::CompareStrict(*cur, *toCompare, skillToAdd, socket) :
+							DecoratedCombination::Compare(*cur, *toCompare, skillToAdd, socket);
+#endif
+
 						// 옛날 걸 리젝트한다
 						toCompare->Delete();
 						it = next.erase(it);
@@ -925,7 +637,7 @@ void PopulateDecorators()
 					{
 						if (newCombination == nullptr)
 						{
-							newCombination = DecoratedCombination::DeriveFrom(cur, dec, socket, d);
+							newCombination = DecoratedCombination::DeriveFrom(cur, dec, socket, decIndex);
 						}
 
 						// 옛날 걸 리젝트한다
@@ -951,7 +663,7 @@ void PopulateDecorators()
 				{
 					if (newCombination == nullptr)
 					{
-						newCombination = DecoratedCombination::DeriveFrom(cur, dec, socket, d);
+						newCombination = DecoratedCombination::DeriveFrom(cur, dec, socket, decIndex);
 					}
 
 					next.push_back(newCombination);
@@ -962,6 +674,31 @@ void PopulateDecorators()
 					{
 						newCombination->Delete();
 					}
+				}
+			};
+
+			// 장식주를 넣지 않는 베리에이션도 시도한다
+			TryToAdd(nullptr, -1, socket);
+
+			int dFrom = cur->lastSocket == socket ? cur->lastDecoratorIndex : 0;
+
+			for (int d = dFrom; d < g_decorators.size(); ++d)
+			{
+				auto dec = g_decorators[d];
+
+				if (strict)
+				{
+					if (dec->slotSize != socket + 1) { continue; }
+				}
+				else
+				{
+					if (dec->slotSize > socket + 1) { continue; }
+				}
+
+				auto si = dec->skillIndex;
+				if (cur->skills[si] + 1 <= g_skillMaxLevel[si])
+				{
+					TryToAdd(dec, d, socket);
 				}
 			}
 #endif
@@ -984,13 +721,14 @@ void PopulateDecorators()
 
 		if (!needToIterate) 
 		{ 
-			socket_++;
+			socket++;
 			first = true;
 		}
 
 		WindowsUtility::Debug(
-			L"\t%d (evaluated=%d,olderdiscarded=%d,equivalent=%d,newerworse=%d)\n",
+			L"\t%d (passed=%d,evaluated=%d,discarded=%d,equivalent=%d,givenup=%d)\n",
 			g_decAll.size(),
+			pass, 
 			evaluated, 
 			rejected[0], 
 			rejected[1],
@@ -1001,38 +739,29 @@ void PopulateDecorators()
 //------------------------------------------------------------------------------
 void TestDamage()
 {
-	LoadArmors();
+	LoadArmors(false);
 	LoadDecorators();
 	LoadCharms();
-
-	g_skillToDecorator.resize(COUNT_OF(g_skills), nullptr);
-
-	for (int i = 0; i < COUNT_OF(g_skills); ++i)
-	{
-		for (int j = 0; j < g_decorators.size(); ++j)
-		{
-			if (g_decorators[j]->skill == g_skills[i])
-			{
-				g_skillToDecorator[i] = g_decorators[j];
-				break;
-			}
-		}
-	}
+	CheckActiveSkills();
 	
-	FilterArmors();
+	map<Armor::PartType, vector<GeneralizedArmor*>*> g_generalized;
+	FilterArmors(g_generalized);
 
-	PopulateArmors();
+	PopulateArmors(g_generalized);
+
+	WeaponDesc weapon;
+	MonsterDesc monster;
 
 	// 무기 슬롯을 더 뚫는다
 	for (auto it = g_all.begin(); it != g_all.end(); ++it)
 	{
 		auto comb = *it;
-		comb->slots[0] += WeaponSlot(0);
-		comb->slots[1] += WeaponSlot(1);
-		comb->slots[2] += WeaponSlot(2);
+		comb->slots[0] += weapon.slots[0];
+		comb->slots[1] += weapon.slots[1];
+		comb->slots[2] += weapon.slots[2];
 	}
 
-	PopulateDecorators();
+	PopulateDecorators(true);
 
 	fopen_s(&file, "log_damage.txt", "w,ccs=UNICODE");
 
@@ -1092,7 +821,7 @@ void TestDamage()
 				comb->skills[8],
 				comb->skills[9]);
 
-			Calculate(desc);
+			Calculate(file, weapon, desc, monster);
 
 			comb->Write(file);
 

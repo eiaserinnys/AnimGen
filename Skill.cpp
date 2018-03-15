@@ -1,9 +1,61 @@
 #include "pch.h"
 #include "Skill.h"
 
+#include "Decorator.h"
+
 #include <Utility.h>
 
 using namespace std;
+
+vector<Decorator*> g_skillToDecorator;
+
+vector<int> g_skillWithNoDecorator;
+
+vector<vector<int>> g_skillsBySlotSize;
+
+//------------------------------------------------------------------------------
+void CheckActiveSkills()
+{
+	g_skillToDecorator.resize(COUNT_OF(g_skills), nullptr);
+
+	g_skillsBySlotSize.push_back(vector<int>());
+	g_skillsBySlotSize.push_back(vector<int>());
+	g_skillsBySlotSize.push_back(vector<int>());
+
+	for (int i = 0; i < COUNT_OF(g_skills); ++i)
+	{
+		bool found = false;
+		for (int j = 0; j < g_decorators.size(); ++j)
+		{
+			if (g_decorators[j]->skill == g_skills[i])
+			{
+				found = true;
+				g_skillToDecorator[i] = g_decorators[j];
+
+				g_skillsBySlotSize[g_decorators[j]->slotSize - 1].push_back(i);
+				break;
+			}
+		}
+		if (!found)
+		{
+			g_skillWithNoDecorator.push_back(i);
+		}
+	}
+}
+
+//------------------------------------------------------------------------------
+int GetSkillIndex(const std::wstring& skill)
+{
+	for (int i = 0; i < COUNT_OF(g_skills); ++i)
+	{
+		if (g_skills[i] == skill)
+		{
+			return i;
+		}
+	}
+
+	return -1;
+}
 
 //------------------------------------------------------------------------------
 int MaxAttackSkillLevel() { return 7; }

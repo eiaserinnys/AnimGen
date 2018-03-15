@@ -12,3 +12,5 @@ struct Decorator
 };
 
 extern std::vector<Decorator*> g_decorators;
+
+void LoadDecorators();
