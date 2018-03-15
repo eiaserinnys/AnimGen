@@ -91,6 +91,7 @@ template <typename CombinationType>
 void AddIfNotWorse(
 	std::list<CombinationType*>& container,
 	CombinationType* newPart,
+	bool deleteEquivalent, 
 	FILE* file, 
 	bool dump)
 {
@@ -116,7 +117,11 @@ void AddIfNotWorse(
 
 			prev->CombineEquivalent(*newPart);
 
-			newPart->Delete();
+			if (deleteEquivalent)
+			{
+				newPart->Delete();
+			}
+
 			newPart = nullptr;
 			break;
 		}

@@ -150,28 +150,27 @@ int RejectWorseCombinations(
 //------------------------------------------------------------------------------
 list<DecoratedCombination*> g_decAll;
 
-void PopulateDecorators(bool strict)
+void PopulateDecorators(bool dumpComparison)
 {
+	FILE* file;
+
+	fopen_s(&file, "log_decorated.txt", "w,ccs=UNICODE");
+
 	// 데커레이티드 컴비네이션을 새로 만든다
 	for (auto comb : g_all)
 	{
 		g_decAll.push_back(DecoratedCombination::DeriveFrom(comb));
 	}
 
-	auto rejected = RejectWorseCombinations(g_decAll, false);
-	WindowsUtility::Debug(
-		L"\tInitial Rejection: %d (%d)\n",
-		g_decAll.size(),
-		rejected);
-
 	// 작은 소켓부터 채워가며 리스트를 구축해보자
 	// 소켓 크기에 대해서 순회하는 것에 주의
 	bool first = true;
 
-	for (int socket = 0; socket < 3; )
+	for (int socket = 2; socket >= 0; )
 	{
 		if (first)
 		{
+			fwprintf(file, L"Filling socket with size %d\n", socket + 1);
 			WindowsUtility::Debug(L"Filling socket with size %d\n", socket + 1);
 			first = false;
 		}
@@ -193,6 +192,7 @@ void PopulateDecorators(bool strict)
 			}
 		}
 
+		fwprintf(file, L"%d combinations moved\n", (int) next.size());
 		WindowsUtility::Debug(L"%d combinations moved\n", next.size());
 
 		int pass = next.size();
@@ -203,209 +203,26 @@ void PopulateDecorators(bool strict)
 			auto cur = *it;
 			assert(cur->slots[socket] > 0);
 
-#if 0
-			// 모든 가능 조합을 한 번에 구축한 뒤 비교하자
-			// 이게 좀 더 빠를 것 같은 기분이 있음
-			vector<int> decorators;
-
-			auto temp = DecoratedCombination::DeriveFrom(cur);
-
-			function<void(int)> BuildCombination;
-			BuildCombination = [&](int iterateFrom)
-			{
-				for (int d = iterateFrom; d < g_decorators.size(); ++d)
-				{
-					auto dec = g_decorators[d];
-
-					if (strict)
-					{
-						if (dec->slotSize != socket + 1) { continue; }
-					}
-					else
-					{
-						if (dec->slotSize > socket + 1) { continue; }
-					}
-
-					bool notMaxed = 
-						temp->skills[dec->skillIndex] + 1 <= 
-						g_skillMaxLevel[dec->skillIndex];
-
-					if (!notMaxed) { continue; }
-
-					temp->skills[dec->skillIndex]++;
-					temp->slots[socket]--;
-					decorators.push_back(d);
-
-					if (temp->slots[socket] > 0)
-					{
-						BuildCombination(d);
-					}
-					else
-					{
-						// 이제 실 조합을 만들어 넣어본다
-						++evaluated;
-						if (evaluated % 10000 == 0)
-						{
-							WindowsUtility::Debug(
-								L"\t%d (evaluated=%d,olderdiscarded=%d,equivalent=%d,newerworse=%d)\n",
-								next.size(),
-								evaluated,
-								rejected[0],
-								rejected[1],
-								rejected[2]);
-						}
-
-						auto newComb = DecoratedCombination::DeriveFrom(cur);
-
-						for (int di : decorators)
-						{
-							auto si = g_decorators[di]->skillIndex;
-							newComb->skills[si]++;
-							newComb->slots[socket]--;
-
-							assert(newComb->skills[si] <= g_skillMaxLevel[si]);
-						}
-
-						assert(newComb->slots[socket] >= 0);
-
-						bool processed = false;
-						for (auto it = next.begin(); it != next.end(); )
-						{
-							auto toCompare = *it;
-
-							// 만들지 않은 상태에서 비교한다
-							auto ret = strict ? 
-								DecoratedCombination::CompareStrict(*newComb, *toCompare) :
-								DecoratedCombination::Compare(*newComb, *toCompare);
-
-							if (ret == DecoratedCombination::Better)
-							{
-								// 옛날 걸 리젝트한다
-								toCompare->Delete();
-								it = next.erase(it);
-								++rejected[0];
-							}
-							else if (ret == DecoratedCombination::Equal)
-							{
-								// 옛날 걸 리젝트한다
-								newComb->CombineEquivalent(toCompare);
-
-								it = next.erase(it);
-
-								++rejected[1];
-							}
-							else if (ret == DecoratedCombination::Worse)
-							{
-								++rejected[2];
-								processed = true;
-								break;
-							}
-							else
-							{
-								++it;
-							}
-						}
-
-						if (!processed)
-						{
-							next.push_back(newComb);
-						}
-						else
-						{
-							newComb->Delete();
-						}
-					}
-
-					temp->skills[dec->skillIndex]--;
-					temp->slots[socket]++;
-					decorators.pop_back();
-				}
-			};
-
-			BuildCombination(0);
-
-			temp->Delete();
-#else
-
 			auto TryToAdd = [&](Decorator* dec, int decIndex, int socket)
 			{
 				evaluated++;
 
+				if (evaluated % 10000 == 0)
+				{
+					WindowsUtility::Debug(
+						L"\t%d (passed=%d,evaluated=%d)\n",
+						next.size(),
+						pass,
+						evaluated);
+
+					fflush(file);
+				}
+
 				int skillToAdd = dec != nullptr ? dec->skillIndex : - 1;
 
-				DecoratedCombination* newCombination = nullptr;
+				auto newCombination = DecoratedCombination::DeriveFrom(cur, dec, socket, decIndex);;
 
-				bool processed = false;
-				for (auto it = next.begin(); it != next.end(); )
-				{
-					auto toCompare = *it;
-
-					// 만들지 않은 상태에서 비교한다
-					auto ret = DecoratedCombination::CompareStrict2(*cur, *toCompare, skillToAdd, socket);
-
-					if (ret == DecoratedCombination::Better)
-					{
-#if 0
-						auto temp = DecoratedCombination::DeriveFrom(cur, dec, socket, decIndex);
-
-						WindowsUtility::Debug(L"Saving\n\t");
-						temp->Dump();
-						temp->Delete();
-						WindowsUtility::Debug(L"for\n\t");
-						toCompare->Dump();
-
-						ret = strict ?
-							DecoratedCombination::CompareStrict(*cur, *toCompare, skillToAdd, socket) :
-							DecoratedCombination::Compare(*cur, *toCompare, skillToAdd, socket);
-#endif
-
-						// 옛날 걸 리젝트한다
-						toCompare->Delete();
-						it = next.erase(it);
-						++rejected[0];
-					}
-					else if (ret == DecoratedCombination::Equal)
-					{
-						if (newCombination == nullptr)
-						{
-							newCombination = DecoratedCombination::DeriveFrom(cur, dec, socket, decIndex);
-						}
-
-						// 옛날 걸 리젝트한다
-						newCombination->CombineEquivalent(*toCompare);
-
-						it = next.erase(it);
-
-						++rejected[1];
-					}
-					else if (ret == DecoratedCombination::Worse)
-					{
-						++rejected[2];
-						processed = true;
-						break;
-					}
-					else
-					{
-						++it;
-					}
-				}
-
-				if (!processed)
-				{
-					if (newCombination == nullptr)
-					{
-						newCombination = DecoratedCombination::DeriveFrom(cur, dec, socket, decIndex);
-					}
-
-					next.push_back(newCombination);
-				}
-				else
-				{
-					if (newCombination != nullptr)
-					{
-						newCombination->Delete();
-					}
-				}
+				AddIfNotWorse(next, newCombination, false, file, dumpComparison);
 			};
 
 			// 장식주를 넣지 않는 베리에이션도 시도한다
@@ -417,14 +234,7 @@ void PopulateDecorators(bool strict)
 			{
 				auto dec = g_decorators[d];
 
-				if (strict)
-				{
-					if (dec->slotSize != socket + 1) { continue; }
-				}
-				else
-				{
-					if (dec->slotSize > socket + 1) { continue; }
-				}
+				if (dec->slotSize != socket + 1) { continue; }
 
 				auto si = dec->skillIndex;
 				if (cur->skills[si] + 1 <= g_skillMaxLevel[si])
@@ -432,7 +242,6 @@ void PopulateDecorators(bool strict)
 					TryToAdd(dec, d, socket);
 				}
 			}
-#endif
 		}
 
 		// 중복된 페어를 제거한다
@@ -452,19 +261,25 @@ void PopulateDecorators(bool strict)
 
 		if (!needToIterate) 
 		{ 
-			socket++;
+			socket--;
 			first = true;
 		}
 
+		fwprintf(
+			file, 
+			L"\t%d (passed=%d,evaluated=%d)\n",
+			(int) g_decAll.size(),
+			pass,
+			evaluated);
+
 		WindowsUtility::Debug(
-			L"\t%d (passed=%d,evaluated=%d,discarded=%d,equivalent=%d,givenup=%d)\n",
+			L"\t%d (passed=%d,evaluated=%d)\n",
 			g_decAll.size(),
 			pass, 
-			evaluated, 
-			rejected[0], 
-			rejected[1],
-			rejected[2]);
+			evaluated);
 	}
+
+	fclose(file);
 }
 
 //------------------------------------------------------------------------------

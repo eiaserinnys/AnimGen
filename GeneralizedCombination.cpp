@@ -406,7 +406,7 @@ void PopulateArmors(
 				auto newComb = new GeneralizedCombination(COUNT_OF(g_skills));
 				newComb->Combine(*it, channel, g);
 
-				AddIfNotWorse(next, newComb, file, dumpComparison);
+				AddIfNotWorse(next, newComb, true, file, dumpComparison);
 			}
 		}
 

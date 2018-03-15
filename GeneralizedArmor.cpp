@@ -142,7 +142,7 @@ void FilterArmors(
 					newPart->slots[i] += add[i] - subtract[i];
 				}
 
-				AddIfNotWorse(container, newPart, file, true);
+				AddIfNotWorse(container, newPart, false, file, true);
 			};
 
 			function<void(int)> Permutate;
