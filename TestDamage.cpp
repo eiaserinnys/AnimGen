@@ -112,7 +112,9 @@ void TestDamage()
 			L"불속성 공격 강화",
 			L"불강",
 			WeaponDesc(6, Core::Vector2D(240, 390), -0.2, 0, 0, 0, 1.2),
-			MonsterDesc{ 0.45, 0.25 },		// 키린
+
+			// 키린
+			MonsterDesc{ Core::Vector2D(0.45, 0.25), 0.66, Core::Vector2D(0.22, 0.2) },
 		},
 
 		{
@@ -120,7 +122,9 @@ void TestDamage()
 			L"물속성 공격 강화",
 			L"물강",
 			WeaponDesc(6, Core::Vector2D(204, 240), 0.0, 0, 0, 1, 1.2),
-			MonsterDesc{ 0.5, 0.3 },		// 테오
+
+			// 테오
+			MonsterDesc{ Core::Vector2D(0.5, 0.3), 0.66, Core::Vector2D(0.2, 0.15) },
 		},
 
 		{
@@ -128,7 +132,7 @@ void TestDamage()
 			L"번개속성 공격 강화",
 			L"뇌강",
 			WeaponDesc(7, Core::Vector2D(204, 270), 0.15, 1, 0, 0, 1.2),  
-			MonsterDesc{ 0.45, 0.2, },		// 크샬다오라
+			MonsterDesc{ Core::Vector2D(0.45, 0.2), 0.66, Core::Vector2D(0.25, 0.15), },		// 크샬다오라
 		},
 
 		{
@@ -136,7 +140,9 @@ void TestDamage()
 			L"얼음속성 공격 강화",
 			L"얼음강",
 			WeaponDesc(8, Core::Vector2D(180, 390), 0.0, 0, 0, 0, 1.2),
-			MonsterDesc{ 0.6, 0.3 },		// 제노지바 임계
+
+			// 제노지바 임계 머리/비임계 배
+			MonsterDesc{ Core::Vector2D(0.6, 0.3), 0.66, Core::Vector2D(0.25, 0.1) },
 		},
 
 		{
@@ -144,7 +150,9 @@ void TestDamage()
 			L"용속성 공격 강화",
 			L"용강",
 			WeaponDesc(7, Core::Vector2D(228, 270), 0.0, 0, 1, 0, 1.2),
-			MonsterDesc{ 0.6, 0.25 },		// 발하자크 머리 파괴
+
+			// 리오레우스 머리
+			MonsterDesc{ Core::Vector2D(0.60, 0.30), 0.66, Core::Vector2D(0.2, 0.2) },
 		},
 	};
 

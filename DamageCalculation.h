@@ -64,11 +64,19 @@ struct WeaponDesc
 //------------------------------------------------------------------------------
 struct MonsterDesc
 {
-	double physicalDefense = 0.0;
-	double elementalDefense = 0.0;
+	Core::Vector2D weakDefense;
+	double weakHitPercent;
+
+	Core::Vector2D normalDefense;
 
 	MonsterDesc() = default;
-	MonsterDesc(double p, double e) : physicalDefense(p), elementalDefense(e) {}
+	MonsterDesc(
+		const Core::Vector2D& weak, 
+		double weakHitPercent, 
+		const Core::Vector2D& normal) 
+		: weakDefense(weak)
+		, weakHitPercent(weakHitPercent)
+		, normalDefense(normal) {}
 };
 
 //------------------------------------------------------------------------------
@@ -77,3 +85,4 @@ double Calculate(
 	const WeaponDesc& weapon, 
 	const Desc& desc, 
 	const MonsterDesc& monster);
+

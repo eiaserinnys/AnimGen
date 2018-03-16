@@ -54,66 +54,81 @@ double Calculate(
 		rawDamageWithBonus.x * (1 + desc.arrowUpgrade) * 1.5 * 1.5,
 		rawDamageWithBonus.y * (1 + desc.elementalBonus.second));
 
-	// 회심률
-	auto criticalProbability =
-		weapon.criticalRate +
-		desc.attackBonus.second +
-		desc.criticalEye +
-		desc.exploitWeakness;
+	// 회심률 (비약점, 약점)
+	auto criticalProbability = Core::Vector2D(
+		weapon.criticalRate + desc.attackBonus.second + desc.criticalEye, 
+		weapon.criticalRate + desc.attackBonus.second + desc.criticalEye + desc.exploitWeakness);
 
-	if (criticalProbability > 1) { criticalProbability = 1; }
-	if (criticalProbability < -1) { criticalProbability = -1; }
+	if (criticalProbability.x > 1) { criticalProbability.x = 1; }
+	if (criticalProbability.x < -1) { criticalProbability.x = -1; }
 
-	double absCriticalProb = abs(criticalProbability);
+	if (criticalProbability.y > 1) { criticalProbability.y = 1; }
+	if (criticalProbability.y < -1) { criticalProbability.y = -1; }
+
+	auto absCriticalProb = Core::Vector2D(
+		abs(criticalProbability.x), 
+		abs(criticalProbability.y));
 
 	// 물리 회심 배율
-	auto physicalCriticalRate =
-		BaseCriticalDamageRate(criticalProbability) +
-		desc.superCritical;
+	auto physicalCriticalRate = Core::Vector2D(
+		BaseCriticalDamageRate(criticalProbability.x) + desc.superCritical,
+		BaseCriticalDamageRate(criticalProbability.y) + desc.superCritical);
 
 	// 속성 회심 배율
-	auto elementalCriticalRate =
-		1 +
-		desc.fireDragonGambit;
+	auto elementalCriticalRate = 1 + desc.fireDragonGambit;
 
-	// 기대 대미지
-	//Core::Vector2D expectedDamage(
-	//	modifiedBaseDamage.x * criticalProbability * physicalCriticalRate +
-	//	modifiedBaseDamage.x * (1 - criticalProbability),
-	//	modifiedBaseDamage.y * criticalProbability * elementalCriticalRate +
-	//	modifiedBaseDamage.y * (1 - criticalProbability)
-	//);
-	Core::Vector2D expectedDamage(
-		modifiedBaseDamage.x,
-		modifiedBaseDamage.y);
+	// 비회심 기대 대미지
+	Core::Vector2D expectedDamage = modifiedBaseDamage;
 
-	Core::Vector2D criticalExpectedDamage(
-		modifiedBaseDamage.x * physicalCriticalRate,
+	// 회심 기대 대미지
+	Core::Vector2D criticalExpectedDamageNormal(
+		modifiedBaseDamage.x * physicalCriticalRate.x,
 		modifiedBaseDamage.y * elementalCriticalRate);
 
-	// 모션 적용
+	Core::Vector2D criticalExpectedDamageWeakness(
+		modifiedBaseDamage.x * physicalCriticalRate.y,
+		modifiedBaseDamage.y * elementalCriticalRate);
+
+	// 모션치 적용
 	Core::Vector2D motionDamage =
 		expectedDamage *
 		Core::Vector2D(weapon.MotionValue(desc), 1);
-	Core::Vector2D criticalMotionDamage =
-		criticalExpectedDamage *
+	Core::Vector2D criticalMotionDamageNormal =
+		criticalExpectedDamageNormal *
+		Core::Vector2D(weapon.MotionValue(desc), 1);
+	Core::Vector2D criticalMotionDamageWeakness =
+		criticalExpectedDamageWeakness *
 		Core::Vector2D(weapon.MotionValue(desc), 1);
 
 	// 방어력 적용
-	Core::Vector2D appliedDamage =
-		motionDamage *
-		Core::Vector2D(monster.physicalDefense, monster.elementalDefense);
-	Core::Vector2D criticalAppliedDamage =
-		criticalMotionDamage *
-		Core::Vector2D(monster.physicalDefense, monster.elementalDefense);
+	Core::Vector2D appliedDamageNormal = motionDamage * monster.normalDefense;
+	Core::Vector2D criticalAppliedDamageNormal = criticalMotionDamageNormal * monster.normalDefense;
 
-	// 최종 기대 대미지
+	Core::Vector2D appliedDamageWeakness = motionDamage * monster.weakDefense;
+	Core::Vector2D criticalAppliedDamageWeakness = criticalMotionDamageWeakness * monster.weakDefense;
+
+	// 최종 대미지 (비약점/약점)
+	Core::Vector2D expectedDamageNormal =
+		Core::Vector2D(
+			int(appliedDamageNormal.x) * (1 - absCriticalProb.x) +
+			int(criticalAppliedDamageNormal.x) * absCriticalProb.x,
+			int(appliedDamageNormal.y) * (1 - absCriticalProb.x) +
+			int(criticalAppliedDamageNormal.y) * absCriticalProb.x);
+
+	Core::Vector2D expectedDamageWeakness =
+		Core::Vector2D(
+			int(appliedDamageWeakness.x) * (1 - absCriticalProb.y) +
+			int(criticalAppliedDamageWeakness.x) * absCriticalProb.y,
+			int(appliedDamageWeakness.y) * (1 - absCriticalProb.y) +
+			int(criticalAppliedDamageWeakness.y) * absCriticalProb.y);
+
+	// 기대 대미지
 	Core::Vector2D finalExpectedDamage =
 		Core::Vector2D(
-			int(appliedDamage.x) * (1 - absCriticalProb) +
-			int(criticalAppliedDamage.x) * absCriticalProb,
-			int(appliedDamage.y) * (1 - absCriticalProb) +
-			int(criticalAppliedDamage.y) * absCriticalProb);
+			monster.weakHitPercent * expectedDamageWeakness.x +
+			(1 - monster.weakHitPercent) * expectedDamageNormal.x,
+			monster.weakHitPercent * expectedDamageWeakness.y +
+			(1 - monster.weakHitPercent) * expectedDamageNormal.y);
 
 	if (file != nullptr)
 	{
@@ -122,8 +137,15 @@ double Calculate(
 			L"%.3f\t%.3f\t"
 			"%.3f\t%.3f\t"
 
-			"%.3f\t%.3f\t%.3f\t"
+			"%.3f\t%.3f\t"
+			"%.3f\t%.3f\t"
+			"%.3f\t"
 
+			"%.3f\t%.3f\t"
+			"%.3f\t%.3f\t"
+			"%.3f\t%.3f\t"
+
+			"%.3f\t%.3f\t"
 			"%.3f\t%.3f\t"
 			"%.3f\t%.3f\t"
 
@@ -138,17 +160,23 @@ double Calculate(
 			rawDamageWithBonus.x, rawDamageWithBonus.y,
 			modifiedBaseDamage.x, modifiedBaseDamage.y,
 
-			criticalProbability,
-			physicalCriticalRate, elementalCriticalRate,
+			criticalProbability.x, criticalProbability.y,
+			physicalCriticalRate.x, physicalCriticalRate.y,
+			elementalCriticalRate,
 
 			expectedDamage.x, expectedDamage.y,
-			criticalExpectedDamage.x, criticalExpectedDamage.y,
+			criticalExpectedDamageNormal.x, criticalExpectedDamageNormal.y,
+			criticalExpectedDamageWeakness.x, criticalExpectedDamageWeakness.y,
 
 			motionDamage.x, motionDamage.y,
-			criticalMotionDamage.x, criticalMotionDamage.y,
+			criticalMotionDamageNormal.x, criticalMotionDamageNormal.y,
+			criticalMotionDamageWeakness.x, criticalMotionDamageWeakness.y,
 
-			appliedDamage.x, appliedDamage.y,
-			criticalAppliedDamage.x, criticalAppliedDamage.y,
+			appliedDamageNormal.x, appliedDamageNormal.y,
+			criticalAppliedDamageNormal.x, criticalAppliedDamageNormal.y,
+
+			appliedDamageWeakness.x, appliedDamageWeakness.y,
+			criticalAppliedDamageWeakness.x, criticalAppliedDamageWeakness.y,
 
 			finalExpectedDamage.x, finalExpectedDamage.y,
 			finalExpectedDamage.x + finalExpectedDamage.y);
