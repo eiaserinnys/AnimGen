@@ -25,13 +25,31 @@ struct Desc
 //------------------------------------------------------------------------------
 struct WeaponDesc
 {
-	Core::Vector2D baseDamage = Core::Vector2D(180, 390);
+	Core::Vector2D baseDamage;
 
-	double criticalRate = 0;
+	double criticalRate;
 
-	int slots[3] = { 0, 0, 0, };
+	int slot1;
+	int slot2;
+	int slot3;
 
-	double multiplier = 1.2;
+	double multiplier;
+
+	WeaponDesc() = default;
+
+	WeaponDesc(
+		const Core::Vector2D& baseDamage,
+		double criticalRate,
+		int slot1, int slot2, int slot3,
+		double multiplier)
+		: baseDamage(baseDamage)
+		, criticalRate(criticalRate)
+		, slot1(slot1)
+		, slot2(slot2)
+		, slot3(slot3)
+		, multiplier(multiplier)
+	{
+	}
 
 	double MotionValue(const Desc& desc) const 
 	{ 
@@ -42,8 +60,11 @@ struct WeaponDesc
 //------------------------------------------------------------------------------
 struct MonsterDesc
 {
-	double physicalDefense = 0.6;
-	double elementalDefense = 0.4;
+	double physicalDefense = 0.0;
+	double elementalDefense = 0.0;
+
+	MonsterDesc() = default;
+	MonsterDesc(double p, double e) : physicalDefense(p), elementalDefense(e) {}
 };
 
 //------------------------------------------------------------------------------

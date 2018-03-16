@@ -181,6 +181,99 @@ void AddIfNotWorse(
 
 //------------------------------------------------------------------------------
 template <typename CombinationType>
+void AddIfNotWorse(
+	std::list<std::pair<double, CombinationType*>>& container,
+	CombinationType* newPart,
+	bool deleteEquivalent,
+	FILE* file,
+	bool dump)
+{
+	for (auto it = container.begin(); it != container.end(); )
+	{
+		auto prev = it->second;
+
+		auto compare = CombinationBase::CompareStrict2(*newPart, *prev);
+
+		if (compare == GeneralizedArmor::Equal)
+		{
+			if (dump)
+			{
+				if (!newPart->IsTriviallyEquivalent(*prev))
+				{
+					fwprintf(
+						file,
+						L"\t%s == %s\n",
+						newPart->DumpToString().c_str(),
+						prev->DumpToString().c_str());
+				}
+			}
+
+			prev->CombineEquivalent(*newPart);
+
+			if (deleteEquivalent)
+			{
+				newPart->Delete();
+			}
+
+			newPart = nullptr;
+			break;
+		}
+		else if (compare == GeneralizedArmor::Better)
+		{
+			if (dump)
+			{
+				if (!prev->IsTriviallyWorse(*newPart))
+				{
+					fwprintf(
+						file,
+						L"\t%s < %s\n",
+						prev->DumpToString().c_str(),
+						newPart->DumpToString().c_str());
+				}
+			}
+
+			prev->Delete();
+			it = container.erase(it);
+		}
+		else if (compare == GeneralizedArmor::Worse)
+		{
+			if (dump)
+			{
+				if (!newPart->IsTriviallyWorse(*prev))
+				{
+					fwprintf(
+						file,
+						L"\t%s < %s\n",
+						newPart->DumpToString().c_str(),
+						prev->DumpToString().c_str());
+				}
+			}
+
+			newPart->Delete();
+			newPart = nullptr;
+			break;
+		}
+		else
+		{
+			++it;
+		}
+	}
+
+	if (newPart != nullptr)
+	{
+		container.push_back(make_pair(0, newPart));
+
+		//if (dump)
+		//{
+		//	WindowsUtility::Debug(L"\t");
+		//	newPart->DumpSimple();
+		//	WindowsUtility::Debug(L" is added.\n");
+		//}
+	}
+}
+
+//------------------------------------------------------------------------------
+template <typename CombinationType>
 int RejectWorseCombinations(
 	std::list<CombinationType*>& next,
 	bool dump)

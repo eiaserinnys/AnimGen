@@ -26,9 +26,6 @@ struct GeneralizedCombination : public CombinationBase
 
 	GeneralizedCombination& operator = (const GeneralizedCombination& rhs);
 
-	void DeriveFrom(
-		const GeneralizedCombination* prev);
-
 	void Combine(
 		const GeneralizedCombination* prev,
 		const Charm* charm);

@@ -77,125 +77,92 @@ void TestDamage()
 	LoadCharms();
 	CheckActiveSkills();
 
-	if (false)
-	{
-		CombinationBase a(COUNT_OF(g_skills)), b(COUNT_OF(g_skills));
-		a.skills[0] = 1;
-		a.skills[1] = 1;
-		b.slots[0] = 1;
-
-		auto comp = CombinationBase::CompareStrict2(a, b);
-
-		comp = CombinationBase::CompareStrict2(a, b);
-	}
-	
 	map<Armor::PartType, list<GeneralizedArmor*>*> g_generalized;
 	FilterArmors(g_generalized, true, true);
 
-	list<GeneralizedCombination*> g_all;
-	PopulateArmors(g_generalized, g_all, false, true);
+	list<GeneralizedCombination*> g_all_base;
+	PopulateArmors(g_generalized, g_all_base, false, true);
 
-	MonsterDesc monster;
-	WeaponDesc weapon;
-
-	// 무기 슬롯까지 확장한다
-	for (auto comb : g_all)
+	struct ToEvaluate
 	{
-		comb->slots[0] += weapon.slots[0];
-		comb->slots[1] += weapon.slots[1];
-		comb->slots[2] += weapon.slots[2];
-	}
+		string name;
+		WeaponDesc weapon;
+		MonsterDesc monster;
+	};
 
-	// 대미지 계산기를 만든다
-	DamageCalculator calc(weapon, monster);
-
-	list<DecoratedCombination*> g_decAll;
-	PopulateDecorators(g_all, g_decAll, &calc, false);
-
-	fopen_s(&file, "log_damage.txt", "w,ccs=UNICODE");
-
-	for (auto it = g_decAll.begin(); it != g_decAll.end(); ++it)
+	ToEvaluate eval[] = 
 	{
-		auto comb = *it;
-
-		//0L"공격",
-		//1L"간파",
-		//2L"슈퍼 회심",
-		//3L"약점 특효",
-		//4L"번개속성 공격 강화",
-		//5L"화룡의 비기",
-		//6L"통상탄/통상화살 강화",
-		//7L"산탄/강사 강화",
-		//8L"활 모으기 단계 해제",
-		//9L"체술",
-
-		if (DamageCalculator::IsCombinationValid(comb))
 		{
-			Desc desc(comb);
+			"비뢰궁(기본)", 
+			WeaponDesc(Core::Vector2D(180, 390), 0.0, 0, 0, 0, 1.2),  
+			MonsterDesc { 0.6, 0.4 }, 
+		},
+		{
+			"비뢰궁(회심,회심)",
+			WeaponDesc(Core::Vector2D(180, 390), 0.15, 0, 0, 0, 1.2),
+			MonsterDesc{ 0.6, 0.4 },
+		},
+		{
+			"비뢰궁(회심,슬롯)",
+			WeaponDesc(Core::Vector2D(180, 390), 0.1, 1, 0, 0, 1.2),
+			MonsterDesc{ 0.6, 0.4 },
+		},
+	};
 
-			fwprintf(
-				file,
-				L"%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t",
-				comb->skills[0],
-				comb->skills[1],
-				comb->skills[2],
-				comb->skills[3],
-				comb->skills[4],
-				comb->skills[5],
-				comb->skills[6],
-				comb->skills[7],
-				comb->skills[8],
-				comb->skills[9]);
+	for (int i = 0; i < COUNT_OF(eval); ++i)
+	{
+		list <GeneralizedCombination*> g_all;
 
-			Calculate(file, weapon, desc, monster);
+		// 무기 슬롯을 확장한다
+		for (auto comb : g_all_base)
+		{
+			auto newComb = new GeneralizedCombination(*comb);
 
-			comb->Write(file);
+			newComb->slots[0] += eval[i].weapon.slot1;
+			newComb->slots[1] += eval[i].weapon.slot2;
+			newComb->slots[2] += eval[i].weapon.slot3;
 
-			fwprintf(file, L"\n");
+			g_all.push_back(newComb);
 		}
-	}
 
-#if 0
-	for (int a = 0; a <= MaxAttackSkillLevel(); ++a)
-	{
-		desc.attackBonus = AttackSkillBonus(a);
+		// 대미지 계산기를 만든다
+		DamageCalculator calc(eval[i].weapon, eval[i].monster);
 
-		for (int b = 0; b <= MaxElementalSkillLevel(); ++b)
+		list<DecoratedCombination*> g_decAll;
+		PopulateDecorators(g_all, g_decAll, &calc, false);
+
+		auto name = Utility::Format("log_damage_%s.txt", eval[i].name.c_str());
+
+		fopen_s(&file, name.c_str(), "w,ccs=UNICODE");
+
+		for (auto it = g_decAll.begin(); it != g_decAll.end(); ++it)
 		{
-			desc.elementalBonus = ElementalSkillLevel(b);
+			auto comb = *it;
 
-			for (int c = 0; c <= MaxCriticalEyeSkillLevel(); ++c)
+			if (DamageCalculator::IsCombinationValid(comb))
 			{
-				desc.criticalEye = CriticalEye(c);
+				Desc desc(comb);
 
-				for (int d = 0; d <= MaxSuperCriticalSkillLevel(); ++d)
+				for (int i = 0; i < COUNT_OF(g_skills); ++i)
 				{
-					desc.superCritical = SuperCritical(d);
-
-					for (int e = 0; e <= MaxExploitWeaknessSkillLevel(); ++e)
-					{
-						desc.exploitWeakness = ExploitWeakness(e);
-
-						for (int f = 0; f < 2; ++f)
-						{
-							desc.fireDragonGambit = f == 0 ? 0 : FireDragonsGambit();
-
-							fprintf(
-								file,
-								"%d\t%d\t%d\t%d\t%d\t%d\t",
-								a, b, c, d, e, f);
-
-							Calculate(desc);
-						}
-					}
+					fwprintf(
+						file,
+						L"%d\t",
+						comb->skills[i]);
 				}
+
+				Calculate(file, eval[i].weapon, desc, eval[i].monster);
+
+				comb->Write(file);
+
+				fwprintf(file, L"\n");
 			}
-
 		}
+
+		fclose(file);
+
+		for (auto comb : g_all) { comb->Delete(); }
+
+		WindowsUtility::Debug(L"%dsec elapsed", (timeGetTime() - pivotTime) / 1000);
 	}
-#endif
-
-	fclose(file);
-
-	WindowsUtility::Debug(L"%dsec elapsed", (timeGetTime() - pivotTime) / 1000);
 }
