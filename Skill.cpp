@@ -7,48 +7,45 @@
 
 using namespace std;
 
-vector<Decorator*> g_skillToDecorator;
-
-vector<int> g_skillWithNoDecorator;
-
-vector<vector<int>> g_skillsBySlotSize;
-
 //------------------------------------------------------------------------------
-void CheckActiveSkills()
+void EvaluatingSkills::Update()
 {
-	g_skillToDecorator.resize(COUNT_OF(g_skills), nullptr);
+	bySlotSize.clear();
+	bySlotSize.push_back(vector<int>());
+	bySlotSize.push_back(vector<int>());
+	bySlotSize.push_back(vector<int>());
 
-	g_skillsBySlotSize.push_back(vector<int>());
-	g_skillsBySlotSize.push_back(vector<int>());
-	g_skillsBySlotSize.push_back(vector<int>());
+	noDecorator.clear();
 
-	for (int i = 0; i < COUNT_OF(g_skills); ++i)
+	for (int i = 0; i < list.size(); ++i)
 	{
+		list[i].decorator = nullptr;
+
 		bool found = false;
 		for (int j = 0; j < g_decorators.size(); ++j)
 		{
-			if (g_decorators[j]->skill == g_skills[i])
+			if (g_decorators[j]->skill == list [i].name)
 			{
 				found = true;
-				g_skillToDecorator[i] = g_decorators[j];
+				list[i].decorator = g_decorators[j];
 
-				g_skillsBySlotSize[g_decorators[j]->slotSize - 1].push_back(i);
+				bySlotSize[g_decorators[j]->slotSize - 1].push_back(i);
 				break;
 			}
 		}
 		if (!found)
 		{
-			g_skillWithNoDecorator.push_back(i);
+			noDecorator.push_back(i);
 		}
 	}
 }
 
 //------------------------------------------------------------------------------
-int GetSkillIndex(const std::wstring& skill)
+int EvaluatingSkills::GetIndex(const std::wstring& skill) const
 {
-	for (int i = 0; i < COUNT_OF(g_skills); ++i)
+	for (int i = 0; i < list.size(); ++i)
 	{
-		if (g_skills[i] == skill)
+		if (list[i].name == skill)
 		{
 			return i;
 		}

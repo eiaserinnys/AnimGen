@@ -57,6 +57,7 @@ GeneralizedCombination& GeneralizedCombination::operator = (const GeneralizedCom
 
 //------------------------------------------------------------------------------
 void GeneralizedCombination::Combine(
+	const EvaluatingSkills& evSkills,
 	const GeneralizedCombination* prev,
 	const Charm* charm)
 {
@@ -71,11 +72,14 @@ void GeneralizedCombination::Combine(
 	{
 		int index = charm->skills[i].second;
 
-		skills[index] += charm->skillLevel;
-
-		if (skills[index] > g_skillMaxLevel[index])
+		if (index >= 0)
 		{
-			skills[index] = g_skillMaxLevel[index];
+			skills[index] += charm->skillLevel;
+
+			if (skills[index] > evSkills.list[index].maxLevel)
+			{
+				skills[index] = evSkills.list[index].maxLevel;
+			}
 		}
 	}
 
@@ -99,6 +103,7 @@ void GeneralizedCombination::Combine(
 
 //------------------------------------------------------------------------------
 void GeneralizedCombination::Combine(
+	const EvaluatingSkills& evSkills, 
 	const GeneralizedCombination* prev,
 	int partIndex, 
 	const GeneralizedArmor* part)
@@ -110,7 +115,7 @@ void GeneralizedCombination::Combine(
 		ParentType::operator = (*prev);
 	}
 
-	ParentType::Combine(*part);
+	ParentType::Combine(evSkills, *part);
 
 	if (prev != nullptr)
 	{
@@ -144,9 +149,9 @@ void GeneralizedCombination::CombineEquivalent(GeneralizedCombination& target)
 }
 
 //------------------------------------------------------------------------------
-void GeneralizedCombination::Dump() const
+void GeneralizedCombination::Dump(const EvaluatingSkills& evSkills) const
 {
-	DumpSimple();
+	DumpSimple(evSkills);
 
 	WindowsUtility::Debug(L"\n");
 
@@ -184,9 +189,10 @@ void GeneralizedCombination::Dump() const
 }
 
 //------------------------------------------------------------------------------
-void GeneralizedCombination::Dump(FILE* file) const
+void GeneralizedCombination::Dump(
+	const EvaluatingSkills& evSkills, FILE* file) const
 {
-	ParentType::Dump(file);
+	ParentType::Dump(evSkills, file);
 
 	for (auto it = instances.begin(); it != instances.end(); ++it)
 	{
@@ -223,6 +229,7 @@ void GeneralizedCombination::Dump(FILE* file) const
 
 //------------------------------------------------------------------------------
 void PopulateArmors(
+	const EvaluatingSkills& evSkills,
 	const map<Armor::PartType, list<GeneralizedArmor*>*>& g_generalized,
 	list<GeneralizedCombination*>& g_all,
 	bool dumpList,
@@ -235,8 +242,8 @@ void PopulateArmors(
 	{
 		for (int i = 0; i < g_charms.size(); ++i)
 		{
-			auto newComb = new GeneralizedCombination(COUNT_OF(g_skills));
-			newComb->Combine(nullptr, g_charms[i]);
+			auto newComb = new GeneralizedCombination(evSkills.list.size());
+			newComb->Combine(evSkills, nullptr, g_charms[i]);
 			g_all.push_back(newComb);
 		}
 
@@ -244,7 +251,7 @@ void PopulateArmors(
 		WindowsUtility::Debug(L"%d combinations with charms ---------------------------------------\n", (int)g_all.size());
 
 		// 전체 덤프 ㄱㄱ
-		if (dumpList) { for (auto g : g_all) { g->Dump(file); } }
+		if (dumpList) { for (auto g : g_all) { g->Dump(evSkills, file); } }
 	}
 
 	// 다음 채널을 추가해서 늘린다
@@ -265,10 +272,10 @@ void PopulateArmors(
 		{
 			for (auto g : gs)
 			{
-				auto newComb = new GeneralizedCombination(COUNT_OF(g_skills));
-				newComb->Combine(*it, channel, g);
+				auto newComb = new GeneralizedCombination(evSkills.list.size());
+				newComb->Combine(evSkills, *it, channel, g);
 
-				AddIfNotWorse(next, newComb, true, file, dumpComparison);
+				AddIfNotWorse(evSkills, next, newComb, true, file, dumpComparison);
 			}
 		}
 
@@ -279,7 +286,7 @@ void PopulateArmors(
 
 		fwprintf(file, L"%d combinations until part %d ---------------------------------------\n", (int)g_all.size(), channel + 1);
 		WindowsUtility::Debug(L"%d combinations until part %d ---------------------------------------\n", g_all.size(), channel + 1);
-		if (dumpList) { for (auto g : g_all) { g->Dump(file); } }
+		if (dumpList) { for (auto g : g_all) { g->Dump(evSkills, file); } }
 	}
 
 	fclose(file);

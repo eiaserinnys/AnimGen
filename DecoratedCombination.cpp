@@ -56,16 +56,6 @@ DecoratedCombination* DecoratedCombination::DeriveFrom(
 DecoratedCombination* DecoratedCombination::DeriveFrom(
 	DecoratedCombination* from)
 {
-	return DeriveFrom(from, nullptr, -1, -1);
-}
-
-//------------------------------------------------------------------------------
-DecoratedCombination* DecoratedCombination::DeriveFrom(
-	DecoratedCombination* from,
-	const Decorator* dec,
-	int socket,
-	int decIndex)
-{
 	auto ret = new DecoratedCombination;
 
 	(*ret).ParentType::operator = (*from);
@@ -75,25 +65,6 @@ DecoratedCombination* DecoratedCombination::DeriveFrom(
 	ret->derivedFrom = from;
 
 	from->refCount++;
-
-	if (dec != nullptr)
-	{
-		auto index = dec->skillIndex;
-
-		if (ret->skills[index] + 1 <= g_skillMaxLevel[index])
-		{
-			ret->skills[index]++;
-			ret->decorator = dec;
-		}
-
-		ret->lastDecoratorIndex = decIndex;
-	}
-
-	if (socket >= 0)
-	{
-		ret->slots[socket]--;	// ¾îÂ·µç ½½·ÔÀº ¼Òºñ
-		ret->lastSocket = socket;
-	}
 
 	return ret;
 }
@@ -138,9 +109,9 @@ void DecoratedCombination::Write(FILE* file) const
 	const DecoratedCombination* c = this;
 	while (c != nullptr)
 	{
-		if (c->decorator != nullptr)
+		for (auto dec : c->decorator)
 		{
-			fwprintf(file, L"%s ", c->decorator->name.c_str());
+			fwprintf(file, L"%s ", dec->name.c_str());
 		}
 
 		c = c->derivedFrom;
@@ -176,7 +147,7 @@ void AddByDamage(
 	DecoratedCombination* comb, 
 	IDamageCalculator* damageCalc)
 {
-	const int maxCount = 500;
+	const int maxCount = 150;
 
 	auto damage = damageCalc->Do(comb);
 
@@ -256,6 +227,7 @@ void AddFixedCombinationsByDamage(
 
 //------------------------------------------------------------------------------
 void PopulateDecorators(
+	const EvaluatingSkills& evSkills,
 	const list<GeneralizedCombination*>& g_all, 
 	list<DecoratedCombination*>& g_decAll_,
 	IDamageCalculator* damageCalc,
@@ -327,7 +299,7 @@ void PopulateDecorators(
 
 					bool maxedAlready =
 						temp->skills[dec->skillIndex] + 1 >
-						g_skillMaxLevel[dec->skillIndex];
+						evSkills.list[dec->skillIndex].maxLevel;
 					if (maxedAlready) { continue; }
 
 					temp->skills[dec->skillIndex]++;
@@ -352,8 +324,9 @@ void PopulateDecorators(
 							auto si = g_decorators[di]->skillIndex;
 							newComb->skills[si]++;
 							newComb->slots[socket]--;
+							newComb->decorator.push_back(g_decorators[di]);
 
-							assert(newComb->skills[si] <= g_skillMaxLevel[si]);
+							assert(newComb->skills[si] <= evSkills.list[si].maxLevel);
 						}
 
 						assert(newComb->slots[socket] >= 0);
@@ -364,7 +337,7 @@ void PopulateDecorators(
 						}
 						else
 						{
-							AddIfNotWorse(next, newComb, false, nullptr, dumpComparison);
+							AddIfNotWorse(evSkills, next, newComb, false, nullptr, dumpComparison);
 						}
 					}
 

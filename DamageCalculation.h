@@ -25,6 +25,8 @@ struct Desc
 //------------------------------------------------------------------------------
 struct WeaponDesc
 {
+	int rarity;
+
 	Core::Vector2D baseDamage;
 
 	double criticalRate;
@@ -38,11 +40,13 @@ struct WeaponDesc
 	WeaponDesc() = default;
 
 	WeaponDesc(
+		int rarity, 
 		const Core::Vector2D& baseDamage,
 		double criticalRate,
 		int slot1, int slot2, int slot3,
 		double multiplier)
-		: baseDamage(baseDamage)
+		: rarity(rarity)
+		, baseDamage(baseDamage)
 		, criticalRate(criticalRate)
 		, slot1(slot1)
 		, slot2(slot2)

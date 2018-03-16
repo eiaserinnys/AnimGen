@@ -1,65 +1,25 @@
 #pragma once
 
-static std::wstring g_skills[] =
-{
-	L"공격",
-	L"간파",
-	L"슈퍼 회심",
-	L"약점 특효",
-	L"얼음속성 공격 강화",
-	L"화룡의 비기",
-
-	// 활 강화
-	L"통상탄/통상화살 강화",
-	L"산탄/강사 강화",
-	L"활 모으기 단계 해제",
-
-	// 유틸리티
-	L"체술",
-};
-
-static std::wstring g_skillsAbb[] =
-{
-	L"공격",
-	L"간파",
-	L"슈회",
-	L"약특",
-	L"속강",
-	L"화비",
-
-	L"통강",
-	L"산강",
-	L"활모",
-
-	L"체술"
-};
-
-static int g_skillMaxLevel[] =
-{
-	7,
-	7,
-	3, 
-	3, 
-	5,
-	2, 
-	1,
-	1,
-	1,
-	5,
-};
-
 struct Decorator;
 
-extern std::vector<Decorator*> g_skillToDecorator;
+struct SkillDescriptor
+{
+	std::wstring name;
+	std::wstring abbName;
+	int maxLevel;
+	Decorator* decorator;
+};
 
-extern std::vector<int> g_skillWithNoDecorator;
+struct EvaluatingSkills
+{
+	std::vector<SkillDescriptor> list;
+	std::vector<int> noDecorator;
+	std::vector<std::vector<int>> bySlotSize;
 
-extern std::vector<std::vector<int>> g_skillsBySlotSize;
+	void Update();
 
-void CheckActiveSkills();
-
-//------------------------------------------------------------------------------
-int GetSkillIndex(const std::wstring& skill);
+	int GetIndex(const std::wstring& skill) const;
+};
 
 //------------------------------------------------------------------------------
 int MaxAttackSkillLevel();

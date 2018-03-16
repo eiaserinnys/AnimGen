@@ -27,10 +27,12 @@ struct GeneralizedCombination : public CombinationBase
 	GeneralizedCombination& operator = (const GeneralizedCombination& rhs);
 
 	void Combine(
+		const EvaluatingSkills& evSkills,
 		const GeneralizedCombination* prev,
 		const Charm* charm);
 
 	void Combine(
+		const EvaluatingSkills& evSkills,
 		const GeneralizedCombination* prev, 
 		int partIndex, 
 		const GeneralizedArmor* part);
@@ -39,9 +41,9 @@ struct GeneralizedCombination : public CombinationBase
 
 	void Delete() { delete this; }
 
-	void Dump() const;
+	void Dump(const EvaluatingSkills& evSkills) const;
 
-	void Dump(FILE* file) const;
+	void Dump(const EvaluatingSkills& evSkills, FILE* file) const;
 
 	std::list<PartInstance*> instances;
 
@@ -51,6 +53,7 @@ struct GeneralizedCombination : public CombinationBase
 };
 
 void PopulateArmors(
+	const EvaluatingSkills& evSkills,
 	const std::map<Armor::PartType, std::list<GeneralizedArmor*>*>& g_generalized,
 	std::list<GeneralizedCombination*>& all,
 	bool dumpList,

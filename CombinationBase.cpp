@@ -46,13 +46,8 @@ CombinationBase& CombinationBase::operator = (const CombinationBase& rhs)
 }
 
 //------------------------------------------------------------------------------
-int CombinationBase::SlotCount() const
-{
-	return slots[0] + slots[1] + slots[2];
-}
-
-//------------------------------------------------------------------------------
 static void CalculateFreedom(
+	const EvaluatingSkills& evSkills,
 	const CombinationBase** side,
 	int slotSize,
 	int lhsSocketToUse, 
@@ -68,9 +63,9 @@ static void CalculateFreedom(
 			slotAvailable--;
 		}
 
-		for (auto si : g_skillsBySlotSize[slotSize])
+		for (auto si : evSkills.bySlotSize[slotSize])
 		{
-			int lvDiff = g_skillMaxLevel[si] - side[s]->skills[si];
+			int lvDiff = evSkills.list[si].maxLevel - side[s]->skills[si];
 
 			int toUse = min(lvDiff, slotAvailable);
 
@@ -130,15 +125,17 @@ int GetGeneralSize(int* freedom, bool* maxed)
 //------------------------------------------------------------------------------
 CombinationBase::ComparisonResult
 	CombinationBase::CompareStrict2(
+		const EvaluatingSkills& evSkills,
 		const CombinationBase& lhs,
 		const CombinationBase& rhs)
 {
-	return CompareStrict2(lhs, rhs, -1, -1);
+	return CompareStrict2(evSkills, lhs, rhs, -1, -1);
 }
 
 //------------------------------------------------------------------------------
 CombinationBase::ComparisonResult
 	CombinationBase::CompareStrict2(
+		const EvaluatingSkills& evSkills,
 		const CombinationBase& lhs,
 		const CombinationBase& rhs,
 		int skillToAddToLhs,
@@ -155,7 +152,7 @@ CombinationBase::ComparisonResult
 	// Strict = 각 슬롯 자리에는 해당 크기의 장식주만 끼운다고 가정
 
 	// 먼저 장식주로 해결되지 않는 스킬을 비교한다
-	for (auto si : g_skillWithNoDecorator)
+	for (auto si : evSkills.noDecorator)
 	{
 		if (lhs.skills[si] > rhs.skills[si])
 		{
@@ -172,13 +169,13 @@ CombinationBase::ComparisonResult
 	// 스킬 상태를 복제한다
 	const int bufferSize = 32;
 	int skills[2][bufferSize];
-	assert(COUNT_OF(g_skills) < bufferSize);
+	assert(evSkills.list.size() < bufferSize);
 
 	if (skillToAddToLhs >= 0) { skills[0][skillToAddToLhs]++; }
 
 	for (int i = 0; i < COUNT_OF(side); ++i)
 	{
-		memcpy(skills[i], side[i]->skills, sizeof(int) * COUNT_OF(g_skills));
+		memcpy(skills[i], side[i]->skills, sizeof(int) * evSkills.list.size());
 	}
 
 	// 슬롯별 자유도를 바탕으로 상호 표현 가능성을 검증한다
@@ -187,7 +184,7 @@ CombinationBase::ComparisonResult
 		// 먼저 슬롯 크기별 자유도를 계산한다
 		int freedom[] = { 0, 0, };
 		bool maxed[] = { false, false, };
-		CalculateFreedom(side, slotSize, lhsSocketToUse, freedom, maxed);
+		CalculateFreedom(evSkills, side, slotSize, lhsSocketToUse, freedom, maxed);
 
 		// 양측의 자유도를 구한 상태에서 비교에 들어간다
 		// 가용한 모든 스킬 최대인 경우 크기 비교가 무의미하다
@@ -203,7 +200,7 @@ CombinationBase::ComparisonResult
 			int available[] = { freedom[0], freedom[1], };
 			int totalLevel[] = { freedom[0], freedom[1], };
 
-			for (auto si : g_skillsBySlotSize[slotSize])
+			for (auto si : evSkills.bySlotSize[slotSize])
 			{
 				totalLevel[0] += side[0]->skills[si];
 				totalLevel[1] += side[1]->skills[si];
@@ -226,7 +223,7 @@ CombinationBase::ComparisonResult
 			{
 				int o = 1 - s;
 
-				for (auto si : g_skillsBySlotSize[slotSize])
+				for (auto si : evSkills.bySlotSize[slotSize])
 				{
 					if (side[s]->skills[si] < side[o]->skills[si])
 					{
@@ -253,26 +250,26 @@ CombinationBase::ComparisonResult
 			// 각 스킬의 달성 가능 최대 레벨이 얼마인지 비교한다
 			// 어느 한쪽이 다른 쪽보다 항상 높으면 유리/불리를 따질 수 있다
 			char checked[bufferSize] = { 0 };
-			assert(g_skillsBySlotSize[slotSize].size() < bufferSize);
+			assert(evSkills.bySlotSize[slotSize].size() < bufferSize);
 
 			function<bool()> EvaluatePermutations;
 
 			EvaluatePermutations = [&]() -> bool
 			{
-				for (auto si : g_skillsBySlotSize[slotSize])
+				for (auto si : evSkills.bySlotSize[slotSize])
 				{
 					if (checked[si] != 0) { continue; }
 
-					if (skills[0][si] >= g_skillMaxLevel[si] &&
-						skills[1][si] >= g_skillMaxLevel[si])
+					if (skills[0][si] >= evSkills.list[si].maxLevel &&
+						skills[1][si] >= evSkills.list[si].maxLevel)
 					{
 						continue;
 					}
 
 					int toUse[] =
 					{
-						min(g_skillMaxLevel[si] - skills[0][si], available[0]),
-						min(g_skillMaxLevel[si] - skills[1][si], available[1]),
+						min(evSkills.list[si].maxLevel - skills[0][si], available[0]),
+						min(evSkills.list[si].maxLevel - skills[1][si], available[1]),
 					};
 
 					skills[0][si] += toUse[0]; available[0] -= toUse[0];
@@ -349,467 +346,17 @@ CombinationBase::ComparisonResult
 }
 
 //------------------------------------------------------------------------------
-CombinationBase::ComparisonResult
-CombinationBase::Compare(
-	const CombinationBase& lhs,
+void CombinationBase::Combine(
+	const EvaluatingSkills& evSkills,
 	const CombinationBase& rhs)
-{
-	return Compare(lhs, rhs, -1, -1);
-}
-
-//------------------------------------------------------------------------------
-CombinationBase::ComparisonResult
-CombinationBase::Compare(
-	const CombinationBase& lhs,
-	const CombinationBase& rhs,
-	int lhsSkillToAdd,
-	int lhsSocketToUse)
-{
-	assert(lhs.skillCount == rhs.skillCount);
-	int skillCount = lhs.skillCount;
-
-	// 완전 동일 여부 체크
-	bool exactSame = true;
-
-	// 계산을 위해서 복제한다
-	int slotLhs[3] = { lhs.slots[0], lhs.slots[1], lhs.slots[2], };
-	int slotRhs[3] = { rhs.slots[0], rhs.slots[1], rhs.slots[2], };
-
-	if (lhsSocketToUse >= 0 && lhsSocketToUse < COUNT_OF(slotLhs))
-	{
-		slotLhs[lhsSocketToUse]--;
-	}
-
-	bool notWorseThan[2] = { false, false };
-
-	// 스킬의 차분을 먼저 구한다
-	int skillLeft = 0;
-	for (int i = 0; i < skillCount; ++i)
-	{
-		int lhsSkill = lhs.skills[i] + (i == lhsSkillToAdd ? 1 : 0);
-		int rhsSkill = rhs.skills[i];
-
-		// 완전 동일 여부를 확인한다
-		exactSame = exactSame && (lhsSkill == rhsSkill);
-
-		if (lhsSkill == 0 && rhsSkill == 0) { continue; }
-
-		int toSub = min(lhsSkill, rhsSkill);
-		lhsSkill = lhsSkill - toSub;
-		rhsSkill = rhsSkill - toSub;
-
-		if (lhsSkill == 0 && rhsSkill == 0) { continue; }
-
-		if (lhsSkill > 0) { assert(rhsSkill == 0); }
-		else { assert(lhsSkill == 0); }
-
-		int skillLeft = lhsSkill > 0 ? lhsSkill : rhsSkill;
-		int* slotsInOtherSide = lhsSkill > 0 ? slotRhs : slotLhs;
-		int index = lhsSkill > 0 ? 0 : 1;
-
-		// 어느 한 쪽에 남은 스킬을 
-		// 반대쪽에 장식주를 달아서 커버 가능한지 확인한다
-		if (g_skillToDecorator[i] != nullptr)
-		{
-			int slotSize = g_skillToDecorator[i]->slotSize;
-
-			for (int j = slotSize - 1; j < COUNT_OF(slots); ++j)
-			{
-				int toSub = min(skillLeft, slotsInOtherSide[j]);
-
-				skillLeft -= toSub;
-				slotsInOtherSide[j] -= toSub;
-				if (skillLeft <= 0) { break; }
-			}
-
-			if (skillLeft > 0)
-			{
-				notWorseThan[index] = true;
-				if (notWorseThan[0] && notWorseThan[1]) { return Undetermined; }
-			}
-		}
-		else
-		{
-			// 장식주로 커버가 안 되는 스킬이다
-			notWorseThan[index] = true;
-			if (notWorseThan[0] && notWorseThan[1]) { return Undetermined; }
-		}
-	}
-
-	// 상호 슬롯을 비교한다
-	if (lhs.SlotCount() > 0 || rhs.SlotCount() > 0)
-	{
-		for (int slotSize = 0; slotSize < COUNT_OF(slots); ++slotSize)
-		{
-			// 완전 동일 여부를 확인한다
-			exactSame = exactSame && (lhs.slots[slotSize] == rhs.slots[slotSize]);
-
-			for (int j = 0; j < 2; ++j)
-			{
-				int curSlot = j == 0 ?
-					lhs.slots[slotSize] : rhs.slots[slotSize];
-
-				if (j == 0 && slotSize == lhsSocketToUse)
-				{
-					curSlot--;
-				}
-
-				if (curSlot == 0) { continue; }
-
-				int* otherSide = j == 0 ? slotRhs : slotLhs;
-
-				bool selected = false;
-				for (int i = slotSize; i < COUNT_OF(slots); ++i)
-				{
-					int toSub = min(curSlot, otherSide[i]);
-
-					curSlot -= toSub;
-					otherSide[i] -= toSub;
-
-					if (curSlot <= 0)
-					{
-						break;
-					}
-				}
-
-				if (curSlot > 0)
-				{
-					notWorseThan[j] = true;
-					if (notWorseThan[0] && notWorseThan[1]) { return Undetermined; }
-				}
-			}
-		}
-	}
-
-	if (exactSame)
-	{
-		assert(!notWorseThan[0] && !notWorseThan[1]);
-	}
-
-	if (notWorseThan[0])
-	{
-		return notWorseThan[1] ? Undetermined : Better;
-	}
-	else
-	{
-		return notWorseThan[1] ? Worse : Equal;
-	}
-}
-
-//------------------------------------------------------------------------------
-CombinationBase::ComparisonResult
-CombinationBase::CompareStrict(
-	const CombinationBase& lhs,
-	const CombinationBase& rhs)
-{
-	return Compare(lhs, rhs, -1, -1);
-}
-
-//------------------------------------------------------------------------------
-CombinationBase::ComparisonResult
-CombinationBase::CompareStrict(
-	const CombinationBase& lhs,
-	const CombinationBase& rhs,
-	int lhsSkillToAdd,
-	int lhsSocketToUse)
-{
-	assert(lhs.skillCount == rhs.skillCount);
-	int skillCount = lhs.skillCount;
-
-	// 완전 동일 여부 체크
-	bool exactSame = true;
-
-	// 계산을 위해서 복제한다
-	bool notWorseThan[2] = { false, false };
-
-	// 스킬의 차분을 먼저 구한다
-	int skillLeft = 0;
-	for (int i = 0; i < skillCount; ++i)
-	{
-		int lhsSkill = lhs.skills[i] + (i == lhsSkillToAdd ? 1 : 0);
-		int rhsSkill = rhs.skills[i];
-
-		// 완전 동일 여부를 확인한다
-		exactSame = exactSame && (lhsSkill == rhsSkill);
-
-		if (lhsSkill < rhsSkill)
-		{
-			notWorseThan[1] = true;
-			if (notWorseThan[0] && notWorseThan[1]) { return Undetermined; }
-		}
-		else if (lhsSkill > rhsSkill)
-		{
-			notWorseThan[0] = true;
-			if (notWorseThan[0] && notWorseThan[1]) { return Undetermined; }
-		}
-	}
-
-	// 상호 슬롯을 비교한다
-	if (lhs.SlotCount() > 0 || rhs.SlotCount() > 0)
-	{
-		for (int slotSize = 0; slotSize < COUNT_OF(slots); ++slotSize)
-		{
-			int lhsSlot = lhs.slots[slotSize] - (slotSize == lhsSocketToUse ? 1 : 0);
-			int rhsSlot = rhs.slots[slotSize];
-
-			// 완전 동일 여부를 확인한다
-			exactSame = exactSame && (lhsSlot == rhsSlot);
-
-			if (lhsSlot < rhsSlot)
-			{
-				notWorseThan[1] = true;
-				if (notWorseThan[0] && notWorseThan[1]) { return Undetermined; }
-			}
-			else if (lhsSlot > rhsSlot)
-			{
-				notWorseThan[0] = true;
-				if (notWorseThan[0] && notWorseThan[1]) { return Undetermined; }
-			}
-		}
-	}
-
-#if 0
-	assert(lhs.skillCount == rhs.skillCount);
-	int skillCount = lhs.skillCount;
-
-	// 완전 동일 여부 체크
-	bool exactSame = true;
-
-	// 계산을 위해서 복제한다
-	int slotLhs[3] = { lhs.slots[0], lhs.slots[1], lhs.slots[2], };
-	int slotRhs[3] = { rhs.slots[0], rhs.slots[1], rhs.slots[2], };
-
-	bool notWorseThan[2] = { false, false };
-
-	// 스킬의 차분을 먼저 구한다
-	int skillLeft = 0;
-	for (int i = 0; i < skillCount; ++i)
-	{
-		int lhsSkill = lhs.skills[i] + (i == lhsSkillToAdd ? 1 : 0);
-		int rhsSkill = rhs.skills[i];
-
-		// 완전 동일 여부를 확인한다
-		exactSame = exactSame && (lhsSkill == rhsSkill);
-
-		if (lhsSkill == 0 && rhsSkill == 0) { continue; }
-
-		int toSub = min(lhsSkill, rhsSkill);
-		lhsSkill = lhsSkill - toSub;
-		rhsSkill = rhsSkill - toSub;
-
-		if (lhsSkill == 0 && rhsSkill == 0) { continue; }
-
-		if (lhsSkill > 0) { assert(rhsSkill == 0); }
-		else { assert(lhsSkill == 0); }
-
-		int skillLeft = lhsSkill > 0 ? lhsSkill : rhsSkill;
-		int* slotsInOtherSide = lhsSkill > 0 ? slotRhs : slotLhs;
-		int index = lhsSkill > 0 ? 0 : 1;
-
-		// 어느 한 쪽에 남은 스킬을 
-		// 반대쪽에 장식주를 달아서 커버 가능한지 확인한다
-		if (g_skillToDecorator[i] != nullptr)
-		{
-			int slotSize = g_skillToDecorator[i]->slotSize;
-
-			// 정확히 그 슬롯에 맞아야 한다
-			int toSub = min(skillLeft, slotsInOtherSide[slotSize - 1]);
-
-			skillLeft -= toSub;
-			slotsInOtherSide[slotSize - 1] -= toSub;
-
-			if (skillLeft > 0)
-			{
-				notWorseThan[index] = true;
-				if (notWorseThan[0] && notWorseThan[1]) { return Undetermined; }
-			}
-		}
-		else
-		{
-			// 장식주로 커버가 안 되는 스킬이다
-			notWorseThan[index] = true;
-			if (notWorseThan[0] && notWorseThan[1]) { return Undetermined; }
-		}
-	}
-
-	// 상호 슬롯을 비교한다
-	if (lhs.SlotCount() > 0 || rhs.SlotCount() > 0)
-	{
-		for (int slotSize = 0; slotSize < COUNT_OF(slots); ++slotSize)
-		{
-			// 완전 동일 여부를 확인한다
-			exactSame = exactSame && (lhs.slots[slotSize] == rhs.slots[slotSize]);
-
-			for (int j = 0; j < 2; ++j)
-			{
-				int curSlot = j == 0 ? lhs.slots[slotSize] : rhs.slots[slotSize];
-
-				if (j == 0 && slotSize == lhsSocketToUse)
-				{
-					curSlot--;
-				}
-
-				if (curSlot == 0) { continue; }
-
-				int* otherSide = j == 0 ? slotRhs : slotLhs;
-
-				bool selected = false;
-				int toSub = min(curSlot, otherSide[slotSize]);
-
-				curSlot -= toSub;
-				otherSide[slotSize] -= toSub;
-
-				if (curSlot > 0)
-				{
-					notWorseThan[j] = true;
-					if (notWorseThan[0] && notWorseThan[1]) { return Undetermined; }
-				}
-			}
-		}
-	}
-#endif
-
-	if (exactSame)
-	{
-		assert(!notWorseThan[0] && !notWorseThan[1]);
-	}
-
-	if (notWorseThan[0])
-	{
-		return notWorseThan[1] ? Undetermined : Better;
-	}
-	else
-	{
-		return notWorseThan[1] ? Worse : Equal;
-	}
-}
-
-//------------------------------------------------------------------------------
-CombinationBase::ComparisonResult
-CombinationBase::Compare(
-	const CombinationBase& rhs) const
-{
-	// 완전 동일 여부 체크
-	bool exactSame = true;
-
-	// 계산을 위해서 복제한다
-	int slotRhs[3] = { rhs.slots[0], rhs.slots[1],rhs.slots[2], };
-
-	// 스킬의 차분을 먼저 구한다
-	int skillLeft = 0;
-	for (int i = 0; i < skillCount; ++i)
-	{
-		int curSkill = skills[i];
-
-		// 완전 동일 여부를 확인한다
-		exactSame = exactSame && (curSkill == rhs.skills[i]);
-
-		if (curSkill > 0)
-		{
-			int toSub = min(curSkill, rhs.skills[i]);
-			curSkill = curSkill - toSub;
-
-			// lhs에 남은 스킬을 rhs에 장식주를 달아서 커버 가능한지 확인한다
-			if (curSkill > 0)
-			{
-				if (g_skillToDecorator[i] != nullptr)
-				{
-					int slotSize = g_skillToDecorator[i]->slotSize;
-
-					for (int j = slotSize - 1; j < COUNT_OF(slots); ++j)
-					{
-						int toSub = min(curSkill, slotRhs[j]);
-
-						if (toSub > 0)
-						{
-							curSkill -= toSub;
-							slotRhs[j] -= toSub;
-
-							if (curSkill <= 0)
-							{
-								break;
-							}
-						}
-					}
-
-					if (curSkill > 0)
-					{
-						return NotWorse;
-					}
-				}
-				else
-				{
-					// 장식주로 커버가 안 되는 스킬이다
-					// 이 조합은 어쩔 수 없이 살려야 한다
-					return NotWorse;
-				}
-			}
-		}
-	}
-
-	// lhs의 슬롯에 꽂을 수 있는 장식주를
-	// rhs의 슬롯에도 꽂을 수 있는지 확인한다
-	if (SlotCount() > 0)
-	{
-		for (int slotSize = 0; slotSize < COUNT_OF(slots); ++slotSize)
-		{
-			int curSlot = slots[slotSize];
-
-			// 완전 동일 여부를 확인한다
-			exactSame = exactSame && (curSlot == rhs.slots[slotSize]);
-
-			if (curSlot > 0)
-			{
-				bool selected = false;
-				for (int i = slotSize; i < COUNT_OF(slots); ++i)
-				{
-					int toSub = min(curSlot, slotRhs[i]);
-
-					if (toSub > 0)
-					{
-						curSlot -= toSub;
-						slotRhs[i] -= toSub;
-
-						if (curSlot <= 0)
-						{
-							break;
-						}
-					}
-				}
-
-				if (curSlot > 0)
-				{
-					return NotWorse;
-				}
-			}
-		}
-	}
-	else
-	{
-		// 완전 동일 여부를 확인한다
-		exactSame = exactSame && (rhs.SlotCount() == 0);
-	}
-
-	return exactSame ? Equal : Worse;
-}
-
-//------------------------------------------------------------------------------
-bool CombinationBase::IsWorseThanOrEqualTo(const CombinationBase& rhs) const
-{
-	auto result = Compare(rhs);
-	return result != NotWorse;
-}
-
-//------------------------------------------------------------------------------
-void CombinationBase::Combine(const CombinationBase& rhs)
 {
 	for (int i = 0; i < skillCount; ++i)
 	{
 		skills[i] += rhs.skills[i];
 
-		if (skills[i] > g_skillMaxLevel[i])
+		if (skills[i] > evSkills.list[i].maxLevel)
 		{
-			skills[i] = g_skillMaxLevel[i];
+			skills[i] = evSkills.list[i].maxLevel;
 		}
 	}
 
@@ -852,21 +399,21 @@ bool CombinationBase::IsTriviallyEquivalent(const CombinationBase& rhs) const
 }
 
 //------------------------------------------------------------------------------
-void CombinationBase::Dump() const
+void CombinationBase::Dump(const EvaluatingSkills& evSkills) const
 {
-	DumpSimple();
+	DumpSimple(evSkills);
 
 	WindowsUtility::Debug(L"\n");
 }
 
 //------------------------------------------------------------------------------
-void CombinationBase::Dump(FILE* file) const
+void CombinationBase::Dump(const EvaluatingSkills& evSkills, FILE* file) const
 {
-	fwprintf(file, L"%s\n", DumpToString().c_str());
+	fwprintf(file, L"%s\n", DumpToString(evSkills).c_str());
 }
 
 //------------------------------------------------------------------------------
-wstring CombinationBase::DumpToString() const
+wstring CombinationBase::DumpToString(const EvaluatingSkills& evSkills) const
 {
 	wstring result;
 
@@ -877,7 +424,7 @@ wstring CombinationBase::DumpToString() const
 		{
 			result += Utility::FormatW(
 				first ? L"%s%d" : L" %s%d",
-				g_skillsAbb[i].c_str(),
+				evSkills.list[i].abbName.c_str(),
 				skills[i]);
 			first = false;
 		}
@@ -896,7 +443,7 @@ wstring CombinationBase::DumpToString() const
 }
 
 //------------------------------------------------------------------------------
-void CombinationBase::DumpSimple() const
+void CombinationBase::DumpSimple(const EvaluatingSkills& evSkills) const
 {
 	bool first = true;
 	for (int i = 0; i < skillCount; ++i)
@@ -905,7 +452,7 @@ void CombinationBase::DumpSimple() const
 		{
 			WindowsUtility::Debug(
 				first ? L"%s%d" : L" %s%d",
-				g_skillsAbb[i].c_str(),
+				evSkills.list[i].abbName.c_str(),
 				skills[i]);
 			first = false;
 		}

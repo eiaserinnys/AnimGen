@@ -6,6 +6,7 @@
 
 using namespace std;
 
+vector<Decorator*> g_allDecorators;
 vector<Decorator*> g_decorators;
 
 //------------------------------------------------------------------------------
@@ -31,22 +32,32 @@ void LoadDecorators()
 
 		if (tokens.size() >= 4)
 		{
-			int index = GetSkillIndex(tokens[0]);
-			if (index >= 0)
-			{
-				auto dec = new Decorator;
-				dec->name = tokens[3];
-				dec->skill = tokens[0];
-				dec->skillIndex = index;
-				dec->rarity = _wtoi(tokens[2].c_str());
-				dec->slotSize = _wtoi(tokens[1].c_str());
+			auto dec = new Decorator;
+			dec->name = tokens[3];
+			dec->skill = tokens[0];
+			dec->skillIndex = -1;
+			dec->rarity = _wtoi(tokens[2].c_str());
+			dec->slotSize = _wtoi(tokens[1].c_str());
 
-				g_decorators.push_back(dec);
-			}
-
-			//WindowsUtility::Debug(L"%s %s R%d [%d]\n", dec->name.c_str(), dec->skill.c_str(), dec->rarity, dec->slotSize);
+			g_allDecorators.push_back(dec);
 		}
 	}
 
 	fclose(file);
+}
+
+//------------------------------------------------------------------------------
+void FilterDecorators(const EvaluatingSkills& evSkills)
+{
+	g_decorators.clear();
+
+	for (auto dec : g_allDecorators)
+	{
+		int index = evSkills.GetIndex(dec->skill);
+		if (index >= 0)
+		{
+			dec->skillIndex = index;
+			g_decorators.push_back(dec);
+		}
+	}
 }

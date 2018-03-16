@@ -14,29 +14,29 @@ vector<Set*> g_sets;
 map<Armor::PartType, vector<Armor*>*> g_armors;
 
 ////////////////////////////////////////////////////////////////////////////////
-bool Armor::IsRelevant() const
+bool Armor::IsRelevant(const EvaluatingSkills& evSkills) const
 {
 	// 셋트 스킬이 포함시킬 스킬인 경우
-	int index = GetSkillIndex(set->skill);
+	int index = evSkills.GetIndex(set->skill);
 	if (index >= 0) { return true; }
 
 	// 개별 파트 스킬이 포함시킬 스킬인 경우
 	for (int k = 0; k < skills.size(); ++k)
 	{
-		int index = GetSkillIndex(skills[k].first);
+		int index = evSkills.GetIndex(skills[k].first);
 		if (index >= 0)
 		{
 			return true;
 		}
 	}
 
-	for (auto dec : g_skillToDecorator)
+	for (auto& sd : evSkills.list)
 	{
-		if (dec == nullptr) { continue; }
+		if (sd.decorator == nullptr) { continue; }
 
 		for (auto s : slots)
 		{
-			if (s == dec->slotSize)
+			if (s == sd.decorator->slotSize)
 			{
 				return true;
 			}

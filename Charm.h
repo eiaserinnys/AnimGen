@@ -3,6 +3,8 @@
 #include <string>
 #include <vector>
 
+#include "Skill.h"
+
 struct Charm
 {
 	std::wstring name;
@@ -15,3 +17,4 @@ struct Charm
 extern std::vector<Charm*> g_charms;
 
 void LoadCharms();
+void FilterCharms(const EvaluatingSkills& evSkills);

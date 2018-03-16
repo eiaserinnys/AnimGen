@@ -4,6 +4,8 @@
 #include <vector>
 #include <map>
 
+#include "Skill.h"
+
 //------------------------------------------------------------------------------
 struct Set
 {
@@ -27,7 +29,7 @@ struct Armor
 		Count,
 	};
 
-	bool IsRelevant() const;
+	bool IsRelevant(const EvaluatingSkills& evSkills) const;
 
 	void Dump(bool addNewLine) const;
 

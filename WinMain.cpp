@@ -29,7 +29,7 @@ INT WINAPI wWinMain(
 	TestVector();
 	TestCurve();
 	TestDamage();
-	//return 0;
+	return 0;
 
 	auto ret = WindowsUtility::RegisterAndCreateOverlappedWindow(
 		hInstance,

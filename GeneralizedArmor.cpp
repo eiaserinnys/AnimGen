@@ -9,17 +9,18 @@
 using namespace std;
 
 //------------------------------------------------------------------------------
-GeneralizedArmor::GeneralizedArmor(const Armor* part)
-	: ParentType(COUNT_OF(g_skills))
+GeneralizedArmor::GeneralizedArmor(
+	const EvaluatingSkills& evSkills, const Armor* part)
+	: ParentType(evSkills.list.size())
 {
 	// 셋트 스킬이 포함시킬 스킬인 경우
-	int index = GetSkillIndex(part->set->skill);
+	int index = evSkills.GetIndex(part->set->skill);
 	if (index >= 0) { skills[index]++; }
 
 	// 개별 파트 스킬이 포함시킬 스킬인 경우
 	for (int k = 0; k < part->skills.size(); ++k)
 	{
-		int index = GetSkillIndex(part->skills[k].first);
+		int index = evSkills.GetIndex(part->skills[k].first);
 		if (index >= 0)
 		{
 			skills[index] += part->skills[k].second;
@@ -58,9 +59,9 @@ void GeneralizedArmor::CombineEquivalent(const GeneralizedArmor& rhs)
 }
 
 //------------------------------------------------------------------------------
-void GeneralizedArmor::Dump() const
+void GeneralizedArmor::Dump(const EvaluatingSkills& evSkills) const
 {
-	DumpSimple();
+	DumpSimple(evSkills);
 
 	WindowsUtility::Debug(L"\n");
 
@@ -71,9 +72,9 @@ void GeneralizedArmor::Dump() const
 }
 
 //------------------------------------------------------------------------------
-void GeneralizedArmor::Dump(FILE* file) const
+void GeneralizedArmor::Dump(const EvaluatingSkills& evSkills, FILE* file) const
 {
-	ParentType::Dump(file);
+	ParentType::Dump(evSkills, file);
 
 	for (auto it = source.begin(); it != source.end(); ++it)
 	{
@@ -85,6 +86,7 @@ void GeneralizedArmor::Dump(FILE* file) const
 
 //------------------------------------------------------------------------------
 void FilterArmors(
+	const EvaluatingSkills& evSkills,
 	map<Armor::PartType, list<GeneralizedArmor*>*>& g_generalized,
 	bool dumpList,
 	bool dumpComparison)
@@ -115,7 +117,7 @@ void FilterArmors(
 			auto part = (*parts)[j];
 
 			// 관심 있는 스킬이 있거나 슬롯이 있거나 해야 한다
-			if (!part->IsRelevant()) 
+			if (!part->IsRelevant(evSkills)) 
 			{ 
 				//WindowsUtility::Debug(L"\tDiscarded\n");
 				continue; 
@@ -127,7 +129,7 @@ void FilterArmors(
 			}
 
 			// 계산을 위해서 베이스를 만든다
-			GeneralizedArmor base(part);
+			GeneralizedArmor base(evSkills, part);
 
 			// 여기서 슬롯에 끼울 수 있는 장식주 크기별로 조합을 새로 만든다
 			int subtract[] = { 0, 0, 0, };
@@ -135,14 +137,14 @@ void FilterArmors(
 
 			auto TryToAdd = [&]()
 			{
-				auto newPart = new GeneralizedArmor(part);
+				auto newPart = new GeneralizedArmor(evSkills, part);
 
 				for (int i = 0; i < 3; ++i)
 				{
 					newPart->slots[i] += add[i] - subtract[i];
 				}
 
-				AddIfNotWorse(container, newPart, false, file, true);
+				AddIfNotWorse(evSkills, container, newPart, false, file, true);
 			};
 
 			function<void(int)> Permutate;
@@ -190,7 +192,7 @@ void FilterArmors(
 		{
 			for (auto general : *g_generalized[(Armor::PartType) i])
 			{
-				general->Dump(file);
+				general->Dump(evSkills, file);
 			}
 		}
 

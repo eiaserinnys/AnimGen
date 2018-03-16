@@ -20,12 +20,6 @@ struct DecoratedCombination : public CombinationBase
 	static DecoratedCombination* DeriveFrom(
 		DecoratedCombination* comb);
 
-	static DecoratedCombination* DeriveFrom(
-		DecoratedCombination* comb,
-		const Decorator* dec,
-		int socket,
-		int decIndex);
-
 	void CombineEquivalent(DecoratedCombination& rhs);
 
 	void Delete();
@@ -37,9 +31,7 @@ public:
 
 	std::list<DecoratedCombination*> equivalents;
 
-	const Decorator* decorator = nullptr;
-	int lastSocket = -1;
-	int lastDecoratorIndex = 0;
+	std::list<const Decorator*> decorator;
 
 private:
 	DecoratedCombination* derivedFrom = nullptr;
@@ -54,6 +46,7 @@ public:
 };
 
 void PopulateDecorators(
+	const EvaluatingSkills& evSkills,
 	const std::list<GeneralizedCombination*>& g_all,
 	std::list<DecoratedCombination*>& g_decAll,
 	IDamageCalculator* damageCalc,

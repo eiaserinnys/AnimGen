@@ -6,8 +6,10 @@
 
 using namespace std;
 
+vector<Charm*> g_allCharms;
 vector<Charm*> g_charms;
 
+//------------------------------------------------------------------------------
 void LoadCharms()
 {
 	FILE* file;
@@ -35,27 +37,40 @@ void LoadCharms()
 
 			for (int i = 1; i < tokens.size() - 1; i++)
 			{
-				int index = GetSkillIndex(tokens[i]);
-				if (index >= 0)
-				{
-					dec->skills.push_back(make_pair(tokens[i], index));
-				}
+				dec->skills.push_back(make_pair(tokens[i], -1));
 			}
 
 			dec->skillLevel = _wtoi(tokens.rbegin()->c_str());
 
-			if (!dec->skills.empty())
-			{
-				g_charms.push_back(dec);
-			}
-			else
-			{
-				delete dec;
-			}
-
-			//WindowsUtility::Debug(L"%s %s R%d [%d]\n", dec->name.c_str(), dec->skill.c_str(), dec->rarity, dec->slotSize);
+			g_allCharms.push_back(dec);
 		}
 	}
 
 	fclose(file);
+}
+
+//------------------------------------------------------------------------------
+void FilterCharms(const EvaluatingSkills& evSkills)
+{
+	g_charms.clear();
+
+	for (auto c : g_allCharms)
+	{
+		bool toAdd = false;
+
+		for (int i = 0; i < c->skills.size(); ++i)
+		{
+			int index = evSkills.GetIndex(c->skills[i].first);
+			if (index >= 0)
+			{
+				c->skills[i].second = index;
+				toAdd = true;
+			}
+		}
+
+		if (toAdd)
+		{
+			g_charms.push_back(c);
+		}
+	}
 }

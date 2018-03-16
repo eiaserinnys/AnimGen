@@ -1,6 +1,7 @@
 #pragma once
 
 #include <WindowsUtility.h>
+#include "Skill.h"
 
 //------------------------------------------------------------------------------
 struct CombinationBase
@@ -24,13 +25,11 @@ struct CombinationBase
 
 	virtual void Delete() { delete this; }
 
-	void Combine(const CombinationBase& rhs);
+	void Combine(const EvaluatingSkills& evSkills, const CombinationBase& rhs);
 
 	bool IsTriviallyWorse(const CombinationBase& rhs) const;
 
 	bool IsTriviallyEquivalent(const CombinationBase& rhs) const;
-
-	int SlotCount() const;
 
 	enum ComparisonResult
 	{
@@ -44,51 +43,30 @@ struct CombinationBase
 	};
 
 	static ComparisonResult CompareStrict2(
+		const EvaluatingSkills& evSkills,
 		const CombinationBase& lhs,
 		const CombinationBase& rhs);
 
 	static ComparisonResult CompareStrict2(
+		const EvaluatingSkills& evSkills,
 		const CombinationBase& lhs,
 		const CombinationBase& rhs,
-		int skillToAddToLhs,
-		int lhsSocketToUse);
+		int na0,
+		int na1);
 
-	static ComparisonResult Compare(
-		const CombinationBase& lhs,
-		const CombinationBase& rhs);
+	void Dump(const EvaluatingSkills& evSkills) const;
 
-	static ComparisonResult CompareStrict(
-		const CombinationBase& lhs,
-		const CombinationBase& rhs);
+	void Dump(const EvaluatingSkills& evSkills, FILE* file) const;
 
-	static ComparisonResult Compare(
-		const CombinationBase& lhs,
-		const CombinationBase& rhs,
-		int skillToAddToLhs,
-		int lhsSocketToUse);
+	void DumpSimple(const EvaluatingSkills& evSkills) const;
 
-	static ComparisonResult CompareStrict(
-		const CombinationBase& lhs,
-		const CombinationBase& rhs,
-		int skillToAddToLhs,
-		int lhsSocketToUse);
-
-	ComparisonResult Compare(const CombinationBase& rhs) const;
-
-	bool IsWorseThanOrEqualTo(const CombinationBase& rhs) const;
-
-	void Dump() const;
-
-	void Dump(FILE* file) const;
-
-	void DumpSimple() const;
-
-	std::wstring DumpToString() const;
+	std::wstring DumpToString(const EvaluatingSkills& evSkills) const;
 };
 
 //------------------------------------------------------------------------------
 template <typename CombinationType>
 void AddIfNotWorse(
+	const EvaluatingSkills& evSkills,
 	std::list<CombinationType*>& container,
 	CombinationType* newPart,
 	bool deleteEquivalent, 
@@ -99,7 +77,7 @@ void AddIfNotWorse(
 	{
 		auto prev = *it;
 
-		auto compare = CombinationBase::CompareStrict2(*newPart, *prev);
+		auto compare = CombinationBase::CompareStrict2(evSkills, *newPart, *prev);
 
 		if (compare == GeneralizedArmor::Equal)
 		{
@@ -110,8 +88,8 @@ void AddIfNotWorse(
 					fwprintf(
 						file,
 						L"\t%s == %s\n",
-						newPart->DumpToString().c_str(),
-						prev->DumpToString().c_str());
+						newPart->DumpToString(evSkills).c_str(),
+						prev->DumpToString(evSkills).c_str());
 				}
 			}
 
@@ -134,8 +112,8 @@ void AddIfNotWorse(
 					fwprintf(
 						file,
 						L"\t%s < %s\n",
-						prev->DumpToString().c_str(),
-						newPart->DumpToString().c_str());
+						prev->DumpToString(evSkills).c_str(),
+						newPart->DumpToString(evSkills).c_str());
 				}
 			}
 
@@ -151,8 +129,8 @@ void AddIfNotWorse(
 					fwprintf(
 						file,
 						L"\t%s < %s\n",
-						newPart->DumpToString().c_str(),
-						prev->DumpToString().c_str());
+						newPart->DumpToString(evSkills).c_str(),
+						prev->DumpToString(evSkills).c_str());
 				}
 			}
 
@@ -182,6 +160,7 @@ void AddIfNotWorse(
 //------------------------------------------------------------------------------
 template <typename CombinationType>
 void AddIfNotWorse(
+	const EvaluatingSkills& evSkills,
 	std::list<std::pair<double, CombinationType*>>& container,
 	CombinationType* newPart,
 	bool deleteEquivalent,
@@ -192,7 +171,7 @@ void AddIfNotWorse(
 	{
 		auto prev = it->second;
 
-		auto compare = CombinationBase::CompareStrict2(*newPart, *prev);
+		auto compare = CombinationBase::CompareStrict2(evSkills, *newPart, *prev);
 
 		if (compare == GeneralizedArmor::Equal)
 		{
@@ -203,8 +182,8 @@ void AddIfNotWorse(
 					fwprintf(
 						file,
 						L"\t%s == %s\n",
-						newPart->DumpToString().c_str(),
-						prev->DumpToString().c_str());
+						newPart->DumpToString(evSkills).c_str(),
+						prev->DumpToString(evSkills).c_str());
 				}
 			}
 
@@ -227,8 +206,8 @@ void AddIfNotWorse(
 					fwprintf(
 						file,
 						L"\t%s < %s\n",
-						prev->DumpToString().c_str(),
-						newPart->DumpToString().c_str());
+						prev->DumpToString(evSkills).c_str(),
+						newPart->DumpToString(evSkills).c_str());
 				}
 			}
 
@@ -244,8 +223,8 @@ void AddIfNotWorse(
 					fwprintf(
 						file,
 						L"\t%s < %s\n",
-						newPart->DumpToString().c_str(),
-						prev->DumpToString().c_str());
+						newPart->DumpToString(evSkills).c_str(),
+						prev->DumpToString(evSkills).c_str());
 				}
 			}
 
