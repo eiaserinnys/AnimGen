@@ -3,6 +3,8 @@
 #include <utility>
 #include "Vector.h"
 
+struct CombinationBase;
+
 //------------------------------------------------------------------------------
 struct Desc
 {
@@ -14,6 +16,10 @@ struct Desc
 	double fireDragonGambit;
 	double arrowUpgrade;
 	int chargeLevel;
+
+	Desc() = default;
+
+	Desc(const CombinationBase* comb);
 };
 
 //------------------------------------------------------------------------------
@@ -41,7 +47,7 @@ struct MonsterDesc
 };
 
 //------------------------------------------------------------------------------
-void Calculate(
+double Calculate(
 	FILE* file, 
 	const WeaponDesc& weapon, 
 	const Desc& desc, 

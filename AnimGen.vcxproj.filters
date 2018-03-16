@@ -90,8 +90,8 @@
     <Filter Include="ThisApp\MHW\Data">
       <UniqueIdentifier>{65afcade-87d8-42b6-87ce-afc952023d6d}</UniqueIdentifier>
     </Filter>
-    <Filter Include="ThisApp\MHW\Utility">
-      <UniqueIdentifier>{2d4efe33-e2a0-42f1-9124-f25f8433b38f}</UniqueIdentifier>
+    <Filter Include="ThisApp\MHW\Combination">
+      <UniqueIdentifier>{2cd93130-4363-4d84-96a4-4654f85feaf1}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -227,9 +227,6 @@
     <ClCompile Include="TestDamage.cpp">
       <Filter>ThisApp\MHW</Filter>
     </ClCompile>
-    <ClCompile Include="GeneralizedCombination.cpp">
-      <Filter>ThisApp\MHW</Filter>
-    </ClCompile>
     <ClCompile Include="DamageCalculation.cpp">
       <Filter>ThisApp\MHW</Filter>
     </ClCompile>
@@ -249,7 +246,13 @@
       <Filter>ThisApp\MHW\Data</Filter>
     </ClCompile>
     <ClCompile Include="CombinationBase.cpp">
-      <Filter>ThisApp\MHW\Utility</Filter>
+      <Filter>ThisApp\MHW\Combination</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneralizedCombination.cpp">
+      <Filter>ThisApp\MHW\Combination</Filter>
+    </ClCompile>
+    <ClCompile Include="DecoratedCombination.cpp">
+      <Filter>ThisApp\MHW\Combination</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -439,9 +442,6 @@
     <ClInclude Include="PositionRotation.h">
       <Filter>Mathematics\Spline</Filter>
     </ClInclude>
-    <ClInclude Include="GeneralizedCombination.h">
-      <Filter>ThisApp\MHW</Filter>
-    </ClInclude>
     <ClInclude Include="Damage.h">
       <Filter>ThisApp\MHW</Filter>
     </ClInclude>
@@ -464,7 +464,13 @@
       <Filter>ThisApp\MHW\Data</Filter>
     </ClInclude>
     <ClInclude Include="CombinationBase.h">
-      <Filter>ThisApp\MHW\Utility</Filter>
+      <Filter>ThisApp\MHW\Combination</Filter>
+    </ClInclude>
+    <ClInclude Include="GeneralizedCombination.h">
+      <Filter>ThisApp\MHW\Combination</Filter>
+    </ClInclude>
+    <ClInclude Include="DecoratedCombination.h">
+      <Filter>ThisApp\MHW\Combination</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

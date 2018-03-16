@@ -221,144 +221,6 @@ void GeneralizedCombination::Dump(FILE* file) const
 	}
 }
 
-////////////////////////////////////////////////////////////////////////////////
-
-int instance = 0;
-
-//------------------------------------------------------------------------------
-void DecoratedCombination::Delete()
-{
-	refCount--;
-
-	assert(refCount >= 0);
-
-	if (refCount == 0) 
-	{ 
-		if (derivedFrom != nullptr)
-		{
-			derivedFrom->Delete();
-			derivedFrom = nullptr;
-		}
-		delete this; 
-	}
-}
-
-//------------------------------------------------------------------------------
-DecoratedCombination::DecoratedCombination()
-{
-	instance++;
-}
-
-//------------------------------------------------------------------------------
-DecoratedCombination* DecoratedCombination::DeriveFrom(
-	const GeneralizedCombination* comb)
-{
-	auto ret = new DecoratedCombination;
-
-	(*ret).ParentType::operator = (*comb);
-
-	ret->source = comb;
-
-	return ret;
-}
-
-//------------------------------------------------------------------------------
-DecoratedCombination* DecoratedCombination::DeriveFrom(
-	DecoratedCombination* from)
-{
-	return DeriveFrom(from, nullptr, -1, -1);
-}
-
-//------------------------------------------------------------------------------
-DecoratedCombination* DecoratedCombination::DeriveFrom(
-	DecoratedCombination* from,
-	const Decorator* dec,
-	int socket,
-	int decIndex)
-{
-	auto ret = new DecoratedCombination;
-
-	(*ret).ParentType::operator = (*from);
-
-	ret->source = from->source;
-
-	ret->derivedFrom = from;
-
-	from->refCount++;
-
-	if (dec != nullptr)
-	{
-		auto index = dec->skillIndex;
-
-		if (ret->skills[index] + 1 <= g_skillMaxLevel[index])
-		{
-			ret->skills[index]++;
-			ret->decorator = dec;
-		}
-
-		ret->lastDecoratorIndex = decIndex;
-	}
-
-	if (socket >= 0)
-	{
-		ret->slots[socket]--;	// 어쨌든 슬롯은 소비
-		ret->lastSocket = socket;
-	}
-
-	return ret;
-}
-
-//------------------------------------------------------------------------------
-DecoratedCombination::~DecoratedCombination()
-{
-	assert(refCount == 0);
-
-	for (auto e : equivalents) 
-	{ 
-		e->Delete(); 
-	}
-	equivalents.clear();
-
-	instance--;
-}
-
-//------------------------------------------------------------------------------
-void DecoratedCombination::CombineEquivalent(DecoratedCombination& rhs)
-{
-	equivalents.push_back(&rhs);
-	equivalents.insert(equivalents.end(), rhs.equivalents.begin(), rhs.equivalents.end());
-	rhs.equivalents.clear();
-}
-
-//------------------------------------------------------------------------------
-void DecoratedCombination::Write(FILE* file) const
-{
-	// 첫번째 조합만 덤프하자
-	auto inst = *source->instances.begin();
-	for (int i = 0; i < COUNT_OF(inst->parts); ++i)
-	{
-		fwprintf(file, L"%s ", (*inst->parts[i]->source.begin())->name.c_str());
-	}
-
-	if (inst->charm != nullptr)
-	{
-		fwprintf(file, L"%s ", inst->charm->name.c_str());
-	}
-
-	const DecoratedCombination* c = this;
-	while (c != nullptr)
-	{
-		if (c->decorator != nullptr)
-		{
-			fwprintf(file, L"%s ", c->decorator->name.c_str());
-		}
-
-		c = c->derivedFrom;
-	}
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
 //------------------------------------------------------------------------------
 void PopulateArmors(
 	const map<Armor::PartType, list<GeneralizedArmor*>*>& g_generalized,
@@ -378,7 +240,7 @@ void PopulateArmors(
 			g_all.push_back(newComb);
 		}
 
-		fwprintf(file, L"%d combinations with charms ---------------------------------------\n", (int) g_all.size());
+		fwprintf(file, L"%d combinations with charms ---------------------------------------\n", (int)g_all.size());
 		WindowsUtility::Debug(L"%d combinations with charms ---------------------------------------\n", (int)g_all.size());
 
 		// 전체 덤프 ㄱㄱ
@@ -415,11 +277,10 @@ void PopulateArmors(
 
 		g_all.swap(next);
 
-		fwprintf(file, L"%d combinations until part %d ---------------------------------------\n", (int) g_all.size(), channel + 1);
+		fwprintf(file, L"%d combinations until part %d ---------------------------------------\n", (int)g_all.size(), channel + 1);
 		WindowsUtility::Debug(L"%d combinations until part %d ---------------------------------------\n", g_all.size(), channel + 1);
 		if (dumpList) { for (auto g : g_all) { g->Dump(file); } }
 	}
 
 	fclose(file);
 }
-

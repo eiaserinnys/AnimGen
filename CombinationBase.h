@@ -178,3 +178,93 @@ void AddIfNotWorse(
 		//}
 	}
 }
+
+//------------------------------------------------------------------------------
+template <typename CombinationType>
+int RejectWorseCombinations(
+	std::list<CombinationType*>& next,
+	bool dump)
+{
+	// 생성된 페어를 평가한다
+	int rejected = 0;
+	for (auto it = next.begin(); it != next.end(); )
+	{
+		auto toEvaluate = *it;
+
+		bool bad = false;
+
+		auto jt = it;
+		jt++;
+
+		for (; jt != next.end();)
+		{
+			auto target = *jt;
+
+			auto result3 = GeneralizedCombination::CompareStrict2(*toEvaluate, *target);
+
+			if (result3 == GeneralizedCombination::Equal)
+			{
+				// 우측을 좌측에 더하자
+				toEvaluate->CombineEquivalent(*target);
+
+				if (dump)
+				{
+					WindowsUtility::Debug(L"Dropping '");
+					target->DumpSimple();
+					WindowsUtility::Debug(L"' for '");
+					toEvaluate->DumpSimple();
+					WindowsUtility::Debug(L"'. (Same)\n");
+				}
+
+				++rejected;
+				jt = next.erase(jt);
+			}
+			else if (result3 == GeneralizedCombination::Worse)
+			{
+				if (dump)
+				{
+					WindowsUtility::Debug(L"Dropping '");
+					toEvaluate->DumpSimple();
+					WindowsUtility::Debug(L"' for '");
+					target->DumpSimple();
+					WindowsUtility::Debug(L"'. (Worse)\n");
+				}
+
+				bad = true;
+				break;
+			}
+			else if (result3 == GeneralizedCombination::Better)
+			{
+				if (dump)
+				{
+					WindowsUtility::Debug(L"Dropping '");
+					target->DumpSimple();
+					WindowsUtility::Debug(L"' for '");
+					toEvaluate->DumpSimple();
+					WindowsUtility::Debug(L"'. (Worse)\n");
+				}
+
+				++rejected;
+				target->Delete();
+				jt = next.erase(jt);
+			}
+			else // Undetermined
+			{
+				jt++;
+			}
+		}
+
+		if (bad)
+		{
+			++rejected;
+			toEvaluate->Delete();
+			it = next.erase(it);
+		}
+		else
+		{
+			it++;
+		}
+	}
+
+	return rejected;
+}

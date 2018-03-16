@@ -3,6 +3,22 @@
 
 #include "Vector.h"
 
+#include "Skill.h"
+#include "CombinationBase.h"
+
+//------------------------------------------------------------------------------
+Desc::Desc(const CombinationBase* comb)
+{
+	attackBonus = AttackSkillBonus(comb->skills[0]);
+	criticalEye = CriticalEye(comb->skills[1]);
+	superCritical = SuperCritical(comb->skills[2]);
+	exploitWeakness = ExploitWeakness(comb->skills[3]);
+	elementalBonus = ElementalSkillLevel(comb->skills[4]);
+	fireDragonGambit = comb->skills[5] >= 2 ? FireDragonsGambit() : 0;
+	arrowUpgrade = comb->skills[6] >= 1 && comb->skills[7] >= 1 ? 0.1 : 0;
+	chargeLevel = comb->skills[8] >= 1 ? 3 : 2;
+}
+
 //------------------------------------------------------------------------------
 inline double BaseCriticalDamageRate(double criticalRate) 
 { 
@@ -10,7 +26,7 @@ inline double BaseCriticalDamageRate(double criticalRate)
 }
 
 //------------------------------------------------------------------------------
-void Calculate(
+double Calculate(
 	FILE* file, 
 	const WeaponDesc& weapon, 
 	const Desc& desc,
@@ -137,4 +153,6 @@ void Calculate(
 			finalExpectedDamage.x, finalExpectedDamage.y,
 			finalExpectedDamage.x + finalExpectedDamage.y);
 	}
+
+	return finalExpectedDamage.x + finalExpectedDamage.y;
 }

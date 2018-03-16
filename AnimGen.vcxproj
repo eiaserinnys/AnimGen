@@ -140,6 +140,7 @@
     <ClCompile Include="ClampedSplineFixedStep.cpp" />
     <ClCompile Include="CombinationBase.cpp" />
     <ClCompile Include="DamageCalculation.cpp" />
+    <ClCompile Include="DecoratedCombination.cpp" />
     <ClCompile Include="Decorator.cpp" />
     <ClCompile Include="DeferredRendrerer.cpp" />
     <ClCompile Include="DiagnosticRenderer.cpp" />
@@ -202,6 +203,7 @@
     <ClInclude Include="CombinationBase.h" />
     <ClInclude Include="Damage.h" />
     <ClInclude Include="DamageCalculation.h" />
+    <ClInclude Include="DecoratedCombination.h" />
     <ClInclude Include="Decorator.h" />
     <ClInclude Include="DeferredRenderer.h" />
     <ClInclude Include="DiagnosticRenderer.h" />
