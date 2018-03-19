@@ -108,10 +108,20 @@ void TestDamage()
 	ToEvaluate eval[] = 
 	{
 		{
+			L"화룡의강궁III",
+			L"불속성 공격 강화",
+			L"불강",
+			WeaponDesc(7, Core::Vector2D(216, 240), 0.2, 1, 0, 0, true, 1.2),
+
+			// 키린
+			MonsterDesc{ Core::Vector2D(0.45, 0.25), 0.66, Core::Vector2D(0.22, 0.2) },
+		},
+
+		{
 			L"쟈나프아르카우스III",
 			L"불속성 공격 강화",
 			L"불강",
-			WeaponDesc(6, Core::Vector2D(240, 390), -0.2, 0, 0, 0, 1.2),
+			WeaponDesc(6, Core::Vector2D(240, 390), -0.2, 0, 0, 0, true, 1.2),
 
 			// 키린
 			MonsterDesc{ Core::Vector2D(0.45, 0.25), 0.66, Core::Vector2D(0.22, 0.2) },
@@ -121,7 +131,7 @@ void TestDamage()
 			L"워터슛III",
 			L"물속성 공격 강화",
 			L"물강",
-			WeaponDesc(6, Core::Vector2D(204, 240), 0.0, 0, 0, 1, 1.2),
+			WeaponDesc(6, Core::Vector2D(204, 240), 0.0, 0, 0, 1, true, 1.2),
 
 			// 테오
 			MonsterDesc{ Core::Vector2D(0.5, 0.3), 0.66, Core::Vector2D(0.2, 0.15) },
@@ -131,25 +141,71 @@ void TestDamage()
 			L"비뢰궁", 
 			L"번개속성 공격 강화",
 			L"뇌강",
-			WeaponDesc(7, Core::Vector2D(204, 270), 0.15, 1, 0, 0, 1.2),  
+			WeaponDesc(7, Core::Vector2D(204, 270), 0.15, 1, 0, 0, true, 1.2),
 			MonsterDesc{ Core::Vector2D(0.45, 0.2), 0.66, Core::Vector2D(0.25, 0.15), },		// 크샬다오라
 		},
 
 		{
 			L"레이펀라이크",
 			L"얼음속성 공격 강화",
-			L"얼음강",
-			WeaponDesc(8, Core::Vector2D(180, 390), 0.0, 0, 0, 0, 1.2),
+			L"얼강",
+			WeaponDesc(8, Core::Vector2D(180, 390), 0.0, 0, 0, 0, true, 1.2),
 
 			// 제노지바 임계 머리/비임계 배
-			MonsterDesc{ Core::Vector2D(0.6, 0.3), 0.66, Core::Vector2D(0.25, 0.1) },
+			//MonsterDesc{ Core::Vector2D(0.6, 0.3), 0.66, Core::Vector2D(0.25, 0.1) },
+			
+			// 테오
+			MonsterDesc{ Core::Vector2D(0.5, 0.25), 0.66, Core::Vector2D(0.2, 0.1) },
+		},
+
+		{
+			L"알나스다오라",
+			L"얼음속성 공격 강화",
+			L"얼강",
+			WeaponDesc(8, Core::Vector2D(204, 240), 0.1, 1, 1, 0, true, 1.2),
+
+			// 제노지바 임계 머리/비임계 배
+			//MonsterDesc{ Core::Vector2D(0.6, 0.3), 0.66, Core::Vector2D(0.25, 0.1) },
+
+			// 테오
+			MonsterDesc{ Core::Vector2D(0.5, 0.25), 0.66, Core::Vector2D(0.2, 0.1) },
+		},
+
+		{
+			L"필멸의화살",
+			L"용속성 공격 강화",
+			L"용강",
+			WeaponDesc(8, Core::Vector2D(240, 150), 0.0, 1, 0, 0, true, 1.2),
+
+			// 리오레우스 머리
+			MonsterDesc{ Core::Vector2D(0.60, 0.30), 0.66, Core::Vector2D(0.2, 0.2) },
+		},
+
+		{
+			L"용골궁III",
+			L"용속성 공격 강화",
+			L"용강",
+			WeaponDesc(6, Core::Vector2D(180, 420), 0.0, 2, 0, 0, false, 1.2),
+
+			// 리오레우스 머리
+			MonsterDesc{ Core::Vector2D(0.60, 0.30), 0.66, Core::Vector2D(0.2, 0.2) },
 		},
 
 		{
 			L"하자크베로스II",
 			L"용속성 공격 강화",
 			L"용강",
-			WeaponDesc(7, Core::Vector2D(228, 270), 0.0, 0, 1, 0, 1.2),
+			WeaponDesc(7, Core::Vector2D(228, 270), 0.0, 0, 1, 0, true, 1.2),
+
+			// 리오레우스 머리
+			MonsterDesc{ Core::Vector2D(0.60, 0.30), 0.66, Core::Vector2D(0.2, 0.2) },
+		},
+
+		{
+			L"제노메토라",
+			L"용속성 공격 강화",
+			L"용강",
+			WeaponDesc(8, Core::Vector2D(204, 180), 0.15, 0, 0, 2, true, 1.2),
 
 			// 리오레우스 머리
 			MonsterDesc{ Core::Vector2D(0.60, 0.30), 0.66, Core::Vector2D(0.2, 0.2) },
@@ -171,6 +227,8 @@ void TestDamage()
 	Custom custom6[] =
 	{
 		{ L"기본", 0.0, 0 },
+		{ L"회심", 0.1, 0 },
+		{ L"회심,회심", 0.15, 0 },
 		{ L"회심,회심,회심", 0.2, 0 },
 		{ L"회심,회심,슬롯", 0.15, 1 },
 	};
@@ -178,6 +236,7 @@ void TestDamage()
 	Custom custom7[] = 
 	{
 		{ L"기본", 0, 0 }, 
+		{ L"회심", 0.10, 0 },
 		{ L"회심,회심", 0.15, 0 },
 		{ L"회심,슬롯", 0.1, 1 },
 	};

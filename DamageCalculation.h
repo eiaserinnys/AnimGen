@@ -35,6 +35,8 @@ struct WeaponDesc
 	int slot2;
 	int slot3;
 
+	bool strongBottle;
+
 	double multiplier;
 
 	WeaponDesc() = default;
@@ -44,6 +46,7 @@ struct WeaponDesc
 		const Core::Vector2D& baseDamage,
 		double criticalRate,
 		int slot1, int slot2, int slot3,
+		bool strongBottle, 
 		double multiplier)
 		: rarity(rarity)
 		, baseDamage(baseDamage)
@@ -51,6 +54,7 @@ struct WeaponDesc
 		, slot1(slot1)
 		, slot2(slot2)
 		, slot3(slot3)
+		, strongBottle(strongBottle)
 		, multiplier(multiplier)
 	{
 	}

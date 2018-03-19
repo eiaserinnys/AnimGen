@@ -22,7 +22,7 @@ Desc::Desc(const CombinationBase* comb)
 //------------------------------------------------------------------------------
 inline double BaseCriticalDamageRate(double criticalRate) 
 { 
-	return criticalRate >= 0 ? 1.25 : 0.75; 
+	return criticalRate >= -0.01 ? 1.25 : 0.75; 
 }
 
 //------------------------------------------------------------------------------
@@ -44,15 +44,19 @@ double Calculate(
 			desc.attackBonus.first,
 			desc.elementalBonus.first / 10);
 
-	if (rawDamageWithBonus.y >= rawDamage.y * 1.3)
-	{
-		rawDamageWithBonus.y = rawDamage.y * 1.3;
-	}
+	// 강격병 유무에 따른 대미지,
+	// 배율이 1.5배로 알려져 있는데 훈련장 수치를 역산해보니 1.35임
+	double strongBottle = weapon.strongBottle ? 1.35 : 1.0;
 
 	// 기본 대미지 * 강격병 * 거리 크리티컬
 	Core::Vector2D modifiedBaseDamage(
-		rawDamageWithBonus.x * (1 + desc.arrowUpgrade) * 1.5 * 1.5,
+		rawDamageWithBonus.x * (1 + desc.arrowUpgrade) * strongBottle * 1.5,
 		rawDamageWithBonus.y * (1 + desc.elementalBonus.second));
+
+	if (modifiedBaseDamage.y >= rawDamage.y * 1.3)
+	{
+		modifiedBaseDamage.y = rawDamage.y * 1.3;
+	}
 
 	// 회심률 (비약점, 약점)
 	auto criticalProbability = Core::Vector2D(

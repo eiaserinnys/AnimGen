@@ -106,6 +106,8 @@ void DecoratedCombination::Write(FILE* file) const
 		fwprintf(file, L"%s ", inst->charm->name.c_str());
 	}
 
+	fwprintf(file, L"\t");
+
 	const DecoratedCombination* c = this;
 	while (c != nullptr)
 	{
@@ -147,7 +149,7 @@ void AddByDamage(
 	DecoratedCombination* comb, 
 	IDamageCalculator* damageCalc)
 {
-	const int maxCount = 150;
+	const int maxCount = 15;
 
 	auto damage = damageCalc->Do(comb);
 
