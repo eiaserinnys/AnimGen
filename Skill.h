@@ -29,6 +29,12 @@ std::pair<int, double> AttackSkillBonus(int level);
 int MaxElementalSkillLevel();
 std::pair<int, double> ElementalSkillLevel(int level);
 
+double NonElementalBonus(int level);
+
+double SpecialAttackBonus(int level);
+
+double DrawCriticalBonus(int level);
+
 //------------------------------------------------------------------------------
 int MaxCriticalEyeSkillLevel();
 double CriticalEye(int level);

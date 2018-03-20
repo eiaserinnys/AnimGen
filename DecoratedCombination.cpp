@@ -147,10 +147,9 @@ void MoveFixedCombinations(
 void AddByDamage(
 	list<pair<double, DecoratedCombination*>>& next, 
 	DecoratedCombination* comb, 
-	IDamageCalculator* damageCalc)
+	IDamageCalculator* damageCalc,
+	int maxCount)
 {
-	const int maxCount = 15;
-
 	auto damage = damageCalc->Do(comb);
 
 	bool canBeAdded =
@@ -210,14 +209,15 @@ void AddByDamage(
 void AddFixedCombinationsByDamage(
 	list<pair<double, DecoratedCombination*>>& next,
 	list<pair<double, DecoratedCombination*>>& prev,
-	IDamageCalculator* damageCalc)
+	IDamageCalculator* damageCalc,
+	int maxCount)
 {
 	for (auto it = prev.begin(); it != prev.end(); )
 	{
 		auto cur = it->second;
 		if (cur->slots[0] <= 0)
 		{
-			AddByDamage(next, cur, damageCalc);
+			AddByDamage(next, cur, damageCalc, maxCount);
 			it = prev.erase(it);
 		}
 		else
@@ -233,6 +233,7 @@ void PopulateDecorators(
 	const list<GeneralizedCombination*>& g_all, 
 	list<DecoratedCombination*>& g_decAll_,
 	IDamageCalculator* damageCalc,
+	int maxCount, 
 	bool dumpComparison)
 {
 	FILE* file;
@@ -259,7 +260,7 @@ void PopulateDecorators(
 		// 먼저 더 슬롯에 끼울 게 없는 조합을 옮긴다
 		if (socket == 0 && damageCalc != nullptr)
 		{
-			AddFixedCombinationsByDamage(next, intm, damageCalc);
+			AddFixedCombinationsByDamage(next, intm, damageCalc, maxCount);
 		}
 		else
 		{
@@ -335,7 +336,7 @@ void PopulateDecorators(
 
 						if (socket == 0 && damageCalc != nullptr)
 						{
-							AddByDamage(next, newComb, damageCalc);
+							AddByDamage(next, newComb, damageCalc, maxCount);
 						}
 						else
 						{

@@ -50,4 +50,5 @@ void PopulateDecorators(
 	const std::list<GeneralizedCombination*>& g_all,
 	std::list<DecoratedCombination*>& g_decAll,
 	IDamageCalculator* damageCalc,
+	int maxCount, 
 	bool dumpComparison);

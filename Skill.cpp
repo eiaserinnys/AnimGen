@@ -83,6 +83,29 @@ pair<int, double> ElementalSkillLevel(int level)
 }
 
 //------------------------------------------------------------------------------
+double NonElementalBonus(int level)
+{
+	return level > 0 ? 0.1 : 0;
+}
+
+double SpecialAttackBonus(int level)
+{
+	if (level <= 0) { return 0; }
+	if (level == 1) { return 0.1; }
+	//if (level >= 2) 
+	{ return 0.2; }
+}
+
+double DrawCriticalBonus(int level)
+{
+	if (level <= 0) { return 0; }
+	if (level == 1) { return 0.3; }
+	if (level == 2) { return 0.6; }
+	//if (level >= 3) 
+	{ return 1; }
+}
+
+//------------------------------------------------------------------------------
 int MaxCriticalEyeSkillLevel() { return 7; }
 
 double CriticalEye(int level)
