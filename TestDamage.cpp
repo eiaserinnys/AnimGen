@@ -427,7 +427,7 @@ void TestDragonPiercer()
 		MonsterDesc
 		{
 			Core::Vector2D(0.7, 0.0), 0.4,
-			Core::Vector2D(0.15, 0.0) 
+			Core::Vector2D(0.3, 0.0) 
 		};
 
 	class DamageCalc : public DamageCalculatorBase {
@@ -461,6 +461,73 @@ void TestDragonPiercer()
 }
 
 //------------------------------------------------------------------------------
+void TestMutedDragonPiercer()
+{
+	SkillDescriptor skills_[] =
+	{
+		{ L"공격", L"공격", 7 },
+		{ L"간파", L"간파", 7 },
+		{ L"슈퍼 회심", L"슈회", 3, },
+		{ L"약점 특효", L"약특", 3, },
+		{ L"무속성 강화", L"무강", 1 },
+
+		{ L"발도술 [기]", L"발도", 3 },
+		{ L"납도술", L"납도", 3 },
+
+		// 활 강화
+		{ L"특수 사격 강화", L"특강", 2 },
+		{ L"관통탄/용화살 강화", L"관강", 1 },
+		{ L"활 모으기 단계 해제", L"활모", 1 },
+
+		{ L"귀마개", L"방음", 5 },
+	};
+
+	auto weapon = WeaponDesc(
+		8, Core::Vector2D(264, 0), -0.3, 2, 0, 0, true, 1.2, true);
+
+	auto monster =
+		// 제노지바 임계 가슴, 통상 꼬리
+		MonsterDesc
+	{
+		Core::Vector2D(0.7, 0.0), 0.4,
+		Core::Vector2D(0.3, 0.0)
+	};
+
+	class DamageCalc : public DamageCalculatorBase {
+	public:
+		DamageCalc(const EvaluatingSkills& evSkills)
+			: DamageCalculatorBase(evSkills)
+		{
+		}
+
+		virtual bool IsCombinationValid(const CombinationBase* comb) const
+		{
+			bool undraw =
+				comb->skills[6] >= 3 ||
+				skillsToUse.list[6].name != L"납도술";
+
+			bool mute =
+				comb->skills[10] >= 5 ||
+				skillsToUse.list[10].name != L"귀마개";
+
+			return undraw && mute;
+		}
+	};
+
+	EvaluatingSkills evSkills;
+	{
+		evSkills.list.insert(evSkills.list.end(), skills_, skills_ + COUNT_OF(skills_));
+		FilterDecorators(evSkills);
+		FilterCharms(evSkills);
+		evSkills.Update();
+	}
+
+	DamageCalc calc(evSkills);
+
+	TestDamageA(evSkills, L"[방음]각왕궁게일혼", weapon, monster, calc, 15);
+}
+
+//------------------------------------------------------------------------------
 void TestDamage()
 {
 	LoadArmors(false);
@@ -468,5 +535,6 @@ void TestDamage()
 	LoadCharms();
 
 	TestDragonPiercer();
+	TestMutedDragonPiercer();
 	TestDamageElemental();
 }
